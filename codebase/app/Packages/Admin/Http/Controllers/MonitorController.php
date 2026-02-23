@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,11 +34,15 @@ class MonitorController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $this->validatePayload($request);
+        $validated = $this->validateStorePayload($request);
+        $siteId = $this->resolveStoreId($validated);
 
         $monitor = Monitor::query()->create([
-            ...$validated,
+            'monster_id' => $validated['monster_id'],
+            'site_id' => $siteId,
+            'product_url' => $validated['product_url'],
             'currency' => strtoupper($validated['currency']),
+            'check_interval_minutes' => (int) $validated['check_interval_minutes'],
             'next_check_at' => now(),
             'active' => $validated['active'] ?? true,
         ]);
@@ -52,11 +57,14 @@ class MonitorController extends Controller
 
     public function update(Request $request, Monitor $monitor): RedirectResponse
     {
-        $validated = $this->validatePayload($request, isUpdate: true);
+        $validated = $this->validateUpdatePayload($request);
 
         $monitor->fill([
-            ...$validated,
+            'monster_id' => $validated['monster_id'],
+            'site_id' => $validated['site_id'],
+            'product_url' => $validated['product_url'],
             'currency' => strtoupper($validated['currency']),
+            'check_interval_minutes' => (int) $validated['check_interval_minutes'],
             'active' => $validated['active'],
         ]);
 
@@ -97,7 +105,33 @@ class MonitorController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function validatePayload(Request $request, bool $isUpdate = false): array
+    private function validateStorePayload(Request $request): array
+    {
+        $validated = $request->validate([
+            'monster_id' => ['required', 'integer', Rule::exists('monsters', 'id')],
+            'site_id' => ['nullable', 'integer', Rule::exists('sites', 'id')],
+            'create_site' => ['sometimes', 'boolean'],
+            'site_name' => ['nullable', 'string', 'max:255'],
+            'product_url' => ['required', 'url', 'max:2048'],
+            'currency' => ['required', 'string', 'size:3'],
+            'check_interval_minutes' => ['required', 'integer', 'min:15', 'max:1440'],
+            'active' => ['sometimes', 'boolean'],
+        ]);
+
+        $createSite = (bool) ($validated['create_site'] ?? false);
+        if (! $createSite && ! isset($validated['site_id'])) {
+            throw ValidationException::withMessages([
+                'site_id' => 'Please select a store or choose Other.',
+            ]);
+        }
+
+        return $validated;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validateUpdatePayload(Request $request): array
     {
         return $request->validate([
             'monster_id' => ['required', 'integer', Rule::exists('monsters', 'id')],
@@ -105,7 +139,51 @@ class MonitorController extends Controller
             'product_url' => ['required', 'url', 'max:2048'],
             'currency' => ['required', 'string', 'size:3'],
             'check_interval_minutes' => ['required', 'integer', 'min:15', 'max:1440'],
-            'active' => [$isUpdate ? 'required' : 'sometimes', 'boolean'],
+            'active' => ['required', 'boolean'],
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function resolveStoreId(array $validated): int
+    {
+        if (isset($validated['site_id']) && is_int($validated['site_id'])) {
+            return $validated['site_id'];
+        }
+
+        $domain = strtolower((string) parse_url((string) $validated['product_url'], PHP_URL_HOST));
+        if ($domain === '') {
+            throw ValidationException::withMessages([
+                'product_url' => 'Could not resolve a domain from the provided product URL.',
+            ]);
+        }
+
+        $customName = trim((string) ($validated['site_name'] ?? ''));
+        $siteName = $customName !== '' ? $customName : $this->guessSiteNameFromDomain($domain);
+
+        $site = Site::query()->firstOrCreate(
+            ['domain' => $domain],
+            [
+                'name' => $siteName,
+                'active' => true,
+            ],
+        );
+
+        if ($customName !== '' && $site->name !== $customName) {
+            $site->forceFill(['name' => $customName])->save();
+        }
+
+        return (int) $site->id;
+    }
+
+    private function guessSiteNameFromDomain(string $domain): string
+    {
+        $name = str($domain)
+            ->replace(['www.', '.com', '.nl', '.eu', '.be', '.de', '.fr', '.co.uk'], '')
+            ->headline()
+            ->toString();
+
+        return $name !== '' ? $name : $domain;
     }
 }

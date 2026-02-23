@@ -10,6 +10,8 @@ import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { type FormEvent, useMemo, useState } from 'react';
 
+const OTHER_STORE_ID = -1;
+
 type MonitorRow = {
     id: number;
     monster_id: number;
@@ -71,7 +73,8 @@ export default function MonitorsIndex({
 
     const form = useForm({
         monster_id: monsters[0]?.id ?? 0,
-        site_id: sites[0]?.id ?? 0,
+        site_id: sites[0]?.id ?? OTHER_STORE_ID,
+        site_name: '',
         product_url: '',
         currency: 'EUR',
         check_interval_minutes: 60,
@@ -122,8 +125,18 @@ export default function MonitorsIndex({
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
+        form.transform((data) => ({
+            ...data,
+            site_id: data.site_id === OTHER_STORE_ID ? null : data.site_id,
+            create_site: data.site_id === OTHER_STORE_ID,
+            site_name:
+                data.site_id === OTHER_STORE_ID
+                    ? data.site_name.trim() || null
+                    : null,
+        }));
+
         form.post(route('admin.monitors.store'), {
-            onSuccess: () => form.reset('product_url'),
+            onSuccess: () => form.reset('product_url', 'site_name'),
         });
     };
 
@@ -225,6 +238,8 @@ export default function MonitorsIndex({
             active: !monitor.active,
         });
     };
+
+    const isOtherStoreSelected = form.data.site_id === OTHER_STORE_ID;
 
     return (
         <AuthenticatedLayout
@@ -336,8 +351,43 @@ export default function MonitorsIndex({
                                                     {site.name} ({site.domain})
                                                 </option>
                                             ))}
+                                            <option value={OTHER_STORE_ID} className="text-black">
+                                                {x(
+                                                    'Other (create from URL)',
+                                                    'Andere (maak aan via URL)',
+                                                )}
+                                            </option>
                                         </select>
                                     </div>
+
+                                    {isOtherStoreSelected && (
+                                        <div className="space-y-1.5">
+                                            <label
+                                                htmlFor="create-monitor-site-name"
+                                                className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                            >
+                                                {x(
+                                                    'Store name (optional)',
+                                                    'Winkelnaam (optioneel)',
+                                                )}
+                                            </label>
+                                            <input
+                                                id="create-monitor-site-name"
+                                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                                placeholder={x(
+                                                    'Example: Small Energy Shop',
+                                                    'Voorbeeld: Kleine Energy Shop',
+                                                )}
+                                                value={form.data.site_name}
+                                                onChange={(event) =>
+                                                    form.setData(
+                                                        'site_name',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    )}
 
                                     <div className="space-y-1.5">
                                         <label
