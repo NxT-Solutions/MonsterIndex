@@ -36,6 +36,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/monitors', [AdminMonitorController::class, 'store'])->name('admin.monitors.store');
     Route::put('/admin/monitors/{monitor}', [AdminMonitorController::class, 'update'])->name('admin.monitors.update');
     Route::delete('/admin/monitors/{monitor}', [AdminMonitorController::class, 'destroy'])->name('admin.monitors.destroy');
+    Route::get('/admin/monitors/{monitor}/selector-browser', [AdminBookmarkletController::class, 'selectorBrowser'])->name('admin.monitors.selector-browser');
 
     Route::get('/admin/alerts', [AdminAlertController::class, 'index'])->name('admin.alerts.index');
     Route::post('/admin/alerts/{alert}/read', [AdminAlertController::class, 'markRead'])->name('admin.alerts.mark-read');

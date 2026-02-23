@@ -2,6 +2,7 @@
   const scriptTag = document.currentScript;
   const scriptUrl = new URL(scriptTag.src);
   const token = scriptUrl.searchParams.get('token');
+  const sourceUrl = scriptUrl.searchParams.get('source_url') || window.location.href;
 
   if (!token) {
     alert('MonsterIndex selector token missing. Regenerate the bookmarklet session.');
@@ -52,6 +53,7 @@
   const onMouseOver = (event) => {
     const el = event.target;
     if (!(el instanceof Element)) return;
+    if (el.closest('[data-monsterindex-ignore="true"]')) return;
 
     if (highlighted && highlighted !== el) {
       highlighted.style.outline = highlighted.dataset.__monsterindex_outline || '';
@@ -121,6 +123,7 @@
 
     const el = event.target;
     if (!(el instanceof Element)) return;
+    if (el.closest('[data-monsterindex-ignore="true"]')) return;
 
     if (state.step === 'price') {
       state.price = toSelector(el);
@@ -144,7 +147,7 @@
   const submitAndFinish = () => {
     const params = new URLSearchParams({
       token,
-      page_url: window.location.href,
+      page_url: sourceUrl,
       page_title: document.title,
       price_css: state.price?.css || '',
       price_xpath: state.price?.xpath || '',

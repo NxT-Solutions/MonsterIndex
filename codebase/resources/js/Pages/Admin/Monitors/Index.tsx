@@ -1,7 +1,6 @@
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { type FormEvent, useState } from 'react';
@@ -25,7 +24,6 @@ type MonitorRow = {
         id: number;
         name: string;
         domain: string;
-        adapter_key: string | null;
     };
     latest_snapshot?: {
         checked_at: string | null;
@@ -47,8 +45,7 @@ type SiteOption = Option & {
 type BookmarkletSession = {
     token: string;
     expires_at: string;
-    loader_url: string;
-    bookmarklet: string;
+    selector_browser_url: string;
 };
 
 export default function MonitorsIndex({
@@ -70,9 +67,7 @@ export default function MonitorsIndex({
     });
 
     const [loadingRun, setLoadingRun] = useState<number | null>(null);
-    const [sessions, setSessions] = useState<Record<number, BookmarkletSession>>(
-        {},
-    );
+    const [loadingSelector, setLoadingSelector] = useState<number | null>(null);
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -92,18 +87,40 @@ export default function MonitorsIndex({
         }
     };
 
-    const createSelectorSession = async (monitor: MonitorRow) => {
-        const response = await axios.post<BookmarkletSession>(
-            route('api.bookmarklet.session'),
-            {
-                monitor_id: monitor.id,
-            },
-        );
+    const openSelectorBrowser = async (monitor: MonitorRow) => {
+        const targetUrl = window
+            .prompt('Open selector for URL', monitor.product_url)
+            ?.trim();
+        if (!targetUrl) {
+            return;
+        }
 
-        setSessions((previous) => ({
-            ...previous,
-            [monitor.id]: response.data,
-        }));
+        setLoadingSelector(monitor.id);
+
+        try {
+            const response = await axios.post<BookmarkletSession>(
+                route('api.bookmarklet.session'),
+                {
+                    monitor_id: monitor.id,
+                },
+            );
+
+            const selectorBrowserUrl = new URL(
+                response.data.selector_browser_url,
+            );
+            selectorBrowserUrl.searchParams.set('url', targetUrl);
+            window.open(
+                selectorBrowserUrl.toString(),
+                '_blank',
+                'noopener,noreferrer',
+            );
+        } catch {
+            window.alert(
+                'Could not create a selector session. Reload and try again.',
+            );
+        } finally {
+            setLoadingSelector(null);
+        }
     };
 
     const editMonitor = (monitor: MonitorRow) => {
@@ -360,11 +377,16 @@ export default function MonitorsIndex({
                                                     variant: 'outline',
                                                     size: 'sm',
                                                 })}
+                                                disabled={
+                                                    loadingSelector === monitor.id
+                                                }
                                                 onClick={() =>
-                                                    createSelectorSession(monitor)
+                                                    openSelectorBrowser(monitor)
                                                 }
                                             >
-                                                Selector Session
+                                                {loadingSelector === monitor.id
+                                                    ? 'Opening...'
+                                                    : 'Open Selector'}
                                             </button>
                                             <button
                                                 type="button"
@@ -386,35 +408,6 @@ export default function MonitorsIndex({
                                         </div>
                                     </div>
 
-                                    {sessions[monitor.id] && (
-                                        <div className="mt-3 rounded-md bg-slate-50 p-3 text-xs text-slate-700">
-                                            <p>
-                                                <strong>Expires:</strong>{' '}
-                                                {new Date(
-                                                    sessions[monitor.id]
-                                                        .expires_at,
-                                                ).toLocaleString()}
-                                            </p>
-                                            <p className="mt-1 break-all">
-                                                <strong>Bookmarklet:</strong>{' '}
-                                                {sessions[monitor.id].bookmarklet}
-                                            </p>
-                                            <a
-                                                href={sessions[monitor.id].loader_url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className={cn(
-                                                    buttonVariants({
-                                                        variant: 'outline',
-                                                        size: 'sm',
-                                                    }),
-                                                    'mt-2',
-                                                )}
-                                            >
-                                                Open Selector Script
-                                            </a>
-                                        </div>
-                                    )}
                                 </div>
                             ))}
                         </CardContent>
