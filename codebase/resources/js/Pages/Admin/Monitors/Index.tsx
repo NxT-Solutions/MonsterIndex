@@ -283,108 +283,153 @@ export default function MonitorsIndex({
                                     className="grid gap-3 md:grid-cols-3"
                                     onSubmit={submit}
                                 >
-                                    <select
-                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
-                                        value={form.data.monster_id}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'monster_id',
-                                                Number(event.target.value),
-                                            )
-                                        }
-                                    >
-                                        {monsters.map((monster) => (
-                                            <option
-                                                key={monster.id}
-                                                value={monster.id}
-                                                className="text-black"
-                                            >
-                                                {monster.name}
-                                            </option>
-                                        ))}
-                                    </select>
-
-                                    <select
-                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
-                                        value={form.data.site_id}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'site_id',
-                                                Number(event.target.value),
-                                            )
-                                        }
-                                    >
-                                        {sites.map((site) => (
-                                            <option key={site.id} value={site.id} className="text-black">
-                                                {site.name} ({site.domain})
-                                            </option>
-                                        ))}
-                                    </select>
-
-                                    <select
-                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
-                                        value={form.data.currency}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'currency',
-                                                event.target.value,
-                                            )
-                                        }
-                                    >
-                                        {currencyOptions.map((currency) => (
-                                            <option
-                                                key={currency.code}
-                                                value={currency.code}
-                                                className="text-black"
-                                            >
-                                                {currency.label}
-                                            </option>
-                                        ))}
-                                    </select>
-
-                                    <input
-                                        className="md:col-span-2 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                        placeholder={x('Product URL', 'Product-URL')}
-                                        value={form.data.product_url}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'product_url',
-                                                event.target.value,
-                                            )
-                                        }
-                                        required
-                                    />
-
-                                    <div className="flex gap-3">
-                                        <input
-                                            type="number"
-                                            min={15}
-                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                            placeholder={x(
-                                                'Interval minutes',
-                                                'Interval minuten',
-                                            )}
-                                            value={form.data.check_interval_minutes}
+                                    <div className="space-y-1.5">
+                                        <label
+                                            htmlFor="create-monitor-monster"
+                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                        >
+                                            {x('Monster', 'Monster')}
+                                        </label>
+                                        <select
+                                            id="create-monitor-monster"
+                                            className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
+                                            value={form.data.monster_id}
                                             onChange={(event) =>
                                                 form.setData(
-                                                    'check_interval_minutes',
+                                                    'monster_id',
                                                     Number(event.target.value),
+                                                )
+                                            }
+                                        >
+                                            {monsters.map((monster) => (
+                                                <option
+                                                    key={monster.id}
+                                                    value={monster.id}
+                                                    className="text-black"
+                                                >
+                                                    {monster.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label
+                                            htmlFor="create-monitor-store"
+                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                        >
+                                            {x('Store', 'Winkel')}
+                                        </label>
+                                        <select
+                                            id="create-monitor-store"
+                                            className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
+                                            value={form.data.site_id}
+                                            onChange={(event) =>
+                                                form.setData(
+                                                    'site_id',
+                                                    Number(event.target.value),
+                                                )
+                                            }
+                                        >
+                                            {sites.map((site) => (
+                                                <option key={site.id} value={site.id} className="text-black">
+                                                    {site.name} ({site.domain})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label
+                                            htmlFor="create-monitor-currency"
+                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                        >
+                                            {x('Currency', 'Valuta')}
+                                        </label>
+                                        <select
+                                            id="create-monitor-currency"
+                                            className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
+                                            value={form.data.currency}
+                                            onChange={(event) =>
+                                                form.setData(
+                                                    'currency',
+                                                    event.target.value,
+                                                )
+                                            }
+                                        >
+                                            {currencyOptions.map((currency) => (
+                                                <option
+                                                    key={currency.code}
+                                                    value={currency.code}
+                                                    className="text-black"
+                                                >
+                                                    {currency.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-1.5 md:col-span-2">
+                                        <label
+                                            htmlFor="create-monitor-product-url"
+                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                        >
+                                            {x('Product URL', 'Product-URL')}
+                                        </label>
+                                        <input
+                                            id="create-monitor-product-url"
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                            placeholder={x('Product URL', 'Product-URL')}
+                                            value={form.data.product_url}
+                                            onChange={(event) =>
+                                                form.setData(
+                                                    'product_url',
+                                                    event.target.value,
                                                 )
                                             }
                                             required
                                         />
-                                        <button
-                                            type="submit"
-                                            className={cn(
-                                                buttonVariants({
-                                                    variant: 'default',
-                                                }),
-                                                'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
-                                            )}
-                                            disabled={form.processing}
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label
+                                            htmlFor="create-monitor-interval"
+                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Create', 'Maken')}
-                                        </button>
+                                            {x('Interval (minutes)', 'Interval (minuten)')}
+                                        </label>
+                                        <div className="flex gap-3">
+                                            <input
+                                                id="create-monitor-interval"
+                                                type="number"
+                                                min={15}
+                                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                                placeholder={x(
+                                                    'Interval minutes',
+                                                    'Interval minuten',
+                                                )}
+                                                value={form.data.check_interval_minutes}
+                                                onChange={(event) =>
+                                                    form.setData(
+                                                        'check_interval_minutes',
+                                                        Number(event.target.value),
+                                                    )
+                                                }
+                                                required
+                                            />
+                                            <button
+                                                type="submit"
+                                                className={cn(
+                                                    buttonVariants({
+                                                        variant: 'default',
+                                                    }),
+                                                    'shrink-0 bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                                )}
+                                                disabled={form.processing}
+                                            >
+                                                {x('Create', 'Maken')}
+                                            </button>
+                                        </div>
                                     </div>
                                 </form>
                             </CardContent>
