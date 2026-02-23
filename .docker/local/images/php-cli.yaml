@@ -1,0 +1,7 @@
+---
+services:
+  php:
+    build:
+      context: ./php-cli
+      dockerfile: Dockerfile
+    restart: unless-stopped
