@@ -37,7 +37,7 @@ it('renders selector browser for valid admin token and monitor', function () {
             'url' => 'https://example.com/product/monster',
         ]))
         ->assertOk()
-        ->assertSee('MonsterIndex Selector Mode', escape: false)
+        ->assertSee('Guided Selector Setup', escape: false)
         ->assertSee('monsterindex-selector-toolbar', escape: false)
         ->assertSee('/bookmarklet/selector.js?', escape: false)
         ->assertSee('Monster Product');

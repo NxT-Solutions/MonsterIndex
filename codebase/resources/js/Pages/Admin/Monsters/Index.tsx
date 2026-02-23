@@ -88,11 +88,7 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
             const selectorBrowserUrl = new URL(response.data.selector_browser_url);
             selectorBrowserUrl.searchParams.set('url', record.product_url);
 
-            window.open(
-                selectorBrowserUrl.toString(),
-                '_blank',
-                'noopener,noreferrer',
-            );
+            window.location.assign(selectorBrowserUrl.toString());
         } catch {
             window.alert('Could not open selector browser. Try reloading the page.');
         } finally {
@@ -377,11 +373,11 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                                                         )
                                                                     }
                                                                 >
-                                                                    {loadingSelector ===
-                                                                    record.id
-                                                                        ? 'Opening...'
-                                                                        : 'Open Selector'}
-                                                                </button>
+                                                                        {loadingSelector ===
+                                                                        record.id
+                                                                            ? 'Opening...'
+                                                                            : 'Start Guided Selector'}
+                                                                    </button>
                                                                 <button
                                                                     type="button"
                                                                     className={buttonVariants(

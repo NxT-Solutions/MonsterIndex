@@ -71,6 +71,7 @@ class BookmarkletController extends Controller
         $selectorScriptUrl = route('bookmarklet.script', [
             'token' => $session->token,
             'source_url' => $targetUrl,
+            'return_url' => route('admin.monsters.index', absolute: true),
         ], absolute: true);
 
         $actionUrl = route('admin.monitors.selector-browser', ['monitor' => $monitor->id], absolute: true);
@@ -80,6 +81,7 @@ class BookmarkletController extends Controller
             currentUrl: $targetUrl,
             token: $session->token,
             actionUrl: $actionUrl,
+            returnUrl: route('admin.monsters.index', absolute: true),
             selectorScriptUrl: $selectorScriptUrl,
         );
 
@@ -160,12 +162,14 @@ HTML;
         string $currentUrl,
         string $token,
         string $actionUrl,
+        string $returnUrl,
         string $selectorScriptUrl,
     ): string {
         $escapedMonitorName = htmlspecialchars($monitorName, ENT_QUOTES, 'UTF-8');
         $escapedCurrentUrl = htmlspecialchars($currentUrl, ENT_QUOTES, 'UTF-8');
         $escapedToken = htmlspecialchars($token, ENT_QUOTES, 'UTF-8');
         $escapedActionUrl = htmlspecialchars($actionUrl, ENT_QUOTES, 'UTF-8');
+        $escapedReturnUrl = htmlspecialchars($returnUrl, ENT_QUOTES, 'UTF-8');
         $escapedSelectorScriptUrl = htmlspecialchars($selectorScriptUrl, ENT_QUOTES, 'UTF-8');
         $encodedCurrentUrl = json_encode($currentUrl);
         if (! is_string($encodedCurrentUrl)) {
@@ -175,21 +179,27 @@ HTML;
         $runtime = <<<HTML
 <style data-monsterindex-ignore="true">
   html { scroll-padding-top: 76px; }
-  #monsterindex-selector-toolbar { position: sticky; top: 0; z-index: 2147483646; background: #0f172a; color: #f8fafc; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-bottom: 2px solid #f97316; font: 13px/1.2 ui-sans-serif,system-ui,-apple-system,sans-serif; }
+  #monsterindex-selector-toolbar { position: sticky; top: 0; z-index: 2147483646; background: #0f172a; color: #f8fafc; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-bottom: 2px solid #f97316; font: 13px/1.3 ui-sans-serif,system-ui,-apple-system,sans-serif; }
   #monsterindex-selector-toolbar strong { color: #fb923c; }
+  #monsterindex-selector-toolbar .monsterindex-selector-meta { display: flex; flex-direction: column; gap: 2px; min-width: 260px; }
+  #monsterindex-selector-toolbar .monsterindex-selector-note { color: #cbd5e1; font-size: 12px; }
   #monsterindex-selector-toolbar form { display: flex; gap: 8px; align-items: center; flex: 1 1 460px; min-width: 260px; }
   #monsterindex-selector-toolbar input[type="url"] { flex: 1 1 auto; min-width: 220px; border: 1px solid #334155; border-radius: 6px; padding: 7px 9px; background: #0b1220; color: #f8fafc; }
-  #monsterindex-selector-toolbar button { border: 1px solid #334155; background: #1e293b; color: #f8fafc; border-radius: 6px; padding: 7px 10px; cursor: pointer; }
+  #monsterindex-selector-toolbar button, #monsterindex-selector-back { border: 1px solid #334155; background: #1e293b; color: #f8fafc; border-radius: 6px; padding: 7px 10px; cursor: pointer; text-decoration: none; }
   #monsterindex-selector-toolbar button:hover { background: #334155; }
+  #monsterindex-selector-back:hover { background: #334155; }
 </style>
 <div id="monsterindex-selector-toolbar" data-monsterindex-ignore="true">
-  <strong>MonsterIndex Selector Mode</strong>
-  <span>{$escapedMonitorName}</span>
+  <div class="monsterindex-selector-meta">
+    <strong>Guided Selector Setup: {$escapedMonitorName}</strong>
+    <span class="monsterindex-selector-note">Stay on this page while selecting. We keep navigation in selector mode until you save.</span>
+  </div>
   <form method="get" action="{$escapedActionUrl}">
     <input type="hidden" name="token" value="{$escapedToken}">
     <input type="url" name="url" value="{$escapedCurrentUrl}" placeholder="https://example.com/product-url" required>
     <button type="submit">Open URL</button>
   </form>
+  <a id="monsterindex-selector-back" href="{$escapedReturnUrl}" data-monsterindex-ignore="true">Back to Admin</a>
 </div>
 <script data-monsterindex-ignore="true" src="{$escapedSelectorScriptUrl}" defer></script>
 <script data-monsterindex-ignore="true">
@@ -214,6 +224,25 @@ HTML;
         // Ignore malformed links and allow normal page behavior.
       }
     }, true);
+
+    document.addEventListener('submit', (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement)) return;
+      if (form.closest('[data-monsterindex-ignore="true"]')) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      window.alert('Form submission is disabled in selector mode. Use the URL field in the top bar to navigate safely.');
+    }, true);
+
+    const backLink = document.getElementById('monsterindex-selector-back');
+    if (backLink) {
+      backLink.addEventListener('click', (event) => {
+        if (window.__monsterindex_selector_unsaved && !window.confirm('You still have unsaved selector changes. Leave anyway?')) {
+          event.preventDefault();
+        }
+      });
+    }
   })();
 </script>
 HTML;
