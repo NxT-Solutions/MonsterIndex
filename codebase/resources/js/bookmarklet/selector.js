@@ -21,6 +21,8 @@
     priceParts: [],
     shippingParts: [],
     quantityParts: [],
+    shippingManualValue: '',
+    quantityManualValue: '',
     shippingSkipped: false,
     submitting: false,
     done: false,
@@ -71,6 +73,7 @@
     '<button id="mi-add-shipping-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Add Shipping Part</button>',
     '<button id="mi-skip-shipping" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Skip Shipping</button>',
     '</div>',
+    '<input id="mi-shipping-manual" type="text" inputmode="decimal" placeholder="Or type shipping manually (example: 4.99)" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;color:#0f172a" />',
     '</div>',
     '<div style="display:grid;gap:6px">',
     '<div style="font-size:11px;font-weight:600;color:#64748b">Quantity setup (optional, for price per can)</div>',
@@ -78,6 +81,7 @@
     '<button id="mi-select-quantity-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Select Can Count</button>',
     '<button id="mi-add-quantity-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Add Count Part</button>',
     '</div>',
+    '<input id="mi-quantity-manual" type="number" min="1" step="1" placeholder="Or type can count manually (example: 12)" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;color:#0f172a" />',
     '</div>',
     '<div style="display:flex;gap:8px">',
     '<button id="mi-reset" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Restart</button>',
@@ -100,8 +104,10 @@
   const selectShippingMainBtn = panel.querySelector('#mi-select-shipping-main');
   const addShippingPartBtn = panel.querySelector('#mi-add-shipping-part');
   const skipShippingBtn = panel.querySelector('#mi-skip-shipping');
+  const shippingManualInput = panel.querySelector('#mi-shipping-manual');
   const selectQuantityMainBtn = panel.querySelector('#mi-select-quantity-main');
   const addQuantityPartBtn = panel.querySelector('#mi-add-quantity-part');
+  const quantityManualInput = panel.querySelector('#mi-quantity-manual');
   const resetBtn = panel.querySelector('#mi-reset');
   const saveBtn = panel.querySelector('#mi-save');
   const backBtn = panel.querySelector('#mi-back');
@@ -272,6 +278,18 @@
     return payload;
   };
 
+  const withManualValue = (selectorPayload, manualValue) => {
+    const normalizedManual = cleanText(manualValue);
+    if (normalizedManual === '') {
+      return selectorPayload;
+    }
+
+    return {
+      ...selectorPayload,
+      manual_value: normalizedManual,
+    };
+  };
+
   const previewParts = (parts, fallbackLabel) => {
     if (!Array.isArray(parts) || parts.length === 0) {
       return fallbackLabel;
@@ -336,16 +354,26 @@
     }
 
     if (shippingValueEl instanceof HTMLElement) {
+      const manualShipping = cleanText(state.shippingManualValue);
       shippingValueEl.textContent = state.shippingSkipped
         ? 'Skipped'
+        : manualShipping !== ''
+        ? `Manual: ${manualShipping}`
         : previewParts(state.shippingParts, 'Not selected (optional)');
       shippingValueEl.style.color =
-        state.shippingParts.length > 0 || state.shippingSkipped ? '#0f766e' : '#475569';
+        state.shippingParts.length > 0 || manualShipping !== '' || state.shippingSkipped
+          ? '#0f766e'
+          : '#475569';
     }
 
     if (quantityValueEl instanceof HTMLElement) {
-      quantityValueEl.textContent = previewParts(state.quantityParts, 'Not selected (optional)');
-      quantityValueEl.style.color = state.quantityParts.length > 0 ? '#0f766e' : '#475569';
+      const manualCount = cleanText(state.quantityManualValue);
+      quantityValueEl.textContent =
+        manualCount !== ''
+          ? `Manual: ${manualCount}`
+          : previewParts(state.quantityParts, 'Not selected (optional)');
+      quantityValueEl.style.color =
+        state.quantityParts.length > 0 || manualCount !== '' ? '#0f766e' : '#475569';
     }
 
     if (selectPriceMainBtn instanceof HTMLButtonElement) {
@@ -368,12 +396,20 @@
       skipShippingBtn.disabled = state.priceParts.length === 0 || state.submitting || state.done;
     }
 
+    if (shippingManualInput instanceof HTMLInputElement) {
+      shippingManualInput.disabled = state.priceParts.length === 0 || state.submitting || state.done || state.shippingSkipped;
+    }
+
     if (selectQuantityMainBtn instanceof HTMLButtonElement) {
       selectQuantityMainBtn.disabled = state.priceParts.length === 0 || state.submitting || state.done;
     }
 
     if (addQuantityPartBtn instanceof HTMLButtonElement) {
       addQuantityPartBtn.disabled = state.quantityParts.length === 0 || state.submitting || state.done;
+    }
+
+    if (quantityManualInput instanceof HTMLInputElement) {
+      quantityManualInput.disabled = state.priceParts.length === 0 || state.submitting || state.done;
     }
 
     if (resetBtn instanceof HTMLButtonElement) {
@@ -412,14 +448,25 @@
     updateUi();
     setStatus('Saving selectors and validating with a quick scrape...', 'info');
 
+    const shippingSelectorPayload = state.shippingSkipped
+      ? {}
+      : withManualValue(
+          selectorPayloadFromParts(state.shippingParts),
+          state.shippingManualValue,
+        );
+    const quantitySelectorPayload = withManualValue(
+      selectorPayloadFromParts(state.quantityParts),
+      state.quantityManualValue,
+    );
+
     const payload = {
       token,
       page_url: sourceUrl,
       page_title: document.title,
       selectors: {
         price: selectorPayloadFromParts(state.priceParts),
-        shipping: state.shippingSkipped ? {} : selectorPayloadFromParts(state.shippingParts),
-        quantity: selectorPayloadFromParts(state.quantityParts),
+        shipping: shippingSelectorPayload,
+        quantity: quantitySelectorPayload,
       },
     };
 
@@ -502,9 +549,30 @@
       }
 
       state.shippingParts = [];
+      state.shippingManualValue = '';
+      if (shippingManualInput instanceof HTMLInputElement) {
+        shippingManualInput.value = '';
+      }
       state.shippingSkipped = true;
       state.mode = 'idle';
       setStatus('Shipping skipped. You can save now.', 'info');
+      updateUi();
+    });
+  }
+
+  if (shippingManualInput instanceof HTMLInputElement) {
+    shippingManualInput.addEventListener('input', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) {
+        return;
+      }
+
+      state.shippingManualValue = cleanText(target.value);
+      if (state.shippingManualValue !== '') {
+        state.shippingSkipped = false;
+      }
+
+      window.__monsterindex_selector_unsaved = true;
       updateUi();
     });
   }
@@ -521,11 +589,32 @@
     });
   }
 
+  if (quantityManualInput instanceof HTMLInputElement) {
+    quantityManualInput.addEventListener('input', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) {
+        return;
+      }
+
+      state.quantityManualValue = cleanText(target.value);
+      window.__monsterindex_selector_unsaved = true;
+      updateUi();
+    });
+  }
+
   if (resetBtn instanceof HTMLButtonElement) {
     resetBtn.addEventListener('click', () => {
       state.priceParts = [];
       state.shippingParts = [];
       state.quantityParts = [];
+      state.shippingManualValue = '';
+      state.quantityManualValue = '';
+      if (shippingManualInput instanceof HTMLInputElement) {
+        shippingManualInput.value = '';
+      }
+      if (quantityManualInput instanceof HTMLInputElement) {
+        quantityManualInput.value = '';
+      }
       state.shippingSkipped = false;
       state.done = false;
       state.mode = 'select-price-main';
@@ -608,6 +697,10 @@
 
     if (state.mode === 'select-shipping-main') {
       state.shippingParts = [selector];
+      state.shippingManualValue = '';
+      if (shippingManualInput instanceof HTMLInputElement) {
+        shippingManualInput.value = '';
+      }
       state.shippingSkipped = false;
       state.mode = 'idle';
       setStatus('Main shipping selected.', 'success');
@@ -626,6 +719,10 @@
 
     if (state.mode === 'select-quantity-main') {
       state.quantityParts = [selector];
+      state.quantityManualValue = '';
+      if (quantityManualInput instanceof HTMLInputElement) {
+        quantityManualInput.value = '';
+      }
       state.mode = 'idle';
       setStatus('Can count selected.', 'success');
       updateUi();

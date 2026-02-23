@@ -37,6 +37,7 @@ class BookmarkletCaptureController extends Controller
             'selectors.shipping.xpath' => ['nullable', 'string', 'max:2000'],
             'selectors.shipping.sample_text' => ['nullable', 'string', 'max:1000'],
             'selectors.shipping.join_with' => ['nullable', 'string', 'max:10'],
+            'selectors.shipping.manual_value' => ['nullable', 'string', 'max:50'],
             'selectors.shipping.parts' => ['nullable', 'array', 'max:6'],
             'selectors.shipping.parts.*.css' => ['nullable', 'string', 'max:2000'],
             'selectors.shipping.parts.*.xpath' => ['nullable', 'string', 'max:2000'],
@@ -45,6 +46,7 @@ class BookmarkletCaptureController extends Controller
             'selectors.quantity.xpath' => ['nullable', 'string', 'max:2000'],
             'selectors.quantity.sample_text' => ['nullable', 'string', 'max:1000'],
             'selectors.quantity.join_with' => ['nullable', 'string', 'max:10'],
+            'selectors.quantity.manual_value' => ['nullable', 'string', 'max:50'],
             'selectors.quantity.parts' => ['nullable', 'array', 'max:6'],
             'selectors.quantity.parts.*.css' => ['nullable', 'string', 'max:2000'],
             'selectors.quantity.parts.*.xpath' => ['nullable', 'string', 'max:2000'],
@@ -135,11 +137,13 @@ class BookmarkletCaptureController extends Controller
                     'css' => $request->query('shipping_css'),
                     'xpath' => $request->query('shipping_xpath'),
                     'sample_text' => $request->query('shipping_sample'),
+                    'manual_value' => $request->query('shipping_manual'),
                 ],
                 'quantity' => [
                     'css' => $request->query('quantity_css'),
                     'xpath' => $request->query('quantity_xpath'),
                     'sample_text' => $request->query('quantity_sample'),
+                    'manual_value' => $request->query('quantity_manual'),
                 ],
             ],
         ];
@@ -185,6 +189,13 @@ class BookmarkletCaptureController extends Controller
 
         if (isset($selector['join_with']) && is_string($selector['join_with'])) {
             $normalized['join_with'] = $selector['join_with'];
+        }
+
+        if (isset($selector['manual_value']) && is_string($selector['manual_value'])) {
+            $manualValue = trim($selector['manual_value']);
+            if ($manualValue !== '') {
+                $normalized['manual_value'] = $manualValue;
+            }
         }
 
         $parts = $selector['parts'] ?? null;

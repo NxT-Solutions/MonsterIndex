@@ -36,33 +36,44 @@ class ManualSelectorExtractor
         $shippingText = is_array($shippingSelector)
             ? $this->selectorTextExtractor->extract($html, $shippingSelector)
             : null;
+        $manualShippingValue = is_array($shippingSelector)
+            ? $this->manualValue($shippingSelector)
+            : null;
 
         $shippingParsed = $this->moneyParser->parse($shippingText, $priceParsed['currency']);
+        $manualShippingParsed = $this->moneyParser->parse($manualShippingValue, $priceParsed['currency']);
+        $shippingCents = $manualShippingParsed['cents'] ?? $shippingParsed['cents'];
+        $shippingRaw = $manualShippingParsed['cents'] !== null ? $manualShippingValue : $shippingText;
 
-        $hasShippingSelector = is_array($shippingSelector)
-            && $this->hasSelector($shippingSelector);
+        $hasShippingInput = (is_array($shippingSelector) && $this->hasSelector($shippingSelector))
+            || $manualShippingValue !== null;
 
-        $status = ($hasShippingSelector && $shippingParsed['cents'] === null)
+        $status = ($hasShippingInput && $shippingCents === null)
             ? 'partial'
             : 'ok';
 
-        $effectiveTotal = $priceParsed['cents'] + ($shippingParsed['cents'] ?? 0);
+        $effectiveTotal = $priceParsed['cents'] + ($shippingCents ?? 0);
         $quantitySelector = $selectorConfig['quantity'] ?? null;
         $quantityText = is_array($quantitySelector)
             ? $this->selectorTextExtractor->extract($html, $quantitySelector)
             : null;
-        $canCount = $this->parseCanCount($quantityText);
+        $manualCanCountValue = is_array($quantitySelector)
+            ? $this->manualValue($quantitySelector)
+            : null;
+        $manualCanCount = $this->parseCanCount($manualCanCountValue);
+        $canCount = $manualCanCount ?? $this->parseCanCount($quantityText);
+        $quantityRaw = $manualCanCount !== null ? $manualCanCountValue : $quantityText;
         $pricePerCanCents = ($canCount !== null && $canCount > 0)
             ? (int) round($effectiveTotal / $canCount)
             : null;
 
         return new ExtractionResult(
             priceCents: $priceParsed['cents'],
-            shippingCents: $shippingParsed['cents'],
+            shippingCents: $shippingCents,
             effectiveTotalCents: $effectiveTotal,
             currency: $priceParsed['currency'],
             status: $status,
-            rawText: trim(implode(' | ', array_filter([$priceText, $shippingText, $quantityText]))),
+            rawText: trim(implode(' | ', array_filter([$priceText, $shippingRaw, $quantityRaw]))),
             canCount: $canCount,
             pricePerCanCents: $pricePerCanCents,
         );
@@ -98,6 +109,20 @@ class ManualSelectorExtractor
         }
 
         return false;
+    }
+
+    /**
+     * @param  array<string, mixed>  $selector
+     */
+    private function manualValue(array $selector): ?string
+    {
+        if (! is_string($selector['manual_value'] ?? null)) {
+            return null;
+        }
+
+        $value = trim($selector['manual_value']);
+
+        return $value === '' ? null : $value;
     }
 
     private function parseCanCount(?string $value): ?int

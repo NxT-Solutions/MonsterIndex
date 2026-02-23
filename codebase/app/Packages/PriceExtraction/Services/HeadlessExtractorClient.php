@@ -48,6 +48,14 @@ class HeadlessExtractorClient
         $priceText = $output['price_text'] ?? null;
         $shippingText = $output['shipping_text'] ?? null;
         $quantityText = $output['quantity_text'] ?? null;
+        $shippingSelector = is_array($selectors['shipping'] ?? null)
+            ? $selectors['shipping']
+            : [];
+        $quantitySelector = is_array($selectors['quantity'] ?? null)
+            ? $selectors['quantity']
+            : [];
+        $manualShippingValue = $this->manualValue($shippingSelector);
+        $manualQuantityValue = $this->manualValue($quantitySelector);
 
         $price = $this->moneyParser->parse(is_string($priceText) ? $priceText : null, $defaultCurrency);
         if ($price['cents'] === null) {
@@ -59,28 +67,85 @@ class HeadlessExtractorClient
         }
 
         $shipping = $this->moneyParser->parse(is_string($shippingText) ? $shippingText : null, $price['currency']);
-        $canCount = $this->parseCanCount(is_string($quantityText) ? $quantityText : null);
-        $effectiveTotal = $price['cents'] + ($shipping['cents'] ?? 0);
+        $manualShipping = $this->moneyParser->parse($manualShippingValue, $price['currency']);
+        $shippingCents = $manualShipping['cents'] ?? $shipping['cents'];
+        $shippingRaw = $manualShipping['cents'] !== null
+            ? $manualShippingValue
+            : (is_string($shippingText) ? $shippingText : null);
+        $manualCanCount = $this->parseCanCount($manualQuantityValue);
+        $canCount = $manualCanCount ?? $this->parseCanCount(is_string($quantityText) ? $quantityText : null);
+        $quantityRaw = $manualCanCount !== null
+            ? $manualQuantityValue
+            : (is_string($quantityText) ? $quantityText : null);
+        $effectiveTotal = $price['cents'] + ($shippingCents ?? 0);
         $pricePerCanCents = ($canCount !== null && $canCount > 0)
             ? (int) round($effectiveTotal / $canCount)
             : null;
+        $hasShippingInput = $this->hasSelector($shippingSelector) || $manualShippingValue !== null;
+        $status = ($hasShippingInput && $shippingCents === null) ? 'partial' : 'ok';
 
         return new ExtractionResult(
             priceCents: $price['cents'],
-            shippingCents: $shipping['cents'],
+            shippingCents: $shippingCents,
             effectiveTotalCents: $effectiveTotal,
             currency: $price['currency'],
-            status: $shippingText && $shipping['cents'] === null ? 'partial' : 'ok',
+            status: $status,
             rawText: trim(implode(' | ', array_filter([
                 is_string($priceText) ? $priceText : null,
-                is_string($shippingText) ? $shippingText : null,
-                is_string($quantityText) ? $quantityText : null,
+                $shippingRaw,
+                $quantityRaw,
             ]))),
             availability: is_string($output['availability'] ?? null) ? $output['availability'] : null,
             usedHeadlessFallback: true,
             canCount: $canCount,
             pricePerCanCents: $pricePerCanCents,
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $selector
+     */
+    private function hasSelector(array $selector): bool
+    {
+        if (is_string($selector['css'] ?? null) && trim($selector['css']) !== '') {
+            return true;
+        }
+
+        if (is_string($selector['xpath'] ?? null) && trim($selector['xpath']) !== '') {
+            return true;
+        }
+
+        $parts = $selector['parts'] ?? null;
+        if (! is_array($parts)) {
+            return false;
+        }
+
+        foreach ($parts as $part) {
+            if (! is_array($part)) {
+                continue;
+            }
+
+            if ((is_string($part['css'] ?? null) && trim($part['css']) !== '')
+                || (is_string($part['xpath'] ?? null) && trim($part['xpath']) !== '')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array<string, mixed>  $selector
+     */
+    private function manualValue(array $selector): ?string
+    {
+        if (! is_string($selector['manual_value'] ?? null)) {
+            return null;
+        }
+
+        $value = trim($selector['manual_value']);
+
+        return $value === '' ? null : $value;
     }
 
     private function parseCanCount(?string $value): ?int

@@ -68,3 +68,43 @@ HTML;
         ->and($result->canCount)->toBe(12)
         ->and($result->pricePerCanCents)->toBe(275);
 });
+
+it('uses manual shipping and manual can count when selector text is not parseable', function () {
+    $extractor = new ManualSelectorExtractor(
+        new SelectorTextExtractor,
+        new MoneyParser,
+    );
+
+    $html = <<<'HTML'
+<html>
+  <body>
+    <span class="price">$24.00</span>
+    <div class="shipping-note">Shipping shown after checkout</div>
+    <div class="pack-label">Case size</div>
+  </body>
+</html>
+HTML;
+
+    $result = $extractor->extract($html, [
+        'price' => [
+            'css' => '.price',
+            'sample_text' => '$24.00',
+        ],
+        'shipping' => [
+            'css' => '.shipping-note',
+            'sample_text' => 'Shipping shown after checkout',
+            'manual_value' => '4.50',
+        ],
+        'quantity' => [
+            'css' => '.pack-label',
+            'sample_text' => 'Case size',
+            'manual_value' => '12',
+        ],
+    ]);
+
+    expect($result->status)->toBe('ok')
+        ->and($result->shippingCents)->toBe(450)
+        ->and($result->effectiveTotalCents)->toBe(2850)
+        ->and($result->canCount)->toBe(12)
+        ->and($result->pricePerCanCents)->toBe(238);
+});
