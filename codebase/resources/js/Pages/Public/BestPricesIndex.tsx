@@ -16,6 +16,8 @@ type BestPriceRow = {
     currency: string;
     price_cents: number | null;
     shipping_cents: number | null;
+    can_count: number | null;
+    price_per_can_cents: number | null;
     effective_total_cents: number;
     effective_total: string;
     checked_at: string | null;
@@ -154,6 +156,18 @@ export default function BestPricesIndex({
                                                   row.currency,
                                               )
                                             : 'Unknown'}
+                                    </p>
+                                    <p>
+                                        <strong>Per can:</strong>{' '}
+                                        {row.price_per_can_cents !== null
+                                            ? formatMoney(
+                                                  row.price_per_can_cents,
+                                                  row.currency,
+                                              )
+                                            : 'Unknown'}
+                                        {row.can_count !== null
+                                            ? ` (${row.can_count} cans)`
+                                            : ''}
                                     </p>
                                     <p>
                                         <strong>Status:</strong> {row.status ?? 'N/A'}

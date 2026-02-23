@@ -27,6 +27,8 @@ it('returns public best prices feed', function () {
         'effective_total_cents' => 1899,
         'price_cents' => 1599,
         'shipping_cents' => 300,
+        'can_count' => 12,
+        'price_per_can_cents' => 158,
     ]);
 
     BestPrice::query()->create([
@@ -40,5 +42,7 @@ it('returns public best prices feed', function () {
     $this->getJson(route('api.public.best-prices'))
         ->assertOk()
         ->assertJsonPath('data.0.monster.slug', 'monster-public-feed')
-        ->assertJsonPath('data.0.effective_total_cents', 1899);
+        ->assertJsonPath('data.0.effective_total_cents', 1899)
+        ->assertJsonPath('data.0.can_count', 12)
+        ->assertJsonPath('data.0.price_per_can_cents', 158);
 });

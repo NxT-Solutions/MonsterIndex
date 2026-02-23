@@ -25,6 +25,8 @@ class MonsterController extends Controller
                     'price_cents' => $snapshot->price_cents,
                     'shipping_cents' => $snapshot->shipping_cents,
                     'effective_total_cents' => $snapshot->effective_total_cents,
+                    'can_count' => $snapshot->can_count,
+                    'price_per_can_cents' => $snapshot->price_per_can_cents,
                     'currency' => $snapshot->currency,
                     'status' => $snapshot->status,
                     'error_code' => $snapshot->error_code,

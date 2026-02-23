@@ -8,6 +8,8 @@ type Snapshot = {
     price_cents: number | null;
     shipping_cents: number | null;
     effective_total_cents: number | null;
+    can_count: number | null;
+    price_per_can_cents: number | null;
     currency: string;
     status: string;
     error_code: string | null;
@@ -60,7 +62,7 @@ export default function MonsterShow({
                             <CardTitle>Snapshot History</CardTitle>
                         </CardHeader>
                         <CardContent className="overflow-x-auto">
-                            <table className="w-full min-w-[800px] text-left text-sm">
+                            <table className="w-full min-w-[960px] text-left text-sm">
                                 <thead>
                                     <tr className="border-b text-xs uppercase tracking-wide text-slate-500">
                                         <th className="px-3 py-2">Checked</th>
@@ -68,6 +70,7 @@ export default function MonsterShow({
                                         <th className="px-3 py-2">Price</th>
                                         <th className="px-3 py-2">Shipping</th>
                                         <th className="px-3 py-2">Total</th>
+                                        <th className="px-3 py-2">Per Can</th>
                                         <th className="px-3 py-2">Status</th>
                                         <th className="px-3 py-2">Product URL</th>
                                     </tr>
@@ -112,6 +115,18 @@ export default function MonsterShow({
                                                           snapshot.currency,
                                                       )
                                                     : 'N/A'}
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                {snapshot.price_per_can_cents !==
+                                                null
+                                                    ? formatMoney(
+                                                          snapshot.price_per_can_cents,
+                                                          snapshot.currency,
+                                                      )
+                                                    : 'Unknown'}
+                                                {snapshot.can_count !== null
+                                                    ? ` (${snapshot.can_count} cans)`
+                                                    : ''}
                                             </td>
                                             <td className="px-3 py-2">
                                                 {snapshot.status}

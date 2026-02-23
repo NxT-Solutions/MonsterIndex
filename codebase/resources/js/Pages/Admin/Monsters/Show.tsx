@@ -32,6 +32,8 @@ type MonitorRecord = {
     latest_snapshot?: {
         checked_at: string | null;
         effective_total_cents: number | null;
+        can_count: number | null;
+        price_per_can_cents: number | null;
         currency: string;
         status: string;
     } | null;
@@ -150,7 +152,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                 </button>
                             </form>
                             <p className="mt-2 text-xs text-slate-500">
-                                After adding the URL, click "Start Guided Selector" to pick price/shipping elements visually.
+                                After adding the URL, click "Start Guided Selector" to pick price, shipping, and can-count elements visually.
                             </p>
                         </CardContent>
                     </Card>
@@ -328,5 +330,11 @@ function latestSnapshotLabel(record: MonitorRecord): string {
         return latest.status;
     }
 
-    return `${latest.currency} ${(latest.effective_total_cents / 100).toFixed(2)} (${latest.status})`;
+    const total = `${latest.currency} ${(latest.effective_total_cents / 100).toFixed(2)}`;
+    const perCan =
+        latest.price_per_can_cents !== null
+            ? ` | per can ${latest.currency} ${(latest.price_per_can_cents / 100).toFixed(2)}${latest.can_count !== null ? ` (${latest.can_count} cans)` : ''}`
+            : '';
+
+    return `${total}${perCan} (${latest.status})`;
 }

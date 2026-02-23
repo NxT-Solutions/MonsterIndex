@@ -15,7 +15,7 @@ class HomeController extends Controller
         $bestPrices = BestPrice::query()
             ->with([
                 'monster:id,name,slug,size_label',
-                'snapshot:id,monitor_id,checked_at,price_cents,shipping_cents,effective_total_cents,currency,status',
+                'snapshot:id,monitor_id,checked_at,price_cents,shipping_cents,effective_total_cents,can_count,price_per_can_cents,currency,status',
                 'snapshot.monitor:id,site_id',
                 'snapshot.monitor.site:id,name,domain',
             ])
@@ -37,6 +37,8 @@ class HomeController extends Controller
                     'currency' => $bestPrice->currency,
                     'price_cents' => $snapshot?->price_cents,
                     'shipping_cents' => $snapshot?->shipping_cents,
+                    'can_count' => $snapshot?->can_count,
+                    'price_per_can_cents' => $snapshot?->price_per_can_cents,
                     'effective_total_cents' => $bestPrice->effective_total_cents,
                     'effective_total' => $this->formatMoney($bestPrice->effective_total_cents, $bestPrice->currency),
                     'checked_at' => $snapshot?->checked_at?->toIso8601String(),
