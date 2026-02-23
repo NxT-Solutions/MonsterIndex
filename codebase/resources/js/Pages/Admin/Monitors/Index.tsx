@@ -1,10 +1,13 @@
+import BarMeter from '@/Components/admin/BarMeter';
+import KpiCard from '@/Components/admin/KpiCard';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 
 type MonitorRow = {
     id: number;
@@ -72,6 +75,44 @@ export default function MonitorsIndex({
 
     const [loadingRun, setLoadingRun] = useState<number | null>(null);
     const [loadingSelector, setLoadingSelector] = useState<number | null>(null);
+
+    const stats = useMemo(() => {
+        const active = monitors.filter((monitor) => monitor.active).length;
+        const configured = monitors.filter((monitor) =>
+            hasPriceSelectorConfig(monitor.selector_config),
+        ).length;
+        const failedLast = monitors.filter(
+            (monitor) => monitor.latest_snapshot?.status === 'failed',
+        ).length;
+
+        return {
+            total: monitors.length,
+            active,
+            inactive: monitors.length - active,
+            configured,
+            failedLast,
+        };
+    }, [monitors]);
+
+    const barRows = useMemo(() => {
+        return [
+            {
+                id: 'configured',
+                label: x('Selector configured', 'Selector geconfigureerd'),
+                value: stats.configured,
+            },
+            {
+                id: 'active',
+                label: x('Active monitors', 'Actieve monitoren'),
+                value: stats.active,
+            },
+            {
+                id: 'failed',
+                label: x('Last run failed', 'Laatste run mislukt'),
+                value: stats.failedLast,
+            },
+        ];
+    }, [stats, x]);
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -183,148 +224,202 @@ export default function MonitorsIndex({
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-slate-800">
-                    {x('Admin: Monitors', 'Admin: Monitoren')}
-                </h2>
+                <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
+                        {x('Automation', 'Automatisering')}
+                    </p>
+                    <h2 className="mt-1 font-display text-2xl font-semibold text-white">
+                        {x('Monitors', 'Monitoren')}
+                    </h2>
+                </div>
             }
         >
             <Head title={x('Admin Monitors', 'Admin Monitoren')} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{x('Create Monitor', 'Monitor Maken')}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <form
-                                className="grid gap-3 md:grid-cols-3"
-                                onSubmit={submit}
-                            >
-                                <select
-                                    className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    value={form.data.monster_id}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'monster_id',
-                                            Number(event.target.value),
-                                        )
-                                    }
+                    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                        <KpiCard
+                            label={x('Total Monitors', 'Totaal Monitoren')}
+                            value={stats.total}
+                            accent="lime"
+                        />
+                        <KpiCard
+                            label={x('Active', 'Actief')}
+                            value={stats.active}
+                            accent="emerald"
+                        />
+                        <KpiCard
+                            label={x('Inactive', 'Inactief')}
+                            value={stats.inactive}
+                            accent="orange"
+                        />
+                        <KpiCard
+                            label={x('Selector Ready', 'Selector Klaar')}
+                            value={stats.configured}
+                            accent="cyan"
+                        />
+                        <KpiCard
+                            label={x('Failed Last Run', 'Mislukte Laatste Run')}
+                            value={stats.failedLast}
+                            accent="orange"
+                        />
+                    </section>
+
+                    <section className="grid gap-4 xl:grid-cols-[1.45fr_1fr]">
+                        <Card className="border-white/10 bg-[color:var(--landing-surface)]">
+                            <CardHeader>
+                                <CardTitle className="font-display text-lg text-white">
+                                    {x('Create Monitor', 'Monitor Maken')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <form
+                                    className="grid gap-3 md:grid-cols-3"
+                                    onSubmit={submit}
                                 >
-                                    {monsters.map((monster) => (
-                                        <option
-                                            key={monster.id}
-                                            value={monster.id}
-                                        >
-                                            {monster.name}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <select
-                                    className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    value={form.data.site_id}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'site_id',
-                                            Number(event.target.value),
-                                        )
-                                    }
-                                >
-                                    {sites.map((site) => (
-                                        <option key={site.id} value={site.id}>
-                                            {site.name} ({site.domain})
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <input
-                                    className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder={x('Currency', 'Valuta')}
-                                    value={form.data.currency}
-                                    onChange={(event) =>
-                                        form.setData('currency', event.target.value)
-                                    }
-                                    required
-                                />
-
-                                <input
-                                    className="md:col-span-2 rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder={x('Product URL', 'Product-URL')}
-                                    value={form.data.product_url}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'product_url',
-                                            event.target.value,
-                                        )
-                                    }
-                                    required
-                                />
-
-                                <div className="flex gap-3">
-                                    <input
-                                        type="number"
-                                        min={15}
-                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                        placeholder={x(
-                                            'Interval minutes',
-                                            'Interval minuten',
-                                        )}
-                                        value={form.data.check_interval_minutes}
+                                    <select
+                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
+                                        value={form.data.monster_id}
                                         onChange={(event) =>
                                             form.setData(
-                                                'check_interval_minutes',
+                                                'monster_id',
                                                 Number(event.target.value),
+                                            )
+                                        }
+                                    >
+                                        {monsters.map((monster) => (
+                                            <option
+                                                key={monster.id}
+                                                value={monster.id}
+                                                className="text-black"
+                                            >
+                                                {monster.name}
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                    <select
+                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
+                                        value={form.data.site_id}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'site_id',
+                                                Number(event.target.value),
+                                            )
+                                        }
+                                    >
+                                        {sites.map((site) => (
+                                            <option key={site.id} value={site.id} className="text-black">
+                                                {site.name} ({site.domain})
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                    <input
+                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                        placeholder={x('Currency', 'Valuta')}
+                                        value={form.data.currency}
+                                        onChange={(event) =>
+                                            form.setData('currency', event.target.value)
+                                        }
+                                        required
+                                    />
+
+                                    <input
+                                        className="md:col-span-2 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                        placeholder={x('Product URL', 'Product-URL')}
+                                        value={form.data.product_url}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'product_url',
+                                                event.target.value,
                                             )
                                         }
                                         required
                                     />
-                                    <button
-                                        type="submit"
-                                        className={buttonVariants({
-                                            variant: 'default',
-                                        })}
-                                        disabled={form.processing}
-                                    >
-                                        {x('Create', 'Maken')}
-                                    </button>
-                                </div>
-                            </form>
-                        </CardContent>
-                    </Card>
 
-                    <Card>
+                                    <div className="flex gap-3">
+                                        <input
+                                            type="number"
+                                            min={15}
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                            placeholder={x(
+                                                'Interval minutes',
+                                                'Interval minuten',
+                                            )}
+                                            value={form.data.check_interval_minutes}
+                                            onChange={(event) =>
+                                                form.setData(
+                                                    'check_interval_minutes',
+                                                    Number(event.target.value),
+                                                )
+                                            }
+                                            required
+                                        />
+                                        <button
+                                            type="submit"
+                                            className={cn(
+                                                buttonVariants({
+                                                    variant: 'default',
+                                                }),
+                                                'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                            )}
+                                            disabled={form.processing}
+                                        >
+                                            {x('Create', 'Maken')}
+                                        </button>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-white/10 bg-[color:var(--landing-surface)]">
+                            <CardHeader>
+                                <CardTitle className="font-display text-lg text-white">
+                                    {x('Monitor Health', 'Monitorgezondheid')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <BarMeter
+                                    rows={barRows}
+                                    emptyLabel={x(
+                                        'No monitor stats yet.',
+                                        'Nog geen monitorstatistieken.',
+                                    )}
+                                />
+                            </CardContent>
+                        </Card>
+                    </section>
+
+                    <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader>
-                            <CardTitle>{x('Monitors', 'Monitoren')}</CardTitle>
+                            <CardTitle className="font-display text-lg text-white">
+                                {x('Monitor List', 'Monitorlijst')}
+                            </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {monitors.length === 0 && (
-                                <p className="text-sm text-slate-600">
+                                <p className="text-sm text-white/65">
                                     {x('No monitors yet.', 'Nog geen monitoren.')}
                                 </p>
                             )}
 
                             {monitors.map((monitor) => (
-                                <div
+                                <article
                                     key={monitor.id}
-                                    className="rounded-lg border border-slate-200 p-4"
+                                    className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4"
                                 >
                                     <div className="flex flex-wrap items-start justify-between gap-3">
-                                        <div className="space-y-1 text-sm text-slate-700">
-                                            <p>
-                                                <strong>
-                                                    {monitor.monster.name}
-                                                </strong>{' '}
-                                                @ {monitor.site.name}
+                                        <div className="space-y-1 text-sm text-white/75">
+                                            <p className="font-semibold text-white">
+                                                {monitor.monster.name} @ {monitor.site.name}
                                             </p>
-                                            <p>{monitor.product_url}</p>
+                                            <p className="break-all text-white/65">{monitor.product_url}</p>
                                             <p>
                                                 {x('Interval:', 'Interval:')}{' '}
-                                                {
-                                                    monitor.check_interval_minutes
-                                                }
-                                                m • {x('Currency:', 'Valuta:')}{' '}
-                                                {monitor.currency} •{' '}
+                                                {monitor.check_interval_minutes}m •{' '}
+                                                {x('Currency:', 'Valuta:')} {monitor.currency} •{' '}
                                                 {x('Active:', 'Actief:')}{' '}
                                                 {monitor.active
                                                     ? x('Yes', 'Ja')
@@ -335,9 +430,7 @@ export default function MonitorsIndex({
                                                 {monitor.next_check_at
                                                     ? new Date(
                                                           monitor.next_check_at,
-                                                      ).toLocaleString(
-                                                          dateLocale,
-                                                      )
+                                                      ).toLocaleString(dateLocale)
                                                     : x('N/A', 'N/B')}
                                             </p>
                                             {monitor.latest_snapshot && (
@@ -360,22 +453,26 @@ export default function MonitorsIndex({
                                         <div className="flex flex-wrap gap-2">
                                             <button
                                                 type="button"
-                                                className={buttonVariants({
-                                                    variant: 'outline',
-                                                    size: 'sm',
-                                                })}
-                                                onClick={() =>
-                                                    editMonitor(monitor)
-                                                }
+                                                className={cn(
+                                                    buttonVariants({
+                                                        variant: 'outline',
+                                                        size: 'sm',
+                                                    }),
+                                                    'border-white/20 bg-transparent text-white hover:bg-white/10',
+                                                )}
+                                                onClick={() => editMonitor(monitor)}
                                             >
                                                 {x('Edit', 'Bewerken')}
                                             </button>
                                             <button
                                                 type="button"
-                                                className={buttonVariants({
-                                                    variant: 'secondary',
-                                                    size: 'sm',
-                                                })}
+                                                className={cn(
+                                                    buttonVariants({
+                                                        variant: 'secondary',
+                                                        size: 'sm',
+                                                    }),
+                                                    'border border-white/15 bg-white/5 text-white hover:bg-white/10',
+                                                )}
                                                 onClick={() =>
                                                     toggleMonitor(monitor)
                                                 }
@@ -386,26 +483,30 @@ export default function MonitorsIndex({
                                             </button>
                                             <button
                                                 type="button"
-                                                className={buttonVariants({
-                                                    variant: 'default',
-                                                    size: 'sm',
-                                                })}
-                                                disabled={
-                                                    loadingRun === monitor.id
-                                                }
+                                                className={cn(
+                                                    buttonVariants({
+                                                        variant: 'default',
+                                                        size: 'sm',
+                                                    }),
+                                                    'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                                )}
+                                                disabled={loadingRun === monitor.id}
                                                 onClick={() => runNow(monitor)}
                                             >
-                                                {x('Run Now', 'Nu Draaien')}
+                                                {loadingRun === monitor.id
+                                                    ? x('Running...', 'Draait...')
+                                                    : x('Run Now', 'Nu Draaien')}
                                             </button>
                                             <button
                                                 type="button"
-                                                className={buttonVariants({
-                                                    variant: 'outline',
-                                                    size: 'sm',
-                                                })}
-                                                disabled={
-                                                    loadingSelector === monitor.id
-                                                }
+                                                className={cn(
+                                                    buttonVariants({
+                                                        variant: 'outline',
+                                                        size: 'sm',
+                                                    }),
+                                                    'border-white/20 bg-transparent text-white hover:bg-white/10',
+                                                )}
+                                                disabled={loadingSelector === monitor.id}
                                                 onClick={() =>
                                                     openSelectorBrowser(monitor)
                                                 }
@@ -419,10 +520,13 @@ export default function MonitorsIndex({
                                             </button>
                                             <button
                                                 type="button"
-                                                className={buttonVariants({
-                                                    variant: 'secondary',
-                                                    size: 'sm',
-                                                })}
+                                                className={cn(
+                                                    buttonVariants({
+                                                        variant: 'secondary',
+                                                        size: 'sm',
+                                                    }),
+                                                    'border border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20',
+                                                )}
                                                 onClick={() =>
                                                     router.delete(
                                                         route(
@@ -436,13 +540,34 @@ export default function MonitorsIndex({
                                             </button>
                                         </div>
                                     </div>
-
-                                </div>
+                                </article>
                             ))}
                         </CardContent>
                     </Card>
                 </div>
             </div>
         </AuthenticatedLayout>
+    );
+}
+
+function hasPriceSelectorConfig(selectorConfig: Record<string, unknown> | null): boolean {
+    if (!selectorConfig) {
+        return false;
+    }
+
+    const price = selectorConfig.price as
+        | {
+              css?: string;
+              xpath?: string;
+              parts?: Array<{ css?: string; xpath?: string }>;
+          }
+        | undefined;
+
+    if ((price?.css ?? '').trim() || (price?.xpath ?? '').trim()) {
+        return true;
+    }
+
+    return (price?.parts ?? []).some(
+        (part) => (part.css ?? '').trim() !== '' || (part.xpath ?? '').trim() !== '',
     );
 }

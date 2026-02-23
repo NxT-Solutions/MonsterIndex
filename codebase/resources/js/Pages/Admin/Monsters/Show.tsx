@@ -1,3 +1,5 @@
+import BarMeter from '@/Components/admin/BarMeter';
+import KpiCard from '@/Components/admin/KpiCard';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
@@ -76,6 +78,50 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
         () => new Set(runningMonitorIds),
         [runningMonitorIds],
     );
+
+    const stats = useMemo(() => {
+        const configured = monster.monitors.filter((record) =>
+            hasPriceSelector(record),
+        ).length;
+        const failed = monster.monitors.filter(
+            (record) => record.latest_snapshot?.status === 'failed',
+        ).length;
+        const withPrice = monster.monitors.filter(
+            (record) => record.latest_snapshot?.effective_total_cents !== null,
+        ).length;
+
+        return {
+            total: monster.monitors.length,
+            configured,
+            failed,
+            withPrice,
+        };
+    }, [monster.monitors]);
+
+    const healthRows = useMemo(() => {
+        return [
+            {
+                id: 'configured',
+                label: x('Selector configured', 'Selector geconfigureerd'),
+                value: stats.configured,
+            },
+            {
+                id: 'priced',
+                label: x('Price detected', 'Prijs gedetecteerd'),
+                value: stats.withPrice,
+            },
+            {
+                id: 'running',
+                label: x('Running now', 'Nu bezig'),
+                value: runningMonitorIds.length,
+            },
+            {
+                id: 'failed',
+                label: x('Failed latest', 'Laatste mislukt'),
+                value: stats.failed,
+            },
+        ];
+    }, [runningMonitorIds.length, stats, x]);
 
     useEffect(() => {
         setRunningMonitorIds(initialRunningMonitorIds(monster.monitors));
@@ -216,19 +262,25 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     <Link
                         href={route('admin.monsters.index')}
                         className={cn(
                             buttonVariants({ variant: 'outline', size: 'sm' }),
+                            'border-white/20 bg-transparent text-white hover:bg-white/10',
                         )}
                     >
                         {x('Back', 'Terug')}
                     </Link>
-                    <h2 className="text-xl font-semibold leading-tight text-slate-800">
-                        {monster.name}
-                        {monster.size_label ? ` (${monster.size_label})` : ''}
-                    </h2>
+                    <div>
+                        <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
+                            {x('Monster Ops', 'Monster Ops')}
+                        </p>
+                        <h2 className="font-display text-2xl font-semibold text-white">
+                            {monster.name}
+                            {monster.size_label ? ` (${monster.size_label})` : ''}
+                        </h2>
+                    </div>
                 </div>
             }
         >
@@ -236,123 +288,140 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
-                    <Card>
+                    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <KpiCard
+                            label={x('Website Records', 'Website-Records')}
+                            value={stats.total}
+                            accent="lime"
+                        />
+                        <KpiCard
+                            label={x('Selector Ready', 'Selector Klaar')}
+                            value={stats.configured}
+                            accent="emerald"
+                        />
+                        <KpiCard
+                            label={x('Running', 'Bezig')}
+                            value={runningMonitorIds.length}
+                            accent="cyan"
+                        />
+                        <KpiCard
+                            label={x('Failed Latest', 'Laatste Mislukt')}
+                            value={stats.failed}
+                            accent="orange"
+                        />
+                    </section>
+
+                    <section className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+                        <Card className="border-white/10 bg-[color:var(--landing-surface)]">
+                            <CardHeader>
+                                <CardTitle className="font-display text-lg text-white">
+                                    {x('Add Website Record', 'Website-Record Toevoegen')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <form
+                                    className="grid gap-3 md:grid-cols-4"
+                                    onSubmit={submitRecord}
+                                >
+                                    <input
+                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                        placeholder={x(
+                                            'Website name (optional)',
+                                            'Websitenaam (optioneel)',
+                                        )}
+                                        value={form.data.site_name}
+                                        onChange={(event) =>
+                                            form.setData('site_name', event.target.value)
+                                        }
+                                    />
+                                    <input
+                                        className="md:col-span-2 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                        placeholder="https://example.com/product-url"
+                                        value={form.data.product_url}
+                                        onChange={(event) =>
+                                            form.setData('product_url', event.target.value)
+                                        }
+                                        required
+                                    />
+                                    <button
+                                        type="submit"
+                                        className={cn(
+                                            buttonVariants({ variant: 'default' }),
+                                            'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                        )}
+                                        disabled={form.processing}
+                                    >
+                                        {x('Add Record', 'Record Toevoegen')}
+                                    </button>
+                                </form>
+                                <p className="mt-2 text-xs text-white/60">
+                                    {x(
+                                        'After adding the URL, click "Start Guided Selector" to pick price, shipping, and can-count elements visually.',
+                                        'Na het toevoegen van de URL klik je op "Start Guided Selector" om prijs-, verzend- en aantalelementen visueel te kiezen.',
+                                    )}
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-white/10 bg-[color:var(--landing-surface)]">
+                            <CardHeader>
+                                <CardTitle className="font-display text-lg text-white">
+                                    {x('Record Health', 'Recordgezondheid')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <BarMeter
+                                    rows={healthRows}
+                                    emptyLabel={x(
+                                        'No records yet.',
+                                        'Nog geen records.',
+                                    )}
+                                />
+                            </CardContent>
+                        </Card>
+                    </section>
+
+                    <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader>
-                            <CardTitle>
-                                {x('Add Website Record', 'Website-Record Toevoegen')}
+                            <CardTitle className="font-display text-lg text-white">
+                                {x('Website Records', 'Website-Records')}
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <form
-                                className="grid gap-3 md:grid-cols-4"
-                                onSubmit={submitRecord}
-                            >
-                                <input
-                                    className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder={x(
-                                        'Website name (optional)',
-                                        'Websitenaam (optioneel)',
-                                    )}
-                                    value={form.data.site_name}
-                                    onChange={(event) =>
-                                        form.setData('site_name', event.target.value)
-                                    }
-                                />
-                                <input
-                                    className="md:col-span-2 rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder="https://example.com/product-url"
-                                    value={form.data.product_url}
-                                    onChange={(event) =>
-                                        form.setData('product_url', event.target.value)
-                                    }
-                                    required
-                                />
-                                <button
-                                    type="submit"
-                                    className={buttonVariants({ variant: 'default' })}
-                                    disabled={form.processing}
-                                >
-                                    {x('Add Record', 'Record Toevoegen')}
-                                </button>
-                            </form>
-                            <p className="mt-2 text-xs text-slate-500">
-                                {x(
-                                    'After adding the URL, click "Start Guided Selector" to pick price, shipping, and can-count elements visually.',
-                                    'Na het toevoegen van de URL klik je op "Start Guided Selector" om prijs-, verzend- en aantalelementen visueel te kiezen.',
-                                )}
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{x('Website Records', 'Website-Records')}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="overflow-x-auto">
+                        <CardContent className="space-y-4">
                             {monster.monitors.length === 0 ? (
-                                <p className="text-sm text-slate-600">
+                                <p className="text-sm text-white/65">
                                     {x(
                                         'No records yet. Add a website product URL first.',
                                         'Nog geen records. Voeg eerst een website-product-URL toe.',
                                     )}
                                 </p>
                             ) : (
-                                <table className="w-full min-w-[980px] text-left text-sm">
-                                    <thead>
-                                        <tr className="border-b text-xs uppercase tracking-wide text-slate-500">
-                                            <th className="px-3 py-2">
-                                                {x('Site', 'Site')}
-                                            </th>
-                                            <th className="px-3 py-2">
-                                                {x('Product URL', 'Product-URL')}
-                                            </th>
-                                            <th className="px-3 py-2">
-                                                {x('Selector', 'Selector')}
-                                            </th>
-                                            <th className="px-3 py-2">
-                                                {x('Latest', 'Laatste')}
-                                            </th>
-                                            <th className="px-3 py-2">
-                                                {x('Next Check', 'Volgende Check')}
-                                            </th>
-                                            <th className="px-3 py-2">
-                                                {x('Scrape', 'Scrape')}
-                                            </th>
-                                            <th className="px-3 py-2">
-                                                {x('Actions', 'Acties')}
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {monster.monitors.map((record) => (
-                                            <tr
-                                                key={record.id}
-                                                className="border-b border-slate-200 align-top"
-                                            >
-                                                <td className="px-3 py-2">
-                                                    <p className="font-medium text-slate-800">
-                                                        {record.site.name}
-                                                    </p>
-                                                    <p className="text-xs text-slate-500">
-                                                        {record.site.domain}
-                                                    </p>
-                                                </td>
-                                                <td className="px-3 py-2">
-                                                    <a
-                                                        href={record.product_url}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="break-all text-slate-700 underline"
-                                                    >
-                                                        {record.product_url}
-                                                    </a>
-                                                </td>
-                                                <td className="px-3 py-2">
+                                monster.monitors.map((record) => (
+                                    <article
+                                        key={record.id}
+                                        className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4"
+                                    >
+                                        <div className="flex flex-wrap items-start justify-between gap-3">
+                                            <div className="space-y-1 text-sm text-white/75">
+                                                <p className="font-medium text-white">
+                                                    {record.site.name} ({record.site.domain})
+                                                </p>
+                                                <a
+                                                    href={record.product_url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="break-all text-white/70 underline"
+                                                >
+                                                    {record.product_url}
+                                                </a>
+                                                <p>
+                                                    {x('Selector:', 'Selector:')}{' '}
                                                     {hasPriceSelector(record)
                                                         ? x('Configured', 'Geconfigureerd')
                                                         : x('Missing', 'Ontbreekt')}
-                                                </td>
-                                                <td className="px-3 py-2">
+                                                </p>
+                                                <p>
+                                                    {x('Latest:', 'Laatste:')}{' '}
                                                     {record.latest_snapshot
                                                         ? latestSnapshotLabel(
                                                               record,
@@ -362,8 +431,9 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                               'No checks yet',
                                                               'Nog geen checks',
                                                           )}
-                                                </td>
-                                                <td className="px-3 py-2">
+                                                </p>
+                                                <p>
+                                                    {x('Next Check:', 'Volgende Check:')}{' '}
                                                     {record.next_check_at
                                                         ? new Date(
                                                               record.next_check_at,
@@ -371,126 +441,121 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                               dateLocale,
                                                           )
                                                         : x('N/A', 'N/B')}
-                                                </td>
-                                                <td className="px-3 py-2">
-                                                    {runningMonitorSet.has(
-                                                        record.id,
-                                                    ) ? (
-                                                        <div className="min-w-[160px] space-y-1.5">
-                                                            <div className="flex items-center gap-2 text-xs font-medium text-orange-700">
-                                                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
-                                                                {x(
-                                                                    'Scraping now...',
-                                                                    'Nu aan het scrapen...',
-                                                                )}
-                                                            </div>
-                                                            <div className="h-1.5 overflow-hidden rounded bg-orange-100">
-                                                                <div className="h-full w-1/2 animate-pulse rounded bg-orange-500" />
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-xs text-slate-500">
-                                                            {x('Idle', 'Inactief')}
-                                                        </span>
+                                                </p>
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    type="button"
+                                                    className={cn(
+                                                        buttonVariants({
+                                                            variant: 'outline',
+                                                            size: 'sm',
+                                                        }),
+                                                        'border-white/20 bg-transparent text-white hover:bg-white/10',
                                                     )}
-                                                </td>
-                                                <td className="px-3 py-2">
-                                                    <div className="flex flex-wrap gap-2">
-                                                        <button
-                                                            type="button"
-                                                            className={buttonVariants(
-                                                                {
-                                                                    variant:
-                                                                        'outline',
-                                                                    size: 'sm',
-                                                                },
+                                                    disabled={
+                                                        loadingSelector ===
+                                                        record.id
+                                                    }
+                                                    onClick={() =>
+                                                        openSelector(record)
+                                                    }
+                                                >
+                                                    {loadingSelector ===
+                                                    record.id
+                                                        ? x(
+                                                              'Opening...',
+                                                              'Openen...',
+                                                          )
+                                                        : x(
+                                                              'Start Guided Selector',
+                                                              'Start Guided Selector',
+                                                          )}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={cn(
+                                                        buttonVariants({
+                                                            variant: 'default',
+                                                            size: 'sm',
+                                                        }),
+                                                        'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                                    )}
+                                                    disabled={
+                                                        loadingRun ===
+                                                            record.id ||
+                                                        runningMonitorSet.has(
+                                                            record.id,
+                                                        )
+                                                    }
+                                                    onClick={() => runNow(record)}
+                                                >
+                                                    {loadingRun === record.id
+                                                        ? x(
+                                                              'Queueing...',
+                                                              'In wachtrij...',
+                                                          )
+                                                        : runningMonitorSet.has(
+                                                                record.id,
+                                                            )
+                                                          ? x(
+                                                                'Running...',
+                                                                'Draait...',
+                                                            )
+                                                          : x(
+                                                                'Run Now',
+                                                                'Nu Draaien',
                                                             )}
-                                                            disabled={
-                                                                loadingSelector ===
-                                                                record.id
-                                                            }
-                                                            onClick={() =>
-                                                                openSelector(record)
-                                                            }
-                                                        >
-                                                            {loadingSelector ===
-                                                            record.id
-                                                                ? x(
-                                                                      'Opening...',
-                                                                      'Openen...',
-                                                                  )
-                                                                : x(
-                                                                      'Start Guided Selector',
-                                                                      'Start Guided Selector',
-                                                                  )}
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className={buttonVariants(
-                                                                {
-                                                                    variant:
-                                                                        'default',
-                                                                    size: 'sm',
-                                                                },
-                                                            )}
-                                                            disabled={
-                                                                loadingRun ===
-                                                                    record.id ||
-                                                                runningMonitorSet.has(
-                                                                    record.id,
-                                                                )
-                                                            }
-                                                            onClick={() =>
-                                                                runNow(record)
-                                                            }
-                                                        >
-                                                            {loadingRun ===
-                                                            record.id
-                                                                ? x(
-                                                                      'Queueing...',
-                                                                      'In wachtrij...',
-                                                                  )
-                                                                : runningMonitorSet.has(
-                                                                      record.id,
-                                                                  )
-                                                                ? x(
-                                                                      'Running...',
-                                                                      'Draait...',
-                                                                  )
-                                                                : x(
-                                                                      'Run Now',
-                                                                      'Nu Draaien',
-                                                                  )}
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className={buttonVariants(
-                                                                {
-                                                                    variant:
-                                                                        'secondary',
-                                                                    size: 'sm',
-                                                                },
-                                                            )}
-                                                            onClick={() =>
-                                                                router.delete(
-                                                                    route(
-                                                                        'admin.monitors.destroy',
-                                                                        record.id,
-                                                                    ),
-                                                                )
-                                                            }
-                                                        >
-                                                            {x(
-                                                                'Delete',
-                                                                'Verwijderen',
-                                                            )}
-                                                        </button>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={cn(
+                                                        buttonVariants({
+                                                            variant: 'secondary',
+                                                            size: 'sm',
+                                                        }),
+                                                        'border border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20',
+                                                    )}
+                                                    onClick={() =>
+                                                        router.delete(
+                                                            route(
+                                                                'admin.monitors.destroy',
+                                                                record.id,
+                                                            ),
+                                                        )
+                                                    }
+                                                >
+                                                    {x(
+                                                        'Delete',
+                                                        'Verwijderen',
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3">
+                                            {runningMonitorSet.has(record.id) ? (
+                                                <div className="max-w-xs space-y-1.5">
+                                                    <div className="flex items-center gap-2 text-xs font-medium text-orange-200">
+                                                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-orange-300 border-t-transparent" />
+                                                        {x(
+                                                            'Scraping now...',
+                                                            'Nu aan het scrapen...',
+                                                        )}
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                                    <div className="h-1.5 overflow-hidden rounded bg-orange-900/40">
+                                                        <div className="h-full w-1/2 animate-pulse rounded bg-orange-300" />
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-white/55">
+                                                    {x('Idle', 'Inactief')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </article>
+                                ))
                             )}
                         </CardContent>
                     </Card>

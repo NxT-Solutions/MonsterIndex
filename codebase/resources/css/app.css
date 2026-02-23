@@ -156,3 +156,10 @@
     radial-gradient(circle at 90% 6%, rgba(34, 211, 238, 0.13), transparent 34%),
     linear-gradient(160deg, #05080a 0%, #091013 55%, #050708 100%);
 }
+
+.admin-root {
+  background-image:
+    radial-gradient(circle at 10% -8%, rgba(157, 255, 0, 0.15), transparent 34%),
+    radial-gradient(circle at 90% -4%, rgba(56, 189, 248, 0.14), transparent 28%),
+    linear-gradient(165deg, #060a0b 0%, #090f11 60%, #06090a 100%);
+}

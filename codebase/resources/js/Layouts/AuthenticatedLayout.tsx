@@ -1,13 +1,18 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
 import LanguageSwitcher from '@/Components/LanguageSwitcher';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import { buttonVariants } from '@/Components/ui/button';
 import { useLocale } from '@/lib/locale';
+import { cn } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/react';
-import { PropsWithChildren, ReactNode, useState } from 'react';
+import { PropsWithChildren, ReactNode, useMemo, useState } from 'react';
 
-export default function Authenticated({
+type NavItem = {
+    label: string;
+    href: string;
+    active: boolean;
+};
+
+export default function AuthenticatedLayout({
     header,
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
@@ -19,215 +24,170 @@ export default function Authenticated({
     }
 
     const isAdmin = user.role === 'admin';
+    const [mobileOpen, setMobileOpen] = useState(false);
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+    const navItems = useMemo<NavItem[]>(() => {
+        const items: NavItem[] = [
+            {
+                label: x('Dashboard', 'Dashboard'),
+                href: route('dashboard'),
+                active: route().current('dashboard'),
+            },
+        ];
+
+        if (isAdmin) {
+            items.push(
+                {
+                    label: x('Admin', 'Admin'),
+                    href: route('admin.dashboard'),
+                    active: route().current('admin.dashboard'),
+                },
+                {
+                    label: x('Monsters', 'Monsters'),
+                    href: route('admin.monsters.index'),
+                    active: route().current('admin.monsters.*'),
+                },
+                {
+                    label: x('Monitors', 'Monitoren'),
+                    href: route('admin.monitors.index'),
+                    active: route().current('admin.monitors.*'),
+                },
+                {
+                    label: x('Sites', 'Sites'),
+                    href: route('admin.sites.index'),
+                    active: route().current('admin.sites.*'),
+                },
+                {
+                    label: x('Alerts', 'Meldingen'),
+                    href: route('admin.alerts.index'),
+                    active: route().current('admin.alerts.*'),
+                },
+            );
+        }
+
+        return items;
+    }, [isAdmin, x]);
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="border-b border-gray-100 bg-white">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
-                                <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
-                                </Link>
+        <div className="admin-root dark min-h-screen bg-[color:var(--landing-bg)] text-white">
+            <nav className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(8,12,12,0.86)] backdrop-blur-xl">
+                <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+                    <div className="flex items-center gap-3">
+                        <Link href={route('home')} className="inline-flex items-center gap-2">
+                            <span className="grid h-10 w-10 place-items-center rounded-md border border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-surface-2)]">
+                                <ApplicationLogo className="h-6 w-6 fill-current text-[color:var(--landing-accent)]" />
+                            </span>
+                            <div className="hidden sm:block">
+                                <p className="font-display text-lg font-semibold text-white">
+                                    MonsterIndex
+                                </p>
+                                <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">
+                                    {x('Admin Ops', 'Admin Ops')}
+                                </p>
                             </div>
+                        </Link>
+                    </div>
 
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    {x('Dashboard', 'Dashboard')}
-                                </NavLink>
-                                {isAdmin && (
-                                    <>
-                                        <NavLink
-                                            href={route('admin.dashboard')}
-                                            active={route().current(
-                                                'admin.dashboard',
-                                            )}
-                                        >
-                                            {x('Admin', 'Admin')}
-                                        </NavLink>
-                                        <NavLink
-                                            href={route('admin.monsters.index')}
-                                            active={route().current(
-                                                'admin.monsters.*',
-                                            )}
-                                        >
-                                            {x(
-                                                'Monsters & Records',
-                                                'Monsters & Records',
-                                            )}
-                                        </NavLink>
-                                        <NavLink
-                                            href={route('admin.alerts.index')}
-                                            active={route().current(
-                                                'admin.alerts.*',
-                                            )}
-                                        >
-                                            {x('Alerts', 'Meldingen')}
-                                        </NavLink>
-                                    </>
+                    <div className="hidden flex-1 items-center justify-center gap-2 lg:flex">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={cn(
+                                    'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                    item.active
+                                        ? 'bg-[color:var(--landing-accent)] text-[#0b1201]'
+                                        : 'text-white/70 hover:bg-white/10 hover:text-white',
                                 )}
-                            </div>
-                        </div>
-
-                        <div className="hidden items-center gap-3 sm:ms-6 sm:flex">
-                            <LanguageSwitcher compact />
-                            <div className="relative ms-1">
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                            >
-                                                {user.name}
-
-                                                <svg
-                                                    className="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </Dropdown.Trigger>
-
-                                    <Dropdown.Content>
-                                        <Dropdown.Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
-                                        >
-                                            {x('Log Out', 'Uitloggen')}
-                                        </Dropdown.Link>
-                                    </Dropdown.Content>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <div className="-me-2 flex items-center sm:hidden">
-                            <button
-                                onClick={() =>
-                                    setShowingNavigationDropdown(
-                                        (previousState) => !previousState,
-                                    )
-                                }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
                             >
-                                <svg
-                                    className="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        className={
-                                            !showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        className={
-                                            showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div
-                    className={
-                        (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
-                    }
-                >
-                    <div className="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            href={route('dashboard')}
-                            active={route().current('dashboard')}
-                        >
-                            {x('Dashboard', 'Dashboard')}
-                        </ResponsiveNavLink>
-                        {isAdmin && (
-                            <>
-                                <ResponsiveNavLink
-                                    href={route('admin.dashboard')}
-                                    active={route().current('admin.dashboard')}
-                                >
-                                    {x('Admin', 'Admin')}
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink
-                                    href={route('admin.monsters.index')}
-                                    active={route().current('admin.monsters.*')}
-                                >
-                                    {x(
-                                        'Monsters & Records',
-                                        'Monsters & Records',
-                                    )}
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink
-                                    href={route('admin.alerts.index')}
-                                    active={route().current('admin.alerts.*')}
-                                >
-                                    {x('Alerts', 'Meldingen')}
-                                </ResponsiveNavLink>
-                            </>
-                        )}
+                                {item.label}
+                            </Link>
+                        ))}
                     </div>
 
-                    <div className="border-t border-gray-200 pb-1 pt-4">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800">
+                    <div className="flex items-center gap-2">
+                        <LanguageSwitcher
+                            compact
+                            className="hidden sm:inline-flex [&>span]:text-white/55"
+                        />
+                        <div className="hidden text-right sm:block">
+                            <p className="max-w-[180px] truncate text-sm font-medium text-white">
                                 {user.name}
-                            </div>
-                            <div className="text-sm font-medium text-gray-500">
+                            </p>
+                            <p className="max-w-[180px] truncate text-xs text-white/55">
                                 {user.email}
-                            </div>
-                            <div className="mt-3">
-                                <LanguageSwitcher compact />
-                            </div>
+                            </p>
                         </div>
-
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route('logout')}
-                                as="button"
+                        <Link
+                            href={route('logout')}
+                            method="post"
+                            as="button"
+                            className={cn(
+                                buttonVariants({ variant: 'outline', size: 'sm' }),
+                                'border-white/20 bg-transparent text-white hover:bg-white/10',
+                            )}
+                        >
+                            {x('Log Out', 'Uitloggen')}
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={() => setMobileOpen((state) => !state)}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/20 bg-white/5 text-white lg:hidden"
+                            aria-label={x('Toggle menu', 'Menu wisselen')}
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                className="h-5 w-5"
                             >
-                                {x('Log Out', 'Uitloggen')}
-                            </ResponsiveNavLink>
-                        </div>
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d={
+                                        mobileOpen
+                                            ? 'M6 18L18 6M6 6l12 12'
+                                            : 'M4 6h16M4 12h16M4 18h16'
+                                    }
+                                />
+                            </svg>
+                        </button>
                     </div>
                 </div>
+
+                {mobileOpen && (
+                    <div className="border-t border-white/10 px-4 py-3 lg:hidden">
+                        <div className="mb-3 flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-white">{user.name}</p>
+                                <p className="text-xs text-white/55">{user.email}</p>
+                            </div>
+                            <LanguageSwitcher compact className="[&>span]:text-white/55" />
+                        </div>
+                        <div className="grid gap-2">
+                            {navItems.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={() => setMobileOpen(false)}
+                                    className={cn(
+                                        'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                        item.active
+                                            ? 'bg-[color:var(--landing-accent)] text-[#0b1201]'
+                                            : 'bg-white/5 text-white/80 hover:bg-white/10',
+                                    )}
+                                >
+                                    {item.label}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </nav>
 
             {header && (
-                <header className="bg-white shadow">
+                <header className="border-b border-white/10 bg-[rgba(9,14,14,0.7)]">
                     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                         {header}
                     </div>

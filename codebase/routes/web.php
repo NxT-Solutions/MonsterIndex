@@ -2,6 +2,7 @@
 
 use Packages\Admin\Http\Controllers\AlertController as AdminAlertController;
 use Packages\Admin\Http\Controllers\BookmarkletController as AdminBookmarkletController;
+use Packages\Admin\Http\Controllers\DashboardController as AdminDashboardController;
 use Packages\Admin\Http\Controllers\MonitorController as AdminMonitorController;
 use Packages\Admin\Http\Controllers\MonsterController as AdminMonsterController;
 use Packages\Admin\Http\Controllers\SiteController as AdminSiteController;
@@ -18,9 +19,7 @@ Route::get('/dashboard', function () {
 })->middleware('auth')->name('dashboard');
 
 Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin', function () {
-        return Inertia::render('Admin/Dashboard');
-    })->name('admin.dashboard');
+    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
     Route::get('/admin/monsters', [AdminMonsterController::class, 'index'])->name('admin.monsters.index');
     Route::get('/admin/monsters/{monster:slug}', [AdminMonsterController::class, 'show'])->name('admin.monsters.show');
