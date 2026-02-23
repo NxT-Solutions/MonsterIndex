@@ -5,6 +5,7 @@ use Packages\Admin\Http\Controllers\BookmarkletController as AdminBookmarkletCon
 use Packages\Admin\Http\Controllers\DashboardController as AdminDashboardController;
 use Packages\Admin\Http\Controllers\MonitorController as AdminMonitorController;
 use Packages\Admin\Http\Controllers\MonsterController as AdminMonsterController;
+use Packages\Admin\Http\Controllers\SiteController as AdminSiteController;
 use Packages\PublicBoard\Http\Controllers\HomeController;
 use Packages\PublicBoard\Http\Controllers\MonsterController as PublicMonsterController;
 use Packages\PublicBoard\Http\Controllers\SitemapController;
@@ -28,6 +29,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/monsters/{monster}', [AdminMonsterController::class, 'update'])->name('admin.monsters.update');
     Route::delete('/admin/monsters/{monster}', [AdminMonsterController::class, 'destroy'])->name('admin.monsters.destroy');
     Route::post('/admin/monsters/{monster}/records', [AdminMonsterController::class, 'storeRecord'])->name('admin.monsters.records.store');
+
+    Route::get('/admin/stores', [AdminSiteController::class, 'index'])->name('admin.stores.index');
+    Route::post('/admin/stores', [AdminSiteController::class, 'store'])->name('admin.stores.store');
+    Route::put('/admin/stores/{site}', [AdminSiteController::class, 'update'])->name('admin.stores.update');
+    Route::delete('/admin/stores/{site}', [AdminSiteController::class, 'destroy'])->name('admin.stores.destroy');
 
     Route::get('/admin/monitors', [AdminMonitorController::class, 'index'])->name('admin.monitors.index');
     Route::post('/admin/monitors', [AdminMonitorController::class, 'store'])->name('admin.monitors.store');

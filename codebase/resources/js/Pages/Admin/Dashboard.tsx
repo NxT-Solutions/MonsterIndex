@@ -108,6 +108,15 @@ export default function AdminDashboard({
                             {x('Open Monitors', 'Open Monitoren')}
                         </Link>
                         <Link
+                            href={route('admin.stores.index')}
+                            className={cn(
+                                buttonVariants({ variant: 'secondary', size: 'sm' }),
+                                'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                            )}
+                        >
+                            {x('Manage Stores', 'Beheer Winkels')}
+                        </Link>
+                        <Link
                             href={route('admin.alerts.index')}
                             className={cn(
                                 buttonVariants({ variant: 'outline', size: 'sm' }),

@@ -49,6 +49,11 @@ export default function AuthenticatedLayout({
                     active: route().current('admin.monsters.*'),
                 },
                 {
+                    label: x('Stores', 'Winkels'),
+                    href: route('admin.stores.index'),
+                    active: route().current('admin.stores.*'),
+                },
+                {
                     label: x('Monitors', 'Monitoren'),
                     href: route('admin.monitors.index'),
                     active: route().current('admin.monitors.*'),
