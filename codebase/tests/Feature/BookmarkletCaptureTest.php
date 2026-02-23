@@ -4,6 +4,7 @@ use Packages\Base\Data\ExtractionResult;
 use App\Models\BookmarkletSession;
 use App\Models\Monitor;
 use App\Models\Monster;
+use App\Models\PriceSnapshot;
 use App\Models\Site;
 use App\Models\User;
 use Packages\PriceExtraction\Services\PriceExtractionService;
@@ -86,4 +87,10 @@ it('captures selector payload with valid token', function () {
         ->and($monitor->selector_config['quantity']['css'] ?? null)->toBe('.pack-size')
         ->and($monitor->selector_config['quantity']['manual_value'] ?? null)->toBe('12')
         ->and($session->used_at)->not->toBeNull();
+
+    $snapshot = PriceSnapshot::query()->where('monitor_id', $monitor->id)->latest('id')->first();
+    expect($snapshot)->not->toBeNull()
+        ->and($snapshot?->effective_total_cents)->toBe(2398)
+        ->and($snapshot?->can_count)->toBe(12)
+        ->and($snapshot?->price_per_can_cents)->toBe(200);
 });

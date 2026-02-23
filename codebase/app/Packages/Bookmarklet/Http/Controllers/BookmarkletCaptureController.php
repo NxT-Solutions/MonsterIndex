@@ -3,7 +3,9 @@
 namespace Packages\Bookmarklet\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\PriceSnapshot;
 use Packages\Bookmarklet\Services\BookmarkletSessionService;
+use Packages\Monitoring\Services\BestPriceProjector;
 use Packages\PriceExtraction\Services\PriceExtractionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,6 +17,7 @@ class BookmarkletCaptureController extends Controller
     public function __construct(
         private readonly BookmarkletSessionService $bookmarkletSessionService,
         private readonly PriceExtractionService $priceExtractionService,
+        private readonly BestPriceProjector $bestPriceProjector,
     ) {}
 
     public function capture(Request $request): JsonResponse|Response
@@ -86,6 +89,23 @@ class BookmarkletCaptureController extends Controller
             );
         }
 
+        $snapshot = PriceSnapshot::query()->create([
+            'monitor_id' => $monitor->id,
+            'checked_at' => now(),
+            'price_cents' => $result->priceCents,
+            'shipping_cents' => $result->shippingCents,
+            'effective_total_cents' => $result->effectiveTotalCents,
+            'can_count' => $result->canCount,
+            'price_per_can_cents' => $result->pricePerCanCents,
+            'currency' => $result->currency,
+            'availability' => $result->availability,
+            'raw_text' => $result->rawText,
+            'status' => $result->status,
+            'error_code' => $result->errorCode,
+        ]);
+
+        $this->bestPriceProjector->projectFromSnapshot($snapshot);
+
         $this->bookmarkletSessionService->markUsed($session);
 
         if ($request->expectsJson()) {
@@ -96,6 +116,7 @@ class BookmarkletCaptureController extends Controller
                 'currency' => $result->currency,
                 'price_cents' => $result->priceCents,
                 'shipping_cents' => $result->shippingCents,
+                'effective_total_cents' => $result->effectiveTotalCents,
                 'can_count' => $result->canCount,
                 'price_per_can_cents' => $result->pricePerCanCents,
             ]);

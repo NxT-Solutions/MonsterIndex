@@ -117,15 +117,17 @@ export default function MonsterShow({
                                                     : 'N/A'}
                                             </td>
                                             <td className="px-3 py-2">
-                                                {snapshot.price_per_can_cents !==
+                                                {effectivePerCanCents(snapshot) !==
                                                 null
                                                     ? formatMoney(
-                                                          snapshot.price_per_can_cents,
+                                                          effectivePerCanCents(
+                                                              snapshot,
+                                                          ) as number,
                                                           snapshot.currency,
                                                       )
                                                     : 'Unknown'}
                                                 {snapshot.can_count !== null
-                                                    ? ` (${snapshot.can_count} cans)`
+                                                    ? ` (${snapshot.can_count}-pack)`
                                                     : ''}
                                             </td>
                                             <td className="px-3 py-2">
@@ -158,4 +160,20 @@ export default function MonsterShow({
 
 function formatMoney(cents: number, currency: string): string {
     return `${currency} ${(cents / 100).toFixed(2)}`;
+}
+
+function effectivePerCanCents(snapshot: Snapshot): number | null {
+    if (snapshot.price_per_can_cents !== null) {
+        return snapshot.price_per_can_cents;
+    }
+
+    if (
+        snapshot.effective_total_cents !== null &&
+        snapshot.can_count !== null &&
+        snapshot.can_count > 0
+    ) {
+        return Math.round(snapshot.effective_total_cents / snapshot.can_count);
+    }
+
+    return null;
 }
