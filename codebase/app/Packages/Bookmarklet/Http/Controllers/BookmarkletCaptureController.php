@@ -41,6 +41,14 @@ class BookmarkletCaptureController extends Controller
             'selectors.shipping.parts.*.css' => ['nullable', 'string', 'max:2000'],
             'selectors.shipping.parts.*.xpath' => ['nullable', 'string', 'max:2000'],
             'selectors.shipping.parts.*.sample_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.quantity.css' => ['nullable', 'string', 'max:2000'],
+            'selectors.quantity.xpath' => ['nullable', 'string', 'max:2000'],
+            'selectors.quantity.sample_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.quantity.join_with' => ['nullable', 'string', 'max:10'],
+            'selectors.quantity.parts' => ['nullable', 'array', 'max:6'],
+            'selectors.quantity.parts.*.css' => ['nullable', 'string', 'max:2000'],
+            'selectors.quantity.parts.*.xpath' => ['nullable', 'string', 'max:2000'],
+            'selectors.quantity.parts.*.sample_text' => ['nullable', 'string', 'max:1000'],
         ]);
 
         if ($validator->fails()) {
@@ -59,6 +67,7 @@ class BookmarkletCaptureController extends Controller
         $selectorConfig = [
             'price' => $this->normalizeSelector($validated['selectors']['price'] ?? []),
             'shipping' => $this->normalizeSelector($validated['selectors']['shipping'] ?? []),
+            'quantity' => $this->normalizeSelector($validated['selectors']['quantity'] ?? []),
         ];
 
         $monitor->selector_config = $selectorConfig;
@@ -85,6 +94,8 @@ class BookmarkletCaptureController extends Controller
                 'currency' => $result->currency,
                 'price_cents' => $result->priceCents,
                 'shipping_cents' => $result->shippingCents,
+                'can_count' => $result->canCount,
+                'price_per_can_cents' => $result->pricePerCanCents,
             ]);
         }
 
@@ -124,6 +135,11 @@ class BookmarkletCaptureController extends Controller
                     'css' => $request->query('shipping_css'),
                     'xpath' => $request->query('shipping_xpath'),
                     'sample_text' => $request->query('shipping_sample'),
+                ],
+                'quantity' => [
+                    'css' => $request->query('quantity_css'),
+                    'xpath' => $request->query('quantity_xpath'),
+                    'sample_text' => $request->query('quantity_sample'),
                 ],
             ],
         ];

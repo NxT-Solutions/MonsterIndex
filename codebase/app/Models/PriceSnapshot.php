@@ -19,6 +19,8 @@ class PriceSnapshot extends Model
         'price_cents',
         'shipping_cents',
         'effective_total_cents',
+        'can_count',
+        'price_per_can_cents',
         'currency',
         'availability',
         'raw_text',
@@ -36,6 +38,8 @@ class PriceSnapshot extends Model
             'price_cents' => 'integer',
             'shipping_cents' => 'integer',
             'effective_total_cents' => 'integer',
+            'can_count' => 'integer',
+            'price_per_can_cents' => 'integer',
         ];
     }
 

@@ -14,6 +14,8 @@ class ExtractionResult
         public readonly ?string $availability = null,
         public readonly ?string $errorCode = null,
         public readonly bool $usedHeadlessFallback = false,
+        public readonly ?int $canCount = null,
+        public readonly ?int $pricePerCanCents = null,
     ) {}
 
     public static function failed(
@@ -44,6 +46,8 @@ class ExtractionResult
             availability: $this->availability,
             errorCode: $this->errorCode,
             usedHeadlessFallback: $usedHeadlessFallback,
+            canCount: $this->canCount,
+            pricePerCanCents: $this->pricePerCanCents,
         );
     }
 }

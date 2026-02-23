@@ -59,6 +59,8 @@ it('captures selector payload with valid token', function () {
         currency: 'USD',
         status: 'ok',
         rawText: '$19.99 | $3.99',
+        canCount: 12,
+        pricePerCanCents: 200,
     ));
     $this->app->instance(PriceExtractionService::class, $mock);
 
@@ -68,13 +70,18 @@ it('captures selector payload with valid token', function () {
         'selectors' => [
             'price' => ['css' => '.price', 'xpath' => '//*[@class="price"]'],
             'shipping' => ['css' => '.shipping', 'xpath' => '//*[@class="shipping"]'],
+            'quantity' => ['css' => '.pack-size', 'xpath' => '//*[@class="pack-size"]'],
         ],
-    ])->assertOk();
+    ])
+        ->assertOk()
+        ->assertJsonPath('can_count', 12)
+        ->assertJsonPath('price_per_can_cents', 200);
 
     $monitor->refresh();
     $session->refresh();
 
     expect($monitor->product_url)->toBe('https://example.com/product')
         ->and($monitor->selector_config['price']['css'] ?? null)->toBe('.price')
+        ->and($monitor->selector_config['quantity']['css'] ?? null)->toBe('.pack-size')
         ->and($session->used_at)->not->toBeNull();
 });

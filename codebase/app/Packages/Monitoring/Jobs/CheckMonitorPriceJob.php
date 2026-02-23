@@ -80,6 +80,8 @@ class CheckMonitorPriceJob implements ShouldQueue
                 'price_cents' => $result->priceCents,
                 'shipping_cents' => $result->shippingCents,
                 'effective_total_cents' => $result->effectiveTotalCents,
+                'can_count' => $result->canCount,
+                'price_per_can_cents' => $result->pricePerCanCents,
                 'currency' => $result->currency,
                 'availability' => $result->availability,
                 'raw_text' => $result->rawText,

@@ -20,6 +20,7 @@
     mode: 'select-price-main',
     priceParts: [],
     shippingParts: [],
+    quantityParts: [],
     shippingSkipped: false,
     submitting: false,
     done: false,
@@ -33,7 +34,7 @@
   panel.style.right = '16px';
   panel.style.bottom = '16px';
   panel.style.zIndex = '2147483647';
-  panel.style.width = 'min(380px, calc(100vw - 24px))';
+  panel.style.width = 'min(390px, calc(100vw - 24px))';
   panel.style.maxHeight = 'calc(100vh - 120px)';
   panel.style.overflowY = 'auto';
   panel.style.borderRadius = '14px';
@@ -46,13 +47,14 @@
   panel.innerHTML = [
     '<div style="padding:14px 14px 10px;border-bottom:1px solid #e2e8f0;background:linear-gradient(180deg,#fff,#f8fafc)">',
     '<div style="font-size:14px;font-weight:700">Guided Price Selector</div>',
-    '<div style="font-size:12px;color:#475569;margin-top:4px">Click values on the page. Use \"Add Part\" when a price is split across multiple elements (ex: 32 + 99).</div>',
+    '<div style="font-size:12px;color:#475569;margin-top:4px">Click values on the page. If a value is split (example 32 and 99), use "Add Part".</div>',
     '</div>',
     '<div style="padding:12px 14px;display:grid;gap:10px">',
     '<div id="mi-instruction" style="font-size:13px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:10px"></div>',
     '<div style="display:grid;gap:8px">',
     '<div style="font-size:12px"><strong>Price:</strong> <span id="mi-price-value" style="color:#475569">Not selected</span></div>',
     '<div style="font-size:12px"><strong>Shipping:</strong> <span id="mi-shipping-value" style="color:#475569">Not selected (optional)</span></div>',
+    '<div style="font-size:12px"><strong>Can count:</strong> <span id="mi-quantity-value" style="color:#475569">Not selected (optional)</span></div>',
     '</div>',
     '<div id="mi-status" style="font-size:12px;border-radius:8px;padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;color:#334155"></div>',
     '<div style="display:grid;gap:6px">',
@@ -70,10 +72,15 @@
     '<button id="mi-skip-shipping" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Skip Shipping</button>',
     '</div>',
     '</div>',
+    '<div style="display:grid;gap:6px">',
+    '<div style="font-size:11px;font-weight:600;color:#64748b">Quantity setup (optional, for price per can)</div>',
     '<div style="display:flex;flex-wrap:wrap;gap:8px">',
-    '<button id="mi-reset" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Restart</button>',
+    '<button id="mi-select-quantity-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Select Can Count</button>',
+    '<button id="mi-add-quantity-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Add Count Part</button>',
+    '</div>',
     '</div>',
     '<div style="display:flex;gap:8px">',
+    '<button id="mi-reset" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Restart</button>',
     '<button id="mi-save" type="button" style="flex:1;border:1px solid #0f172a;background:#0f172a;color:#ffffff;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;cursor:pointer">Save and Validate</button>',
     '<button id="mi-back" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:10px 12px;font-size:12px;cursor:pointer">Back</button>',
     '</div>',
@@ -85,6 +92,7 @@
   const instructionEl = panel.querySelector('#mi-instruction');
   const priceValueEl = panel.querySelector('#mi-price-value');
   const shippingValueEl = panel.querySelector('#mi-shipping-value');
+  const quantityValueEl = panel.querySelector('#mi-quantity-value');
   const statusEl = panel.querySelector('#mi-status');
 
   const selectPriceMainBtn = panel.querySelector('#mi-select-price-main');
@@ -92,6 +100,8 @@
   const selectShippingMainBtn = panel.querySelector('#mi-select-shipping-main');
   const addShippingPartBtn = panel.querySelector('#mi-add-shipping-part');
   const skipShippingBtn = panel.querySelector('#mi-skip-shipping');
+  const selectQuantityMainBtn = panel.querySelector('#mi-select-quantity-main');
+  const addQuantityPartBtn = panel.querySelector('#mi-add-quantity-part');
   const resetBtn = panel.querySelector('#mi-reset');
   const saveBtn = panel.querySelector('#mi-save');
   const backBtn = panel.querySelector('#mi-back');
@@ -103,6 +113,8 @@
     'select-price-extra',
     'select-shipping-main',
     'select-shipping-extra',
+    'select-quantity-main',
+    'select-quantity-extra',
   ]);
 
   const isSelecting = () => selectingModes.has(state.mode);
@@ -285,7 +297,7 @@
     }
 
     if (state.mode === 'select-price-extra') {
-      instructionEl.textContent = 'Click the extra price part (example: cents).';
+      instructionEl.textContent = 'Click the extra price part (for example cents).';
       return;
     }
 
@@ -295,7 +307,17 @@
     }
 
     if (state.mode === 'select-shipping-extra') {
-      instructionEl.textContent = 'Click an extra shipping part if needed.';
+      instructionEl.textContent = 'Click the extra shipping part (optional).';
+      return;
+    }
+
+    if (state.mode === 'select-quantity-main') {
+      instructionEl.textContent = 'Click the can count (example: 12 pack).';
+      return;
+    }
+
+    if (state.mode === 'select-quantity-extra') {
+      instructionEl.textContent = 'Click extra can-count part if the count is split.';
       return;
     }
 
@@ -321,6 +343,11 @@
         state.shippingParts.length > 0 || state.shippingSkipped ? '#0f766e' : '#475569';
     }
 
+    if (quantityValueEl instanceof HTMLElement) {
+      quantityValueEl.textContent = previewParts(state.quantityParts, 'Not selected (optional)');
+      quantityValueEl.style.color = state.quantityParts.length > 0 ? '#0f766e' : '#475569';
+    }
+
     if (selectPriceMainBtn instanceof HTMLButtonElement) {
       selectPriceMainBtn.disabled = state.submitting || state.done;
     }
@@ -339,6 +366,14 @@
 
     if (skipShippingBtn instanceof HTMLButtonElement) {
       skipShippingBtn.disabled = state.priceParts.length === 0 || state.submitting || state.done;
+    }
+
+    if (selectQuantityMainBtn instanceof HTMLButtonElement) {
+      selectQuantityMainBtn.disabled = state.priceParts.length === 0 || state.submitting || state.done;
+    }
+
+    if (addQuantityPartBtn instanceof HTMLButtonElement) {
+      addQuantityPartBtn.disabled = state.quantityParts.length === 0 || state.submitting || state.done;
     }
 
     if (resetBtn instanceof HTMLButtonElement) {
@@ -384,6 +419,7 @@
       selectors: {
         price: selectorPayloadFromParts(state.priceParts),
         shipping: state.shippingSkipped ? {} : selectorPayloadFromParts(state.shippingParts),
+        quantity: selectorPayloadFromParts(state.quantityParts),
       },
     };
 
@@ -416,7 +452,12 @@
           ? `${data.currency} ${(data.price_cents / 100).toFixed(2)}`
           : 'Unknown';
 
-      setStatus(`Saved successfully. Detected price: ${parsedPrice}.`, 'success');
+      const perCanText =
+        typeof data.price_per_can_cents === 'number'
+          ? ` • Per can: ${data.currency} ${(data.price_per_can_cents / 100).toFixed(2)}`
+          : '';
+
+      setStatus(`Saved successfully. Detected price: ${parsedPrice}${perCanText}.`, 'success');
     } catch (error) {
       const message =
         error instanceof Error
@@ -437,7 +478,7 @@
 
   if (addPricePartBtn instanceof HTMLButtonElement) {
     addPricePartBtn.addEventListener('click', () => {
-      startSelection('select-price-extra', 'Click the extra price part (example: cents).');
+      startSelection('select-price-extra', 'Click the extra price part (for example cents).');
     });
   }
 
@@ -468,10 +509,23 @@
     });
   }
 
+  if (selectQuantityMainBtn instanceof HTMLButtonElement) {
+    selectQuantityMainBtn.addEventListener('click', () => {
+      startSelection('select-quantity-main', 'Click the can count (for example 12 pack).');
+    });
+  }
+
+  if (addQuantityPartBtn instanceof HTMLButtonElement) {
+    addQuantityPartBtn.addEventListener('click', () => {
+      startSelection('select-quantity-extra', 'Click the extra count part if needed.');
+    });
+  }
+
   if (resetBtn instanceof HTMLButtonElement) {
     resetBtn.addEventListener('click', () => {
       state.priceParts = [];
       state.shippingParts = [];
+      state.quantityParts = [];
       state.shippingSkipped = false;
       state.done = false;
       state.mode = 'select-price-main';
@@ -539,7 +593,7 @@
       state.priceParts = [selector];
       state.shippingSkipped = false;
       state.mode = 'idle';
-      setStatus('Main price selected. Add a price part if needed, then select shipping.', 'success');
+      setStatus('Main price selected. Add another part if needed.', 'success');
       updateUi();
       return;
     }
@@ -556,7 +610,7 @@
       state.shippingParts = [selector];
       state.shippingSkipped = false;
       state.mode = 'idle';
-      setStatus('Main shipping selected. Add another shipping part if needed.', 'success');
+      setStatus('Main shipping selected.', 'success');
       updateUi();
       return;
     }
@@ -566,6 +620,22 @@
       state.shippingSkipped = false;
       state.mode = 'idle';
       setStatus('Extra shipping part added.', 'success');
+      updateUi();
+      return;
+    }
+
+    if (state.mode === 'select-quantity-main') {
+      state.quantityParts = [selector];
+      state.mode = 'idle';
+      setStatus('Can count selected.', 'success');
+      updateUi();
+      return;
+    }
+
+    if (state.mode === 'select-quantity-extra') {
+      state.quantityParts.push(selector);
+      state.mode = 'idle';
+      setStatus('Extra can-count part added.', 'success');
       updateUi();
     }
   };

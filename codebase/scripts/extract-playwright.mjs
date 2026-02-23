@@ -38,7 +38,7 @@ const page = await browser.newPage({
 try {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
 
-  const extractText = async (selector) => {
+  const extractSingleText = async (selector) => {
     if (!selector || typeof selector !== 'object') return null;
 
     if (selector.css) {
@@ -62,13 +62,58 @@ try {
     return null;
   };
 
+  const inferJoinWith = (parts) => {
+    if (!Array.isArray(parts) || parts.length <= 1) return '';
+
+    if (parts.length === 2) {
+      const left = String(parts[0] || '').trim();
+      const rightDigits = String(parts[1] || '').replace(/\D+/g, '');
+      const leftHasDecimal = /[.,]\d{1,2}\b/.test(left);
+
+      if (!leftHasDecimal && /^\d{2}$/.test(rightDigits)) {
+        return '.';
+      }
+    }
+
+    return '';
+  };
+
+  const extractText = async (selector) => {
+    if (!selector || typeof selector !== 'object') return null;
+
+    if (Array.isArray(selector.parts) && selector.parts.length > 0) {
+      const parts = [];
+
+      for (const part of selector.parts) {
+        if (!part || typeof part !== 'object') continue;
+
+        const text = await extractSingleText(part);
+        if (text && text.trim()) {
+          parts.push(text.trim());
+        }
+      }
+
+      if (parts.length > 0) {
+        const joinWith = typeof selector.join_with === 'string'
+          ? selector.join_with
+          : inferJoinWith(parts);
+
+        return parts.join(joinWith);
+      }
+    }
+
+    return extractSingleText(selector);
+  };
+
   const priceText = await extractText(selectors?.price);
   const shippingText = await extractText(selectors?.shipping);
+  const quantityText = await extractText(selectors?.quantity);
 
   console.log(
     JSON.stringify({
       price_text: priceText,
       shipping_text: shippingText,
+      quantity_text: quantityText,
       availability: null,
     }),
   );

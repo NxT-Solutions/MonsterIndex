@@ -47,6 +47,14 @@ class ManualSelectorExtractor
             : 'ok';
 
         $effectiveTotal = $priceParsed['cents'] + ($shippingParsed['cents'] ?? 0);
+        $quantitySelector = $selectorConfig['quantity'] ?? null;
+        $quantityText = is_array($quantitySelector)
+            ? $this->selectorTextExtractor->extract($html, $quantitySelector)
+            : null;
+        $canCount = $this->parseCanCount($quantityText);
+        $pricePerCanCents = ($canCount !== null && $canCount > 0)
+            ? (int) round($effectiveTotal / $canCount)
+            : null;
 
         return new ExtractionResult(
             priceCents: $priceParsed['cents'],
@@ -54,7 +62,9 @@ class ManualSelectorExtractor
             effectiveTotalCents: $effectiveTotal,
             currency: $priceParsed['currency'],
             status: $status,
-            rawText: trim(implode(' | ', array_filter([$priceText, $shippingText]))),
+            rawText: trim(implode(' | ', array_filter([$priceText, $shippingText, $quantityText]))),
+            canCount: $canCount,
+            pricePerCanCents: $pricePerCanCents,
         );
     }
 
@@ -88,5 +98,36 @@ class ManualSelectorExtractor
         }
 
         return false;
+    }
+
+    private function parseCanCount(?string $value): ?int
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $normalized = trim(preg_replace('/\s+/', ' ', $value) ?? '');
+        if ($normalized === '') {
+            return null;
+        }
+
+        $patterns = [
+            '/(\d{1,4})\s*(?:pack|pk|ct|count|cans?|x)\b/i',
+            '/(?:pack|pk|ct|count|cans?)\s*(?:of\s*)?(\d{1,4})\b/i',
+            '/\b(\d{1,4})\b/',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $normalized, $matches) !== 1) {
+                continue;
+            }
+
+            $count = isset($matches[1]) ? (int) $matches[1] : 0;
+            if ($count > 0 && $count <= 500) {
+                return $count;
+            }
+        }
+
+        return null;
     }
 }
