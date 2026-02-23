@@ -1,39 +1,50 @@
 #!/usr/bin/env bash
 
-DOCKER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -n "${ZSH_VERSION:-}" ]; then
+  SCRIPT_SOURCE="$(eval 'echo ${(%):-%x}')"
+else
+  SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+fi
+
+DOCKER_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
 PROJECT_ROOT="$(cd "$DOCKER_DIR/../.." && pwd)"
 COMPOSE_FILE="$DOCKER_DIR/compose.yaml"
 ENV_FILE="$DOCKER_DIR/.env"
 
-compose_cmd() {
+# Avoid zsh alias collisions when these helper names already exist.
+for helper_name in compose_cmd dartisan dcomposer dnpm devite dup ddown dlogs; do
+  unalias "$helper_name" >/dev/null 2>&1 || true
+done
+
+function compose_cmd {
   (cd "$PROJECT_ROOT" && docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@")
 }
 
-dartisan() {
+function dartisan {
   compose_cmd exec php php /var/www/html/artisan "$@"
 }
 
-dcomposer() {
+function dcomposer {
   compose_cmd exec php composer "$@"
 }
 
-dnpm() {
+function dnpm {
   compose_cmd run --rm node npm "$@"
 }
 
-devite() {
+function devite {
   compose_cmd run --rm --service-ports node npm run dev -- --host 0.0.0.0 --port 5173
 }
 
-dup() {
+function dup {
   compose_cmd up -d --build
 }
 
-ddown() {
+function ddown {
   compose_cmd down
 }
 
-dlogs() {
+function dlogs {
   compose_cmd logs -f "$@"
 }
 
