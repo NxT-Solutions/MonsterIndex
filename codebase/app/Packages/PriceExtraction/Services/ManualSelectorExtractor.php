@@ -14,7 +14,7 @@ class ManualSelectorExtractor
     /**
      * @param  array<string, mixed>  $selectorConfig
      */
-    public function extract(string $html, array $selectorConfig, string $defaultCurrency = 'USD'): ExtractionResult
+    public function extract(string $html, array $selectorConfig, string $defaultCurrency = 'EUR'): ExtractionResult
     {
         $priceSelector = $selectorConfig['price'] ?? null;
         if (! is_array($priceSelector)) {

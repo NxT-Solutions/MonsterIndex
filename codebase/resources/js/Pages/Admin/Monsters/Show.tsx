@@ -2,6 +2,7 @@ import BarMeter from '@/Components/admin/BarMeter';
 import KpiCard from '@/Components/admin/KpiCard';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { currencyOptionsForLocale } from '@/lib/currencies';
 import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
@@ -60,11 +61,15 @@ type RunsEventPayload = {
 export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
     const { locale, x } = useLocale();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const currencyOptions = useMemo(
+        () => currencyOptionsForLocale(locale),
+        [locale],
+    );
 
     const form = useForm({
         site_name: '',
         product_url: '',
-        currency: 'USD',
+        currency: 'EUR',
         check_interval_minutes: 60,
         active: true,
     });
@@ -320,7 +325,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                             </CardHeader>
                             <CardContent>
                                 <form
-                                    className="grid gap-3 md:grid-cols-4"
+                                    className="grid gap-3 md:grid-cols-5"
                                     onSubmit={submitRecord}
                                 >
                                     <input
@@ -343,6 +348,26 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                         }
                                         required
                                     />
+                                    <select
+                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
+                                        value={form.data.currency}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'currency',
+                                                event.target.value,
+                                            )
+                                        }
+                                    >
+                                        {currencyOptions.map((currency) => (
+                                            <option
+                                                key={currency.code}
+                                                value={currency.code}
+                                                className="text-black"
+                                            >
+                                                {currency.label}
+                                            </option>
+                                        ))}
+                                    </select>
                                     <button
                                         type="submit"
                                         className={cn(

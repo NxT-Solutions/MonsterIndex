@@ -7,7 +7,7 @@ class MoneyParser
     /**
      * @return array{cents: int|null, currency: string}
      */
-    public function parse(?string $value, string $defaultCurrency = 'USD'): array
+    public function parse(?string $value, string $defaultCurrency = 'EUR'): array
     {
         if (! $value) {
             return ['cents' => null, 'currency' => $defaultCurrency];

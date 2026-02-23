@@ -28,7 +28,7 @@ class PriceSnapshotFactory extends Factory
             'effective_total_cents' => $price + $shipping,
             'can_count' => 12,
             'price_per_can_cents' => (int) round(($price + $shipping) / 12),
-            'currency' => 'USD',
+            'currency' => 'EUR',
             'availability' => 'in_stock',
             'raw_text' => '$'.number_format(($price + $shipping) / 100, 2),
             'status' => 'ok',

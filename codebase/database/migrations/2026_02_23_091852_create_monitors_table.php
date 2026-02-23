@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('site_id')->constrained()->cascadeOnDelete();
             $table->string('product_url', 2048);
             $table->json('selector_config')->nullable();
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('EUR');
             $table->unsignedInteger('check_interval_minutes')->default(60);
             $table->timestamp('next_check_at')->nullable();
             $table->boolean('active')->default(true);

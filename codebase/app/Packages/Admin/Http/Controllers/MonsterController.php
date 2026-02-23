@@ -140,7 +140,7 @@ class MonsterController extends Controller
             'site_id' => $site->id,
             'product_url' => $validated['product_url'],
             'selector_config' => null,
-            'currency' => strtoupper((string) ($validated['currency'] ?? 'USD')),
+            'currency' => strtoupper((string) ($validated['currency'] ?? 'EUR')),
             'check_interval_minutes' => (int) ($validated['check_interval_minutes'] ?? 60),
             'next_check_at' => now(),
             'active' => $validated['active'] ?? true,

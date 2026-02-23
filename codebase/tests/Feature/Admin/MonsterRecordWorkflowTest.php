@@ -28,7 +28,7 @@ it('allows admin to add a site record directly from the monster workflow', funct
         'monster_id' => $monster->id,
         'site_id' => $site->id,
         'product_url' => 'https://shop.example.com/products/monster-12-pack',
-        'currency' => 'USD',
+        'currency' => 'EUR',
         'check_interval_minutes' => 60,
         'active' => true,
     ]);

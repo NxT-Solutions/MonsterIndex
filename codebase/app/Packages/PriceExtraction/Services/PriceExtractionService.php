@@ -19,7 +19,7 @@ class PriceExtractionService
         $monitor->loadMissing('site');
 
         $html = $this->fetchHtml($monitor->product_url);
-        $defaultCurrency = $monitor->currency ?: 'USD';
+        $defaultCurrency = $monitor->currency ?: 'EUR';
 
         if ($html === null) {
             return $this->maybeFallback(

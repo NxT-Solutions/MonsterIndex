@@ -34,7 +34,7 @@ class MonitorFactory extends Factory
                     'sample_text' => '$4.99',
                 ],
             ],
-            'currency' => 'USD',
+            'currency' => 'EUR',
             'check_interval_minutes' => 60,
             'next_check_at' => now(),
             'active' => true,

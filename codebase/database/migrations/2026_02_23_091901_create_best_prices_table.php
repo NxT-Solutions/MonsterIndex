@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('monster_id')->constrained()->cascadeOnDelete();
             $table->foreignId('snapshot_id')->constrained('price_snapshots')->cascadeOnDelete();
             $table->unsignedInteger('effective_total_cents');
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('EUR');
             $table->timestamp('computed_at');
             $table->timestamps();
 

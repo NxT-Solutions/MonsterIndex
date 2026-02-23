@@ -2,6 +2,7 @@ import BarMeter from '@/Components/admin/BarMeter';
 import KpiCard from '@/Components/admin/KpiCard';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { currencyOptionsForLocale } from '@/lib/currencies';
 import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
@@ -63,12 +64,16 @@ export default function MonitorsIndex({
 }) {
     const { locale, x } = useLocale();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const currencyOptions = useMemo(
+        () => currencyOptionsForLocale(locale),
+        [locale],
+    );
 
     const form = useForm({
         monster_id: monsters[0]?.id ?? 0,
         site_id: sites[0]?.id ?? 0,
         product_url: '',
-        currency: 'USD',
+        currency: 'EUR',
         check_interval_minutes: 60,
         active: true,
     });
@@ -316,15 +321,26 @@ export default function MonitorsIndex({
                                         ))}
                                     </select>
 
-                                    <input
-                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                        placeholder={x('Currency', 'Valuta')}
+                                    <select
+                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
                                         value={form.data.currency}
                                         onChange={(event) =>
-                                            form.setData('currency', event.target.value)
+                                            form.setData(
+                                                'currency',
+                                                event.target.value,
+                                            )
                                         }
-                                        required
-                                    />
+                                    >
+                                        {currencyOptions.map((currency) => (
+                                            <option
+                                                key={currency.code}
+                                                value={currency.code}
+                                                className="text-black"
+                                            >
+                                                {currency.label}
+                                            </option>
+                                        ))}
+                                    </select>
 
                                     <input
                                         className="md:col-span-2 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"

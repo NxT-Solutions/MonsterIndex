@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedInteger('price_cents')->nullable();
             $table->unsignedInteger('shipping_cents')->nullable();
             $table->unsignedInteger('effective_total_cents')->nullable();
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('EUR');
             $table->string('availability')->nullable();
             $table->text('raw_text')->nullable();
             $table->string('status')->default('ok');

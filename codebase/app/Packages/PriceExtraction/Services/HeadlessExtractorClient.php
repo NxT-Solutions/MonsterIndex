@@ -12,7 +12,7 @@ class HeadlessExtractorClient
     /**
      * @param  array<string, mixed>  $selectors
      */
-    public function extract(string $url, array $selectors, string $defaultCurrency = 'USD'): ExtractionResult
+    public function extract(string $url, array $selectors, string $defaultCurrency = 'EUR'): ExtractionResult
     {
         $payload = json_encode([
             'url' => $url,
