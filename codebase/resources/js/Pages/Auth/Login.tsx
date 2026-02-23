@@ -12,6 +12,13 @@ import { Head, usePage } from '@inertiajs/react';
 
 export default function Login() {
     const errors = usePage().props.errors as Record<string, string>;
+    const googleRedirectUrl = route('auth.google.redirect');
+
+    const beginGoogleAuth = (event: React.MouseEvent<HTMLAnchorElement>) => {
+        // Force a full-page redirect for OAuth, bypassing any client-side link handling.
+        event.preventDefault();
+        window.location.assign(googleRedirectUrl);
+    };
 
     return (
         <GuestLayout>
@@ -32,7 +39,8 @@ export default function Login() {
                         </p>
                     )}
                     <a
-                        href={route('auth.google.redirect')}
+                        href={googleRedirectUrl}
+                        onClick={beginGoogleAuth}
                         className={cn(
                             buttonVariants({ variant: 'default', size: 'lg' }),
                             'w-full gap-2',

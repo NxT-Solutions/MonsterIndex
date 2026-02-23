@@ -2,6 +2,6 @@
 
 return [
     'admin_emails' => [
-        'you@example.com',
+        'noah@codana.eu',
     ],
 ];
