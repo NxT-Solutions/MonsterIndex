@@ -28,9 +28,19 @@ class BookmarkletCaptureController extends Controller
             'selectors.price.css' => ['nullable', 'string', 'max:2000'],
             'selectors.price.xpath' => ['nullable', 'string', 'max:2000'],
             'selectors.price.sample_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.price.join_with' => ['nullable', 'string', 'max:10'],
+            'selectors.price.parts' => ['nullable', 'array', 'max:6'],
+            'selectors.price.parts.*.css' => ['nullable', 'string', 'max:2000'],
+            'selectors.price.parts.*.xpath' => ['nullable', 'string', 'max:2000'],
+            'selectors.price.parts.*.sample_text' => ['nullable', 'string', 'max:1000'],
             'selectors.shipping.css' => ['nullable', 'string', 'max:2000'],
             'selectors.shipping.xpath' => ['nullable', 'string', 'max:2000'],
             'selectors.shipping.sample_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.shipping.join_with' => ['nullable', 'string', 'max:10'],
+            'selectors.shipping.parts' => ['nullable', 'array', 'max:6'],
+            'selectors.shipping.parts.*.css' => ['nullable', 'string', 'max:2000'],
+            'selectors.shipping.parts.*.xpath' => ['nullable', 'string', 'max:2000'],
+            'selectors.shipping.parts.*.sample_text' => ['nullable', 'string', 'max:1000'],
         ]);
 
         if ($validator->fails()) {
@@ -47,8 +57,8 @@ class BookmarkletCaptureController extends Controller
         $monitor = $session->monitor()->with('site', 'monster')->firstOrFail();
 
         $selectorConfig = [
-            'price' => $validated['selectors']['price'] ?? [],
-            'shipping' => $validated['selectors']['shipping'] ?? [],
+            'price' => $this->normalizeSelector($validated['selectors']['price'] ?? []),
+            'shipping' => $this->normalizeSelector($validated['selectors']['shipping'] ?? []),
         ];
 
         $monitor->selector_config = $selectorConfig;
@@ -135,5 +145,60 @@ class BookmarkletCaptureController extends Controller
             ]),
             $status,
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $selector
+     * @return array<string, mixed>
+     */
+    private function normalizeSelector(array $selector): array
+    {
+        $normalized = [];
+
+        if (isset($selector['css']) && is_string($selector['css'])) {
+            $normalized['css'] = trim($selector['css']);
+        }
+
+        if (isset($selector['xpath']) && is_string($selector['xpath'])) {
+            $normalized['xpath'] = trim($selector['xpath']);
+        }
+
+        if (isset($selector['sample_text']) && is_string($selector['sample_text'])) {
+            $normalized['sample_text'] = trim($selector['sample_text']);
+        }
+
+        if (isset($selector['join_with']) && is_string($selector['join_with'])) {
+            $normalized['join_with'] = $selector['join_with'];
+        }
+
+        $parts = $selector['parts'] ?? null;
+        if (is_array($parts)) {
+            $normalizedParts = collect($parts)
+                ->filter(fn ($part): bool => is_array($part))
+                ->map(function (array $part): array {
+                    return [
+                        'css' => is_string($part['css'] ?? null) ? trim($part['css']) : null,
+                        'xpath' => is_string($part['xpath'] ?? null) ? trim($part['xpath']) : null,
+                        'sample_text' => is_string($part['sample_text'] ?? null) ? trim($part['sample_text']) : null,
+                    ];
+                })
+                ->filter(function (array $part): bool {
+                    return ($part['css'] ?? '') !== '' || ($part['xpath'] ?? '') !== '';
+                })
+                ->values()
+                ->all();
+
+            if ($normalizedParts !== []) {
+                $normalized['parts'] = $normalizedParts;
+
+                // Keep single-selector keys for compatibility with existing tooling.
+                $first = $normalizedParts[0];
+                $normalized['css'] = $normalized['css'] ?? ($first['css'] ?? null);
+                $normalized['xpath'] = $normalized['xpath'] ?? ($first['xpath'] ?? null);
+                $normalized['sample_text'] = $normalized['sample_text'] ?? ($first['sample_text'] ?? null);
+            }
+        }
+
+        return $normalized;
     }
 }

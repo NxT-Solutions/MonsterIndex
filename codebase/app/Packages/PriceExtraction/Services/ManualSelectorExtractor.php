@@ -40,8 +40,7 @@ class ManualSelectorExtractor
         $shippingParsed = $this->moneyParser->parse($shippingText, $priceParsed['currency']);
 
         $hasShippingSelector = is_array($shippingSelector)
-            && ((is_string($shippingSelector['css'] ?? null) && trim($shippingSelector['css']) !== '')
-                || (is_string($shippingSelector['xpath'] ?? null) && trim($shippingSelector['xpath']) !== ''));
+            && $this->hasSelector($shippingSelector);
 
         $status = ($hasShippingSelector && $shippingParsed['cents'] === null)
             ? 'partial'
@@ -57,5 +56,37 @@ class ManualSelectorExtractor
             status: $status,
             rawText: trim(implode(' | ', array_filter([$priceText, $shippingText]))),
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $selector
+     */
+    private function hasSelector(array $selector): bool
+    {
+        if (is_string($selector['css'] ?? null) && trim($selector['css']) !== '') {
+            return true;
+        }
+
+        if (is_string($selector['xpath'] ?? null) && trim($selector['xpath']) !== '') {
+            return true;
+        }
+
+        $parts = $selector['parts'] ?? null;
+        if (! is_array($parts)) {
+            return false;
+        }
+
+        foreach ($parts as $part) {
+            if (! is_array($part)) {
+                continue;
+            }
+
+            if ((is_string($part['css'] ?? null) && trim($part['css']) !== '')
+                || (is_string($part['xpath'] ?? null) && trim($part['xpath']) !== '')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

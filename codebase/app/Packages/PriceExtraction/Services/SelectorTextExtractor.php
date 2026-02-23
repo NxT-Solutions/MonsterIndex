@@ -28,6 +28,35 @@ class SelectorTextExtractor
 
         $xpath = new DOMXPath($document);
 
+        $parts = $selector['parts'] ?? null;
+        if (is_array($parts) && $parts !== []) {
+            $collected = [];
+            foreach ($parts as $part) {
+                if (! is_array($part)) {
+                    continue;
+                }
+
+                $text = $this->extractSingle($xpath, $part);
+                if ($text !== null && $text !== '') {
+                    $collected[] = $text;
+                }
+            }
+
+            if ($collected !== []) {
+                $joinWith = $this->resolveJoinWith($selector, $collected);
+
+                return trim(implode($joinWith, $collected));
+            }
+        }
+
+        return $this->extractSingle($xpath, $selector);
+    }
+
+    /**
+     * @param  array<string, mixed>  $selector
+     */
+    private function extractSingle(DOMXPath $xpath, array $selector): ?string
+    {
         $css = $selector['css'] ?? null;
         if (is_string($css) && trim($css) !== '') {
             $xpathQuery = $this->cssToXPath->toXPath($css);
@@ -43,6 +72,30 @@ class SelectorTextExtractor
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $selector
+     * @param  list<string>  $parts
+     */
+    private function resolveJoinWith(array $selector, array $parts): string
+    {
+        $joinWith = $selector['join_with'] ?? null;
+        if (is_string($joinWith)) {
+            return $joinWith;
+        }
+
+        if (count($parts) === 2) {
+            $left = trim($parts[0]);
+            $right = preg_replace('/\D+/', '', trim($parts[1])) ?? '';
+            $leftHasDecimal = preg_match('/[.,]\d{1,2}\b/', $left) === 1;
+
+            if (! $leftHasDecimal && preg_match('/^\d{2}$/', $right) === 1) {
+                return '.';
+            }
+        }
+
+        return '';
     }
 
     private function createDocument(string $html): ?DOMDocument

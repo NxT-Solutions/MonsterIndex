@@ -39,6 +39,8 @@ class BookmarkletController extends Controller
 
     public function selectorBrowser(Request $request, Monitor $monitor): Response
     {
+        $monitor->loadMissing('monster');
+
         $validated = $request->validate([
             'token' => ['required', 'string'],
             'url' => ['nullable', 'url', 'max:2048'],
@@ -68,10 +70,14 @@ class BookmarkletController extends Controller
             ]);
         }
 
+        $returnUrl = $monitor->monster
+            ? route('admin.monsters.show', $monitor->monster->slug, absolute: true)
+            : route('admin.monsters.index', absolute: true);
+
         $selectorScriptUrl = route('bookmarklet.script', [
             'token' => $session->token,
             'source_url' => $targetUrl,
-            'return_url' => route('admin.monsters.index', absolute: true),
+            'return_url' => $returnUrl,
         ], absolute: true);
 
         $actionUrl = route('admin.monitors.selector-browser', ['monitor' => $monitor->id], absolute: true);
@@ -81,7 +87,7 @@ class BookmarkletController extends Controller
             currentUrl: $targetUrl,
             token: $session->token,
             actionUrl: $actionUrl,
-            returnUrl: route('admin.monsters.index', absolute: true),
+            returnUrl: $returnUrl,
             selectorScriptUrl: $selectorScriptUrl,
         );
 
