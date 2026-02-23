@@ -8,7 +8,7 @@ import {
 } from '@/Components/ui/card';
 import { cn } from '@/lib/utils';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 
 export default function Login() {
     const errors = usePage().props.errors as Record<string, string>;
@@ -31,7 +31,7 @@ export default function Login() {
                             {errors.google}
                         </p>
                     )}
-                    <Link
+                    <a
                         href={route('auth.google.redirect')}
                         className={cn(
                             buttonVariants({ variant: 'default', size: 'lg' }),
@@ -40,7 +40,7 @@ export default function Login() {
                     >
                         <GoogleIcon className="size-4" />
                         Continue with Google
-                    </Link>
+                    </a>
                     <Button
                         type="button"
                         variant="secondary"
