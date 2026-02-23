@@ -1,6 +1,7 @@
+import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
 export default function AdminDashboard() {
     return (
@@ -14,24 +15,66 @@ export default function AdminDashboard() {
             <Head title="Admin" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Admin Access Confirmed</CardTitle>
+                            <CardTitle>Management</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-slate-700">
                             <p>
-                                This area is restricted to users whose Google
-                                email appears in
-                                <code className="mx-1 rounded bg-slate-100 px-1 py-0.5">
-                                    config/authz.php
-                                </code>
-                                .
+                                Configure core entities for monitoring and
+                                extraction.
                             </p>
-                            <p className="text-slate-500">
-                                Next step is implementing monster, site, and
-                                monitor management screens.
+                            <div className="flex flex-wrap gap-2">
+                                <Link
+                                    href={route('admin.monsters.index')}
+                                    className={buttonVariants({
+                                        variant: 'outline',
+                                        size: 'sm',
+                                    })}
+                                >
+                                    Monsters
+                                </Link>
+                                <Link
+                                    href={route('admin.sites.index')}
+                                    className={buttonVariants({
+                                        variant: 'outline',
+                                        size: 'sm',
+                                    })}
+                                >
+                                    Sites
+                                </Link>
+                                <Link
+                                    href={route('admin.monitors.index')}
+                                    className={buttonVariants({
+                                        variant: 'outline',
+                                        size: 'sm',
+                                    })}
+                                >
+                                    Monitors
+                                </Link>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Signals</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm text-slate-700">
+                            <p>
+                                Review deal alerts generated from monitored
+                                snapshots.
                             </p>
+                            <Link
+                                href={route('admin.alerts.index')}
+                                className={buttonVariants({
+                                    variant: 'default',
+                                    size: 'sm',
+                                })}
+                            >
+                                Open Alerts
+                            </Link>
                         </CardContent>
                     </Card>
                 </div>

@@ -40,14 +40,48 @@ export default function Authenticated({
                                     Dashboard
                                 </NavLink>
                                 {isAdmin && (
-                                    <NavLink
-                                        href={route('admin.dashboard')}
-                                        active={route().current(
-                                            'admin.dashboard',
-                                        )}
-                                    >
-                                        Admin
-                                    </NavLink>
+                                    <>
+                                        <NavLink
+                                            href={route('admin.dashboard')}
+                                            active={route().current(
+                                                'admin.dashboard',
+                                            )}
+                                        >
+                                            Admin
+                                        </NavLink>
+                                        <NavLink
+                                            href={route('admin.monsters.index')}
+                                            active={route().current(
+                                                'admin.monsters.*',
+                                            )}
+                                        >
+                                            Monsters
+                                        </NavLink>
+                                        <NavLink
+                                            href={route('admin.sites.index')}
+                                            active={route().current(
+                                                'admin.sites.*',
+                                            )}
+                                        >
+                                            Sites
+                                        </NavLink>
+                                        <NavLink
+                                            href={route('admin.monitors.index')}
+                                            active={route().current(
+                                                'admin.monitors.*',
+                                            )}
+                                        >
+                                            Monitors
+                                        </NavLink>
+                                        <NavLink
+                                            href={route('admin.alerts.index')}
+                                            active={route().current(
+                                                'admin.alerts.*',
+                                            )}
+                                        >
+                                            Alerts
+                                        </NavLink>
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -149,12 +183,38 @@ export default function Authenticated({
                             Dashboard
                         </ResponsiveNavLink>
                         {isAdmin && (
-                            <ResponsiveNavLink
-                                href={route('admin.dashboard')}
-                                active={route().current('admin.dashboard')}
-                            >
-                                Admin
-                            </ResponsiveNavLink>
+                            <>
+                                <ResponsiveNavLink
+                                    href={route('admin.dashboard')}
+                                    active={route().current('admin.dashboard')}
+                                >
+                                    Admin
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('admin.monsters.index')}
+                                    active={route().current('admin.monsters.*')}
+                                >
+                                    Monsters
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('admin.sites.index')}
+                                    active={route().current('admin.sites.*')}
+                                >
+                                    Sites
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('admin.monitors.index')}
+                                    active={route().current('admin.monitors.*')}
+                                >
+                                    Monitors
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('admin.alerts.index')}
+                                    active={route().current('admin.alerts.*')}
+                                >
+                                    Alerts
+                                </ResponsiveNavLink>
+                            </>
                         )}
                     </div>
 
