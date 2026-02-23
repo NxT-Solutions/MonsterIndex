@@ -1,5 +1,6 @@
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
@@ -14,6 +15,8 @@ interface Monster {
 }
 
 export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
+    const { x } = useLocale();
+
     const form = useForm({
         name: '',
         slug: '',
@@ -29,12 +32,18 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
     };
 
     const editMonster = (monster: Monster) => {
-        const name = window.prompt('Monster name', monster.name);
+        const name = window.prompt(
+            x('Monster name', 'Monster naam'),
+            monster.name,
+        );
         if (!name) return;
 
-        const slug = window.prompt('Slug', monster.slug) ?? monster.slug;
+        const slug = window.prompt(x('Slug', 'Slug'), monster.slug) ?? monster.slug;
         const sizeLabel =
-            window.prompt('Size label', monster.size_label ?? '') ?? '';
+            window.prompt(
+                x('Size label', 'Formaatlabel'),
+                monster.size_label ?? '',
+            ) ?? '';
 
         router.put(route('admin.monsters.update', monster.slug), {
             name,
@@ -48,17 +57,17 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-slate-800">
-                    Admin: Monsters
+                    {x('Admin: Monsters', 'Admin: Monsters')}
                 </h2>
             }
         >
-            <Head title="Admin Monsters" />
+            <Head title={x('Admin Monsters', 'Admin Monsters')} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Create Monster</CardTitle>
+                            <CardTitle>{x('Create Monster', 'Monster Maken')}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <form
@@ -67,7 +76,7 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                             >
                                 <input
                                     className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder="Name"
+                                    placeholder={x('Name', 'Naam')}
                                     value={form.data.name}
                                     onChange={(event) =>
                                         form.setData('name', event.target.value)
@@ -76,7 +85,10 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                 />
                                 <input
                                     className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder="Slug (optional)"
+                                    placeholder={x(
+                                        'Slug (optional)',
+                                        'Slug (optioneel)',
+                                    )}
                                     value={form.data.slug}
                                     onChange={(event) =>
                                         form.setData('slug', event.target.value)
@@ -84,7 +96,10 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                 />
                                 <input
                                     className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder="Size label (optional)"
+                                    placeholder={x(
+                                        'Size label (optional)',
+                                        'Formaatlabel (optioneel)',
+                                    )}
                                     value={form.data.size_label}
                                     onChange={(event) =>
                                         form.setData(
@@ -100,7 +115,7 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                     })}
                                     disabled={form.processing}
                                 >
-                                    Add Monster
+                                    {x('Add Monster', 'Monster Toevoegen')}
                                 </button>
                             </form>
                         </CardContent>
@@ -108,18 +123,30 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Monsters</CardTitle>
+                            <CardTitle>{x('Monsters', 'Monsters')}</CardTitle>
                         </CardHeader>
                         <CardContent className="overflow-x-auto">
                             <table className="w-full min-w-[760px] text-left text-sm">
                                 <thead>
                                     <tr className="border-b text-xs uppercase tracking-wide text-slate-500">
-                                        <th className="px-3 py-2">Name</th>
-                                        <th className="px-3 py-2">Slug</th>
-                                        <th className="px-3 py-2">Size</th>
-                                        <th className="px-3 py-2">Records</th>
-                                        <th className="px-3 py-2">Active</th>
-                                        <th className="px-3 py-2">Actions</th>
+                                        <th className="px-3 py-2">
+                                            {x('Name', 'Naam')}
+                                        </th>
+                                        <th className="px-3 py-2">
+                                            {x('Slug', 'Slug')}
+                                        </th>
+                                        <th className="px-3 py-2">
+                                            {x('Size', 'Formaat')}
+                                        </th>
+                                        <th className="px-3 py-2">
+                                            {x('Records', 'Records')}
+                                        </th>
+                                        <th className="px-3 py-2">
+                                            {x('Active', 'Actief')}
+                                        </th>
+                                        <th className="px-3 py-2">
+                                            {x('Actions', 'Acties')}
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -141,7 +168,9 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                                 {monster.monitors_count}
                                             </td>
                                             <td className="px-3 py-2">
-                                                {monster.active ? 'Yes' : 'No'}
+                                                {monster.active
+                                                    ? x('Yes', 'Ja')
+                                                    : x('No', 'Nee')}
                                             </td>
                                             <td className="px-3 py-2">
                                                 <div className="flex gap-2">
@@ -155,7 +184,10 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                                             size: 'sm',
                                                         })}
                                                     >
-                                                        Open Detail
+                                                        {x(
+                                                            'Open Detail',
+                                                            'Open Detail',
+                                                        )}
                                                     </Link>
                                                     <button
                                                         type="button"
@@ -167,7 +199,7 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                                             editMonster(monster)
                                                         }
                                                     >
-                                                        Edit
+                                                        {x('Edit', 'Bewerken')}
                                                     </button>
                                                     <button
                                                         type="button"
@@ -184,7 +216,7 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                                             )
                                                         }
                                                     >
-                                                        Delete
+                                                        {x('Delete', 'Verwijderen')}
                                                     </button>
                                                 </div>
                                             </td>

@@ -1,9 +1,21 @@
+@php
+    $lang = request()->query('lang') === 'nl' ? 'nl' : 'en';
+    $title = $lang === 'nl'
+        ? 'MonsterIndex Selector Resultaat'
+        : 'MonsterIndex Selector Capture';
+    $successHeading = $lang === 'nl'
+        ? 'Selector Opslag Gelukt'
+        : 'Selector Capture Success';
+    $errorHeading = $lang === 'nl'
+        ? 'Selector Opslag Fout'
+        : 'Selector Capture Error';
+@endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ $lang }}">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>MonsterIndex Selector Capture</title>
+        <title>{{ $title }}</title>
         <style>
             body {
                 margin: 0;
@@ -29,7 +41,7 @@
     <body>
         <div class="card">
             <h1 class="{{ $ok ? 'ok' : 'error' }}">
-                {{ $ok ? 'Selector Capture Success' : 'Selector Capture Error' }}
+                {{ $ok ? $successHeading : $errorHeading }}
             </h1>
             <p>{{ $message }}</p>
         </div>

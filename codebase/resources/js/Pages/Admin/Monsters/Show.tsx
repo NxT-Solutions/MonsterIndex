@@ -1,5 +1,6 @@
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
 import { Head, Link, router, useForm } from '@inertiajs/react';
@@ -55,6 +56,9 @@ type RunsEventPayload = {
 };
 
 export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
+    const { locale, x } = useLocale();
+    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+
     const form = useForm({
         site_name: '',
         product_url: '',
@@ -158,14 +162,21 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                 route('api.bookmarklet.session'),
                 {
                     monitor_id: record.id,
+                    lang: locale,
                 },
             );
 
             const selectorBrowserUrl = new URL(response.data.selector_browser_url);
             selectorBrowserUrl.searchParams.set('url', record.product_url);
+            selectorBrowserUrl.searchParams.set('lang', locale);
             window.location.assign(selectorBrowserUrl.toString());
         } catch {
-            window.alert('Could not open selector browser. Try reloading this page.');
+            window.alert(
+                x(
+                    'Could not open selector browser. Try reloading this page.',
+                    'Kon de selectorbrowser niet openen. Probeer deze pagina opnieuw te laden.',
+                ),
+            );
         } finally {
             setLoadingSelector(null);
         }
@@ -191,7 +202,12 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
             setRunningMonitorIds((currentRunning) =>
                 currentRunning.filter((monitorId) => monitorId !== record.id),
             );
-            window.alert('Could not queue this scrape run. Please retry.');
+            window.alert(
+                x(
+                    'Could not queue this scrape run. Please retry.',
+                    'Kon deze scrape-run niet inplannen. Probeer opnieuw.',
+                ),
+            );
         } finally {
             setLoadingRun(null);
         }
@@ -207,7 +223,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                             buttonVariants({ variant: 'outline', size: 'sm' }),
                         )}
                     >
-                        Back
+                        {x('Back', 'Terug')}
                     </Link>
                     <h2 className="text-xl font-semibold leading-tight text-slate-800">
                         {monster.name}
@@ -216,13 +232,15 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                 </div>
             }
         >
-            <Head title={`Monster: ${monster.name}`} />
+            <Head title={`${x('Monster', 'Monster')}: ${monster.name}`} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Add Website Record</CardTitle>
+                            <CardTitle>
+                                {x('Add Website Record', 'Website-Record Toevoegen')}
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <form
@@ -231,7 +249,10 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                             >
                                 <input
                                     className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder="Website name (optional)"
+                                    placeholder={x(
+                                        'Website name (optional)',
+                                        'Websitenaam (optioneel)',
+                                    )}
                                     value={form.data.site_name}
                                     onChange={(event) =>
                                         form.setData('site_name', event.target.value)
@@ -251,35 +272,55 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                     className={buttonVariants({ variant: 'default' })}
                                     disabled={form.processing}
                                 >
-                                    Add Record
+                                    {x('Add Record', 'Record Toevoegen')}
                                 </button>
                             </form>
                             <p className="mt-2 text-xs text-slate-500">
-                                After adding the URL, click "Start Guided Selector" to pick price, shipping, and can-count elements visually.
+                                {x(
+                                    'After adding the URL, click "Start Guided Selector" to pick price, shipping, and can-count elements visually.',
+                                    'Na het toevoegen van de URL klik je op "Start Guided Selector" om prijs-, verzend- en aantalelementen visueel te kiezen.',
+                                )}
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Website Records</CardTitle>
+                            <CardTitle>{x('Website Records', 'Website-Records')}</CardTitle>
                         </CardHeader>
                         <CardContent className="overflow-x-auto">
                             {monster.monitors.length === 0 ? (
                                 <p className="text-sm text-slate-600">
-                                    No records yet. Add a website product URL first.
+                                    {x(
+                                        'No records yet. Add a website product URL first.',
+                                        'Nog geen records. Voeg eerst een website-product-URL toe.',
+                                    )}
                                 </p>
                             ) : (
                                 <table className="w-full min-w-[980px] text-left text-sm">
                                     <thead>
                                         <tr className="border-b text-xs uppercase tracking-wide text-slate-500">
-                                            <th className="px-3 py-2">Site</th>
-                                            <th className="px-3 py-2">Product URL</th>
-                                            <th className="px-3 py-2">Selector</th>
-                                            <th className="px-3 py-2">Latest</th>
-                                            <th className="px-3 py-2">Next Check</th>
-                                            <th className="px-3 py-2">Scrape</th>
-                                            <th className="px-3 py-2">Actions</th>
+                                            <th className="px-3 py-2">
+                                                {x('Site', 'Site')}
+                                            </th>
+                                            <th className="px-3 py-2">
+                                                {x('Product URL', 'Product-URL')}
+                                            </th>
+                                            <th className="px-3 py-2">
+                                                {x('Selector', 'Selector')}
+                                            </th>
+                                            <th className="px-3 py-2">
+                                                {x('Latest', 'Laatste')}
+                                            </th>
+                                            <th className="px-3 py-2">
+                                                {x('Next Check', 'Volgende Check')}
+                                            </th>
+                                            <th className="px-3 py-2">
+                                                {x('Scrape', 'Scrape')}
+                                            </th>
+                                            <th className="px-3 py-2">
+                                                {x('Actions', 'Acties')}
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -308,20 +349,28 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                 </td>
                                                 <td className="px-3 py-2">
                                                     {hasPriceSelector(record)
-                                                        ? 'Configured'
-                                                        : 'Missing'}
+                                                        ? x('Configured', 'Geconfigureerd')
+                                                        : x('Missing', 'Ontbreekt')}
                                                 </td>
                                                 <td className="px-3 py-2">
                                                     {record.latest_snapshot
-                                                        ? latestSnapshotLabel(record)
-                                                        : 'No checks yet'}
+                                                        ? latestSnapshotLabel(
+                                                              record,
+                                                              x,
+                                                          )
+                                                        : x(
+                                                              'No checks yet',
+                                                              'Nog geen checks',
+                                                          )}
                                                 </td>
                                                 <td className="px-3 py-2">
                                                     {record.next_check_at
                                                         ? new Date(
                                                               record.next_check_at,
-                                                          ).toLocaleString()
-                                                        : 'N/A'}
+                                                          ).toLocaleString(
+                                                              dateLocale,
+                                                          )
+                                                        : x('N/A', 'N/B')}
                                                 </td>
                                                 <td className="px-3 py-2">
                                                     {runningMonitorSet.has(
@@ -330,7 +379,10 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                         <div className="min-w-[160px] space-y-1.5">
                                                             <div className="flex items-center gap-2 text-xs font-medium text-orange-700">
                                                                 <span className="h-3 w-3 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
-                                                                Scraping now...
+                                                                {x(
+                                                                    'Scraping now...',
+                                                                    'Nu aan het scrapen...',
+                                                                )}
                                                             </div>
                                                             <div className="h-1.5 overflow-hidden rounded bg-orange-100">
                                                                 <div className="h-full w-1/2 animate-pulse rounded bg-orange-500" />
@@ -338,7 +390,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                         </div>
                                                     ) : (
                                                         <span className="text-xs text-slate-500">
-                                                            Idle
+                                                            {x('Idle', 'Inactief')}
                                                         </span>
                                                     )}
                                                 </td>
@@ -363,8 +415,14 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                         >
                                                             {loadingSelector ===
                                                             record.id
-                                                                ? 'Opening...'
-                                                                : 'Start Guided Selector'}
+                                                                ? x(
+                                                                      'Opening...',
+                                                                      'Openen...',
+                                                                  )
+                                                                : x(
+                                                                      'Start Guided Selector',
+                                                                      'Start Guided Selector',
+                                                                  )}
                                                         </button>
                                                         <button
                                                             type="button"
@@ -388,12 +446,21 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                         >
                                                             {loadingRun ===
                                                             record.id
-                                                                ? 'Queueing...'
+                                                                ? x(
+                                                                      'Queueing...',
+                                                                      'In wachtrij...',
+                                                                  )
                                                                 : runningMonitorSet.has(
                                                                       record.id,
                                                                   )
-                                                                ? 'Running...'
-                                                                : 'Run Now'}
+                                                                ? x(
+                                                                      'Running...',
+                                                                      'Draait...',
+                                                                  )
+                                                                : x(
+                                                                      'Run Now',
+                                                                      'Nu Draaien',
+                                                                  )}
                                                         </button>
                                                         <button
                                                             type="button"
@@ -413,7 +480,10 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                                 )
                                                             }
                                                         >
-                                                            Delete
+                                                            {x(
+                                                                'Delete',
+                                                                'Verwijderen',
+                                                            )}
                                                         </button>
                                                     </div>
                                                 </td>
@@ -453,10 +523,13 @@ function hasPriceSelector(record: MonitorRecord): boolean {
     );
 }
 
-function latestSnapshotLabel(record: MonitorRecord): string {
+function latestSnapshotLabel(
+    record: MonitorRecord,
+    x: (english: string, dutch: string) => string,
+): string {
     const latest = record.latest_snapshot;
     if (!latest) {
-        return 'No checks yet';
+        return x('No checks yet', 'Nog geen checks');
     }
 
     if (latest.effective_total_cents === null) {
@@ -466,7 +539,7 @@ function latestSnapshotLabel(record: MonitorRecord): string {
     const total = `${latest.currency} ${(latest.effective_total_cents / 100).toFixed(2)}`;
     const perCan =
         latest.price_per_can_cents !== null
-            ? ` | per can ${latest.currency} ${(latest.price_per_can_cents / 100).toFixed(2)}${latest.can_count !== null ? ` (${latest.can_count} cans)` : ''}`
+            ? ` | ${x('per can', 'per blik')} ${latest.currency} ${(latest.price_per_can_cents / 100).toFixed(2)}${latest.can_count !== null ? ` (${latest.can_count} ${x('cans', 'blikjes')})` : ''}`
             : '';
 
     return `${total}${perCan} (${latest.status})`;

@@ -21,10 +21,12 @@ class BookmarkletController extends Controller
     {
         $validated = $request->validate([
             'monitor_id' => ['required', 'integer', 'exists:monitors,id'],
+            'lang' => ['nullable', 'in:en,nl'],
         ]);
 
         $monitor = Monitor::query()->findOrFail($validated['monitor_id']);
         $session = $this->bookmarkletSessionService->create($monitor, $request->user());
+        $lang = $validated['lang'] ?? 'en';
 
         return response()->json([
             'token' => $session->token,
@@ -33,6 +35,7 @@ class BookmarkletController extends Controller
                 'monitor' => $monitor->id,
                 'token' => $session->token,
                 'url' => $monitor->product_url,
+                'lang' => $lang,
             ], absolute: true),
         ]);
     }
@@ -44,7 +47,9 @@ class BookmarkletController extends Controller
         $validated = $request->validate([
             'token' => ['required', 'string'],
             'url' => ['nullable', 'url', 'max:2048'],
+            'lang' => ['nullable', 'in:en,nl'],
         ]);
+        $lang = $validated['lang'] ?? 'en';
 
         $session = $this->bookmarkletSessionService->resolveValidToken($validated['token']);
         abort_unless(
@@ -57,30 +62,45 @@ class BookmarkletController extends Controller
 
         $targetUrl = $validated['url'] ?: $monitor->product_url;
         if (! $this->supportsUrl($targetUrl)) {
-            abort(422, 'Only HTTP/HTTPS URLs are supported.');
+            abort(422, $this->translate($lang, 'Only HTTP/HTTPS URLs are supported.', 'Alleen HTTP/HTTPS-URL\'s worden ondersteund.'));
         }
 
         $html = $this->fetchHtml($targetUrl);
         if ($html === null) {
-            $message = 'Failed to fetch the target page. Check URL, anti-bot protection, or try another page.';
+            $message = $this->translate(
+                $lang,
+                'Failed to fetch the target page. Check URL, anti-bot protection, or try another page.',
+                'Kon de doelpagina niet ophalen. Controleer de URL, anti-botbescherming of probeer een andere pagina.',
+            );
 
-            return response($this->renderErrorDocument($message), 502, [
+            return response($this->renderErrorDocument($message, $lang), 502, [
                 'Content-Type' => 'text/html; charset=UTF-8',
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             ]);
         }
 
         $returnUrl = $monitor->monster
-            ? route('admin.monsters.show', $monitor->monster->slug, absolute: true)
-            : route('admin.monsters.index', absolute: true);
+            ? route('admin.monsters.show', [
+                'monster' => $monitor->monster->slug,
+                'lang' => $lang,
+            ], absolute: true)
+            : route('admin.monsters.index', ['lang' => $lang], absolute: true);
 
         $selectorScriptUrl = route('bookmarklet.script', [
             'token' => $session->token,
             'source_url' => $targetUrl,
             'return_url' => $returnUrl,
+            'lang' => $lang,
         ], absolute: true);
 
-        $actionUrl = route('admin.monitors.selector-browser', ['monitor' => $monitor->id], absolute: true);
+        $actionUrl = route(
+            'admin.monitors.selector-browser',
+            [
+                'monitor' => $monitor->id,
+                'lang' => $lang,
+            ],
+            absolute: true,
+        );
         $injected = $this->injectSelectorRuntime(
             html: $html,
             monitorName: $monitor->monster?->name ?: 'Monitor',
@@ -89,6 +109,7 @@ class BookmarkletController extends Controller
             actionUrl: $actionUrl,
             returnUrl: $returnUrl,
             selectorScriptUrl: $selectorScriptUrl,
+            lang: $lang,
         );
 
         return response($injected, 200, [
@@ -134,17 +155,28 @@ class BookmarkletController extends Controller
         return in_array($scheme, ['http', 'https'], true);
     }
 
-    private function renderErrorDocument(string $message): string
+    private function renderErrorDocument(string $message, string $lang = 'en'): string
     {
         $escapedMessage = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+        $title = htmlspecialchars(
+            $this->translate($lang, 'Selector Browser Error', 'Selectorbrowser Fout'),
+            ENT_QUOTES,
+            'UTF-8',
+        );
+        $header = htmlspecialchars(
+            $this->translate($lang, 'MonsterIndex Selector Browser', 'MonsterIndex Selectorbrowser'),
+            ENT_QUOTES,
+            'UTF-8',
+        );
+        $docLang = htmlspecialchars($lang === 'nl' ? 'nl' : 'en', ENT_QUOTES, 'UTF-8');
 
         return <<<HTML
 <!doctype html>
-<html lang="en">
+<html lang="{$docLang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Selector Browser Error</title>
+  <title>{$title}</title>
   <style>
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: ui-sans-serif,system-ui,-apple-system,sans-serif; background: #f8fafc; color: #0f172a; }
     .card { width: min(680px, calc(100% - 2rem)); border: 1px solid #cbd5e1; border-radius: 12px; background: #fff; padding: 1rem 1.25rem; }
@@ -154,7 +186,7 @@ class BookmarkletController extends Controller
 </head>
 <body>
   <div class="card">
-    <h1>MonsterIndex Selector Browser</h1>
+    <h1>{$header}</h1>
     <p>{$escapedMessage}</p>
   </div>
 </body>
@@ -170,6 +202,7 @@ HTML;
         string $actionUrl,
         string $returnUrl,
         string $selectorScriptUrl,
+        string $lang = 'en',
     ): string {
         $escapedMonitorName = htmlspecialchars($monitorName, ENT_QUOTES, 'UTF-8');
         $escapedCurrentUrl = htmlspecialchars($currentUrl, ENT_QUOTES, 'UTF-8');
@@ -177,9 +210,59 @@ HTML;
         $escapedActionUrl = htmlspecialchars($actionUrl, ENT_QUOTES, 'UTF-8');
         $escapedReturnUrl = htmlspecialchars($returnUrl, ENT_QUOTES, 'UTF-8');
         $escapedSelectorScriptUrl = htmlspecialchars($selectorScriptUrl, ENT_QUOTES, 'UTF-8');
+        $escapedLang = htmlspecialchars($lang === 'nl' ? 'nl' : 'en', ENT_QUOTES, 'UTF-8');
+        $headerLabel = htmlspecialchars(
+            $this->translate($lang, 'Guided Selector Setup', 'Geleide Selector Setup'),
+            ENT_QUOTES,
+            'UTF-8',
+        );
+        $stayMessage = htmlspecialchars(
+            $this->translate(
+                $lang,
+                'Stay on this page while selecting. We keep navigation in selector mode until you save.',
+                'Blijf op deze pagina tijdens het selecteren. We houden navigatie in selectormodus tot je opslaat.',
+            ),
+            ENT_QUOTES,
+            'UTF-8',
+        );
+        $inputPlaceholder = htmlspecialchars(
+            $this->translate($lang, 'https://example.com/product-url', 'https://voorbeeld.com/product-url'),
+            ENT_QUOTES,
+            'UTF-8',
+        );
+        $openUrlLabel = htmlspecialchars(
+            $this->translate($lang, 'Open URL', 'Open URL'),
+            ENT_QUOTES,
+            'UTF-8',
+        );
+        $backLabel = htmlspecialchars(
+            $this->translate($lang, 'Back to Admin', 'Terug naar Admin'),
+            ENT_QUOTES,
+            'UTF-8',
+        );
+        $formBlockedMessage = json_encode(
+            $this->translate(
+                $lang,
+                'Form submission is disabled in selector mode. Use the URL field in the top bar to navigate safely.',
+                'Formulierverzending is uitgeschakeld in selectormodus. Gebruik het URL-veld in de bovenbalk om veilig te navigeren.',
+            ),
+        );
+        $unsavedLeaveMessage = json_encode(
+            $this->translate(
+                $lang,
+                'You still have unsaved selector changes. Leave anyway?',
+                'Je hebt nog niet-opgeslagen selectorwijzigingen. Toch verlaten?',
+            ),
+        );
         $encodedCurrentUrl = json_encode($currentUrl);
         if (! is_string($encodedCurrentUrl)) {
             $encodedCurrentUrl = '""';
+        }
+        if (! is_string($formBlockedMessage)) {
+            $formBlockedMessage = '""';
+        }
+        if (! is_string($unsavedLeaveMessage)) {
+            $unsavedLeaveMessage = '""';
         }
 
         $runtime = <<<HTML
@@ -197,15 +280,16 @@ HTML;
 </style>
 <div id="monsterindex-selector-toolbar" data-monsterindex-ignore="true">
   <div class="monsterindex-selector-meta">
-    <strong>Guided Selector Setup: {$escapedMonitorName}</strong>
-    <span class="monsterindex-selector-note">Stay on this page while selecting. We keep navigation in selector mode until you save.</span>
+    <strong>{$headerLabel}: {$escapedMonitorName}</strong>
+    <span class="monsterindex-selector-note">{$stayMessage}</span>
   </div>
   <form method="get" action="{$escapedActionUrl}">
     <input type="hidden" name="token" value="{$escapedToken}">
-    <input type="url" name="url" value="{$escapedCurrentUrl}" placeholder="https://example.com/product-url" required>
-    <button type="submit">Open URL</button>
+    <input type="hidden" name="lang" value="{$escapedLang}">
+    <input type="url" name="url" value="{$escapedCurrentUrl}" placeholder="{$inputPlaceholder}" required>
+    <button type="submit">{$openUrlLabel}</button>
   </form>
-  <a id="monsterindex-selector-back" href="{$escapedReturnUrl}" data-monsterindex-ignore="true">Back to Admin</a>
+  <a id="monsterindex-selector-back" href="{$escapedReturnUrl}" data-monsterindex-ignore="true">{$backLabel}</a>
 </div>
 <script data-monsterindex-ignore="true" src="{$escapedSelectorScriptUrl}" defer></script>
 <script data-monsterindex-ignore="true">
@@ -238,13 +322,13 @@ HTML;
 
       event.preventDefault();
       event.stopPropagation();
-      window.alert('Form submission is disabled in selector mode. Use the URL field in the top bar to navigate safely.');
+      window.alert({$formBlockedMessage});
     }, true);
 
     const backLink = document.getElementById('monsterindex-selector-back');
     if (backLink) {
       backLink.addEventListener('click', (event) => {
-        if (window.__monsterindex_selector_unsaved && !window.confirm('You still have unsaved selector changes. Leave anyway?')) {
+        if (window.__monsterindex_selector_unsaved && !window.confirm({$unsavedLeaveMessage})) {
           event.preventDefault();
         }
       });
@@ -265,5 +349,10 @@ HTML;
         }
 
         return '<body>'.$runtime.$html.'</body>';
+    }
+
+    private function translate(string $lang, string $english, string $dutch): string
+    {
+        return $lang === 'nl' ? $dutch : $english;
     }
 }

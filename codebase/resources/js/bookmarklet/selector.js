@@ -8,9 +8,20 @@
   const token = scriptUrl.searchParams.get('token');
   const sourceUrl = scriptUrl.searchParams.get('source_url') || window.location.href;
   const returnUrl = scriptUrl.searchParams.get('return_url') || '/admin/monsters';
+  const language =
+    scriptUrl.searchParams.get('lang') === 'nl' ||
+    new URLSearchParams(window.location.search).get('lang') === 'nl'
+      ? 'nl'
+      : 'en';
+  const x = (english, dutch) => (language === 'nl' ? dutch : english);
 
   if (!token) {
-    alert('MonsterIndex selector token missing. Regenerate the selector session.');
+    alert(
+      x(
+        'MonsterIndex selector token missing. Regenerate the selector session.',
+        'MonsterIndex selectortoken ontbreekt. Genereer de selectorsessie opnieuw.',
+      ),
+    );
     return;
   }
 
@@ -46,50 +57,104 @@
   panel.style.fontFamily = 'ui-sans-serif,system-ui,-apple-system,sans-serif';
   panel.style.color = '#0f172a';
 
-  panel.innerHTML = [
-    '<div style="padding:14px 14px 10px;border-bottom:1px solid #e2e8f0;background:linear-gradient(180deg,#fff,#f8fafc)">',
-    '<div style="font-size:14px;font-weight:700">Guided Price Selector</div>',
-    '<div style="font-size:12px;color:#475569;margin-top:4px">Click values on the page. If a value is split (example 32 and 99), use "Add Part".</div>',
-    '</div>',
-    '<div style="padding:12px 14px;display:grid;gap:10px">',
-    '<div id="mi-instruction" style="font-size:13px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:10px"></div>',
-    '<div style="display:grid;gap:8px">',
-    '<div style="font-size:12px"><strong>Price:</strong> <span id="mi-price-value" style="color:#475569">Not selected</span></div>',
-    '<div style="font-size:12px"><strong>Shipping:</strong> <span id="mi-shipping-value" style="color:#475569">Not selected (optional)</span></div>',
-    '<div style="font-size:12px"><strong>Can count:</strong> <span id="mi-quantity-value" style="color:#475569">Not selected (optional)</span></div>',
-    '</div>',
-    '<div id="mi-status" style="font-size:12px;border-radius:8px;padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;color:#334155"></div>',
-    '<div style="display:grid;gap:6px">',
-    '<div style="font-size:11px;font-weight:600;color:#64748b">Price setup</div>',
-    '<div style="display:flex;flex-wrap:wrap;gap:8px">',
-    '<button id="mi-select-price-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Select Price</button>',
-    '<button id="mi-add-price-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Add Price Part</button>',
-    '</div>',
-    '</div>',
-    '<div style="display:grid;gap:6px">',
-    '<div style="font-size:11px;font-weight:600;color:#64748b">Shipping setup (optional)</div>',
-    '<div style="display:flex;flex-wrap:wrap;gap:8px">',
-    '<button id="mi-select-shipping-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Select Shipping</button>',
-    '<button id="mi-add-shipping-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Add Shipping Part</button>',
-    '<button id="mi-skip-shipping" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Skip Shipping</button>',
-    '</div>',
-    '<input id="mi-shipping-manual" type="text" inputmode="decimal" placeholder="Or type shipping manually (example: 4.99)" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;color:#0f172a" />',
-    '</div>',
-    '<div style="display:grid;gap:6px">',
-    '<div style="font-size:11px;font-weight:600;color:#64748b">Quantity setup (optional, for price per can)</div>',
-    '<div style="display:flex;flex-wrap:wrap;gap:8px">',
-    '<button id="mi-select-quantity-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Select Can Count</button>',
-    '<button id="mi-add-quantity-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Add Count Part</button>',
-    '</div>',
-    '<input id="mi-quantity-manual" type="number" min="1" step="1" placeholder="Or type can count manually (example: 12)" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;color:#0f172a" />',
-    '</div>',
-    '<div style="display:flex;gap:8px">',
-    '<button id="mi-reset" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">Restart</button>',
-    '<button id="mi-save" type="button" style="flex:1;border:1px solid #0f172a;background:#0f172a;color:#ffffff;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;cursor:pointer">Save and Validate</button>',
-    '<button id="mi-back" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:10px 12px;font-size:12px;cursor:pointer">Back</button>',
-    '</div>',
-    '</div>',
-  ].join('');
+  panel.innerHTML = `
+    <div style="padding:14px 14px 10px;border-bottom:1px solid #e2e8f0;background:linear-gradient(180deg,#fff,#f8fafc)">
+      <div style="font-size:14px;font-weight:700">${x('Guided Price Selector', 'Geleide Prijsselector')}</div>
+      <div style="font-size:12px;color:#475569;margin-top:4px">${x(
+        'Click values on the page. If a value is split (example 32 and 99), use "Add Part".',
+        'Klik waarden op de pagina. Als een waarde opgesplitst is (bijvoorbeeld 32 en 99), gebruik dan "Deel toevoegen".',
+      )}</div>
+    </div>
+    <div style="padding:12px 14px;display:grid;gap:10px">
+      <div id="mi-instruction" style="font-size:13px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:10px"></div>
+      <div style="display:grid;gap:8px">
+        <div style="font-size:12px"><strong>${x('Price:', 'Prijs:')}</strong> <span id="mi-price-value" style="color:#475569">${x(
+          'Not selected',
+          'Niet geselecteerd',
+        )}</span></div>
+        <div style="font-size:12px"><strong>${x('Shipping:', 'Verzending:')}</strong> <span id="mi-shipping-value" style="color:#475569">${x(
+          'Not selected (optional)',
+          'Niet geselecteerd (optioneel)',
+        )}</span></div>
+        <div style="font-size:12px"><strong>${x('Can count:', 'Blik-aantal:')}</strong> <span id="mi-quantity-value" style="color:#475569">${x(
+          'Not selected (optional)',
+          'Niet geselecteerd (optioneel)',
+        )}</span></div>
+      </div>
+      <div id="mi-status" style="font-size:12px;border-radius:8px;padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;color:#334155"></div>
+      <div style="display:grid;gap:6px">
+        <div style="font-size:11px;font-weight:600;color:#64748b">${x('Price setup', 'Prijsinstelling')}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button id="mi-select-price-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
+            'Select Price',
+            'Selecteer Prijs',
+          )}</button>
+          <button id="mi-add-price-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
+            'Add Price Part',
+            'Voeg Prijsdeel Toe',
+          )}</button>
+        </div>
+      </div>
+      <div style="display:grid;gap:6px">
+        <div style="font-size:11px;font-weight:600;color:#64748b">${x(
+          'Shipping setup (optional)',
+          'Verzendinstelling (optioneel)',
+        )}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button id="mi-select-shipping-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
+            'Select Shipping',
+            'Selecteer Verzending',
+          )}</button>
+          <button id="mi-add-shipping-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
+            'Add Shipping Part',
+            'Voeg Verzendingdeel Toe',
+          )}</button>
+          <button id="mi-skip-shipping" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
+            'Skip Shipping',
+            'Sla Verzending Over',
+          )}</button>
+        </div>
+        <input id="mi-shipping-manual" type="text" inputmode="decimal" placeholder="${x(
+          'Or type shipping manually (example: 4.99)',
+          'Of vul verzendkosten handmatig in (voorbeeld: 4,99)',
+        )}" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;color:#0f172a" />
+      </div>
+      <div style="display:grid;gap:6px">
+        <div style="font-size:11px;font-weight:600;color:#64748b">${x(
+          'Quantity setup (optional, for price per can)',
+          'Aantalinstelling (optioneel, voor prijs per blik)',
+        )}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button id="mi-select-quantity-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
+            'Select Can Count',
+            'Selecteer Blik-aantal',
+          )}</button>
+          <button id="mi-add-quantity-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
+            'Add Count Part',
+            'Voeg Aantaldeel Toe',
+          )}</button>
+        </div>
+        <input id="mi-quantity-manual" type="number" min="1" step="1" placeholder="${x(
+          'Or type can count manually (example: 12)',
+          'Of vul aantal blikjes handmatig in (voorbeeld: 12)',
+        )}" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;color:#0f172a" />
+      </div>
+      <div style="display:flex;gap:8px">
+        <button id="mi-reset" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
+          'Restart',
+          'Herstart',
+        )}</button>
+        <button id="mi-save" type="button" style="flex:1;border:1px solid #0f172a;background:#0f172a;color:#ffffff;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;cursor:pointer">${x(
+          'Save and Validate',
+          'Opslaan en Valideren',
+        )}</button>
+        <button id="mi-back" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:10px 12px;font-size:12px;cursor:pointer">${x(
+          'Back',
+          'Terug',
+        )}</button>
+      </div>
+    </div>
+  `;
 
   document.body.appendChild(panel);
 
@@ -301,7 +366,14 @@
       .filter((value) => value !== '')
       .join(joinWith);
 
-    return text || `Selected ${parts.length} part${parts.length > 1 ? 's' : ''}`;
+    if (text) {
+      return text;
+    }
+
+    return x(
+      `Selected ${parts.length} part${parts.length > 1 ? 's' : ''}`,
+      `Geselecteerd: ${parts.length} deel${parts.length > 1 ? 'en' : ''}`,
+    );
   };
 
   const updateInstruction = () => {
@@ -310,56 +382,80 @@
     }
 
     if (state.mode === 'select-price-main') {
-      instructionEl.textContent = 'Click the main price value on the page.';
+      instructionEl.textContent = x(
+        'Click the main price value on the page.',
+        'Klik de hoofdprijs op de pagina.',
+      );
       return;
     }
 
     if (state.mode === 'select-price-extra') {
-      instructionEl.textContent = 'Click the extra price part (for example cents).';
+      instructionEl.textContent = x(
+        'Click the extra price part (for example cents).',
+        'Klik het extra prijsdeel (bijvoorbeeld centen).',
+      );
       return;
     }
 
     if (state.mode === 'select-shipping-main') {
-      instructionEl.textContent = 'Click the main shipping amount.';
+      instructionEl.textContent = x(
+        'Click the main shipping amount.',
+        'Klik het hoofdverzendbedrag.',
+      );
       return;
     }
 
     if (state.mode === 'select-shipping-extra') {
-      instructionEl.textContent = 'Click the extra shipping part (optional).';
+      instructionEl.textContent = x(
+        'Click the extra shipping part (optional).',
+        'Klik het extra verzenddeel (optioneel).',
+      );
       return;
     }
 
     if (state.mode === 'select-quantity-main') {
-      instructionEl.textContent = 'Click the can count (example: 12 pack).';
+      instructionEl.textContent = x(
+        'Click the can count (example: 12 pack).',
+        'Klik het aantal blikjes (voorbeeld: 12-pack).',
+      );
       return;
     }
 
     if (state.mode === 'select-quantity-extra') {
-      instructionEl.textContent = 'Click extra can-count part if the count is split.';
+      instructionEl.textContent = x(
+        'Click extra can-count part if the count is split.',
+        'Klik een extra deel van het blik-aantal als het opgesplitst is.',
+      );
       return;
     }
 
     if (state.mode === 'done') {
-      instructionEl.textContent = 'Setup saved. You can now go back.';
+      instructionEl.textContent = x(
+        'Setup saved. You can now go back.',
+        'Instelling opgeslagen. Je kunt nu teruggaan.',
+      );
       return;
     }
 
-    instructionEl.textContent = 'Use the buttons to select values, then click Save and Validate.';
+    instructionEl.textContent = x(
+      'Use the buttons to select values, then click Save and Validate.',
+      'Gebruik de knoppen om waarden te selecteren en klik daarna op Opslaan en Valideren.',
+    );
   };
 
   const updateUi = () => {
     if (priceValueEl instanceof HTMLElement) {
-      priceValueEl.textContent = previewParts(state.priceParts, 'Not selected');
+      priceValueEl.textContent = previewParts(state.priceParts, x('Not selected', 'Niet geselecteerd'));
       priceValueEl.style.color = state.priceParts.length > 0 ? '#0f766e' : '#475569';
     }
 
     if (shippingValueEl instanceof HTMLElement) {
       const manualShipping = cleanText(state.shippingManualValue);
       shippingValueEl.textContent = state.shippingSkipped
-        ? 'Skipped'
+        ? x('Skipped', 'Overgeslagen')
         : manualShipping !== ''
-        ? `Manual: ${manualShipping}`
-        : previewParts(state.shippingParts, 'Not selected (optional)');
+        ? x(`Manual: ${manualShipping}`, `Handmatig: ${manualShipping}`)
+        : previewParts(state.shippingParts, x('Not selected (optional)', 'Niet geselecteerd (optioneel)'));
       shippingValueEl.style.color =
         state.shippingParts.length > 0 || manualShipping !== '' || state.shippingSkipped
           ? '#0f766e'
@@ -370,8 +466,8 @@
       const manualCount = cleanText(state.quantityManualValue);
       quantityValueEl.textContent =
         manualCount !== ''
-          ? `Manual: ${manualCount}`
-          : previewParts(state.quantityParts, 'Not selected (optional)');
+          ? x(`Manual: ${manualCount}`, `Handmatig: ${manualCount}`)
+          : previewParts(state.quantityParts, x('Not selected (optional)', 'Niet geselecteerd (optioneel)'));
       quantityValueEl.style.color =
         state.quantityParts.length > 0 || manualCount !== '' ? '#0f766e' : '#475569';
     }
@@ -418,7 +514,11 @@
 
     if (saveBtn instanceof HTMLButtonElement) {
       saveBtn.disabled = state.priceParts.length === 0 || state.submitting || state.done;
-      saveBtn.textContent = state.submitting ? 'Saving...' : state.done ? 'Saved' : 'Save and Validate';
+      saveBtn.textContent = state.submitting
+        ? x('Saving...', 'Opslaan...')
+        : state.done
+        ? x('Saved', 'Opgeslagen')
+        : x('Save and Validate', 'Opslaan en Valideren');
     }
 
     updateInstruction();
@@ -446,7 +546,13 @@
     state.submitting = true;
     state.mode = 'idle';
     updateUi();
-    setStatus('Saving selectors and validating with a quick scrape...', 'info');
+    setStatus(
+      x(
+        'Saving selectors and validating with a quick scrape...',
+        'Selectors opslaan en valideren met een snelle scrape...',
+      ),
+      'info',
+    );
 
     const shippingSelectorPayload = state.shippingSkipped
       ? {}
@@ -460,6 +566,7 @@
     );
 
     const payload = {
+      lang: language,
       token,
       page_url: sourceUrl,
       page_title: document.title,
@@ -486,7 +593,10 @@
       if (!response.ok || !data.ok) {
         throw new Error(
           data.message ||
-            'Could not validate these selectors yet. Try selecting clearer values.',
+            x(
+              'Could not validate these selectors yet. Try selecting clearer values.',
+              'Kon deze selectors nog niet valideren. Probeer duidelijkere waarden te selecteren.',
+            ),
         );
       }
 
@@ -497,19 +607,31 @@
       const parsedPrice =
         typeof data.price_cents === 'number'
           ? `${data.currency} ${(data.price_cents / 100).toFixed(2)}`
-          : 'Unknown';
+          : x('Unknown', 'Onbekend');
 
       const perCanText =
         typeof data.price_per_can_cents === 'number'
-          ? ` • Per can: ${data.currency} ${(data.price_per_can_cents / 100).toFixed(2)}`
+          ? x(
+              ` • Per can: ${data.currency} ${(data.price_per_can_cents / 100).toFixed(2)}`,
+              ` • Per blik: ${data.currency} ${(data.price_per_can_cents / 100).toFixed(2)}`,
+            )
           : '';
 
-      setStatus(`Saved successfully. Detected price: ${parsedPrice}${perCanText}.`, 'success');
+      setStatus(
+        x(
+          `Saved successfully. Detected price: ${parsedPrice}${perCanText}.`,
+          `Succesvol opgeslagen. Gedetecteerde prijs: ${parsedPrice}${perCanText}.`,
+        ),
+        'success',
+      );
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : 'Save failed. Please retry with another selection.';
+          : x(
+              'Save failed. Please retry with another selection.',
+              'Opslaan mislukt. Probeer opnieuw met een andere selectie.',
+            );
       setStatus(message, 'error');
     } finally {
       state.submitting = false;
@@ -519,32 +641,53 @@
 
   if (selectPriceMainBtn instanceof HTMLButtonElement) {
     selectPriceMainBtn.addEventListener('click', () => {
-      startSelection('select-price-main', 'Click the main price value.');
+      startSelection(
+        'select-price-main',
+        x('Click the main price value.', 'Klik de hoofdprijs.'),
+      );
     });
   }
 
   if (addPricePartBtn instanceof HTMLButtonElement) {
     addPricePartBtn.addEventListener('click', () => {
-      startSelection('select-price-extra', 'Click the extra price part (for example cents).');
+      startSelection(
+        'select-price-extra',
+        x(
+          'Click the extra price part (for example cents).',
+          'Klik het extra prijsdeel (bijvoorbeeld centen).',
+        ),
+      );
     });
   }
 
   if (selectShippingMainBtn instanceof HTMLButtonElement) {
     selectShippingMainBtn.addEventListener('click', () => {
-      startSelection('select-shipping-main', 'Click the main shipping amount.');
+      startSelection(
+        'select-shipping-main',
+        x('Click the main shipping amount.', 'Klik het hoofdverzendbedrag.'),
+      );
     });
   }
 
   if (addShippingPartBtn instanceof HTMLButtonElement) {
     addShippingPartBtn.addEventListener('click', () => {
-      startSelection('select-shipping-extra', 'Click the extra shipping part.');
+      startSelection(
+        'select-shipping-extra',
+        x('Click the extra shipping part.', 'Klik het extra verzenddeel.'),
+      );
     });
   }
 
   if (skipShippingBtn instanceof HTMLButtonElement) {
     skipShippingBtn.addEventListener('click', () => {
       if (state.priceParts.length === 0) {
-        setStatus('Select a price before skipping shipping.', 'error');
+        setStatus(
+          x(
+            'Select a price before skipping shipping.',
+            'Selecteer eerst een prijs voordat je verzending overslaat.',
+          ),
+          'error',
+        );
         return;
       }
 
@@ -555,7 +698,10 @@
       }
       state.shippingSkipped = true;
       state.mode = 'idle';
-      setStatus('Shipping skipped. You can save now.', 'info');
+      setStatus(
+        x('Shipping skipped. You can save now.', 'Verzending overgeslagen. Je kunt nu opslaan.'),
+        'info',
+      );
       updateUi();
     });
   }
@@ -579,13 +725,25 @@
 
   if (selectQuantityMainBtn instanceof HTMLButtonElement) {
     selectQuantityMainBtn.addEventListener('click', () => {
-      startSelection('select-quantity-main', 'Click the can count (for example 12 pack).');
+      startSelection(
+        'select-quantity-main',
+        x(
+          'Click the can count (for example 12 pack).',
+          'Klik het aantal blikjes (bijvoorbeeld 12-pack).',
+        ),
+      );
     });
   }
 
   if (addQuantityPartBtn instanceof HTMLButtonElement) {
     addQuantityPartBtn.addEventListener('click', () => {
-      startSelection('select-quantity-extra', 'Click the extra count part if needed.');
+      startSelection(
+        'select-quantity-extra',
+        x(
+          'Click the extra count part if needed.',
+          'Klik indien nodig het extra aantaldeel.',
+        ),
+      );
     });
   }
 
@@ -619,7 +777,13 @@
       state.done = false;
       state.mode = 'select-price-main';
       window.__monsterindex_selector_unsaved = true;
-      setStatus('Restarted. Click the main price value to begin.', 'info');
+      setStatus(
+        x(
+          'Restarted. Click the main price value to begin.',
+          'Herstart. Klik de hoofdprijs om te beginnen.',
+        ),
+        'info',
+      );
       updateUi();
     });
   }
@@ -632,7 +796,12 @@
     backBtn.addEventListener('click', () => {
       if (
         window.__monsterindex_selector_unsaved &&
-        !window.confirm('You still have unsaved selector changes. Leave anyway?')
+        !window.confirm(
+          x(
+            'You still have unsaved selector changes. Leave anyway?',
+            'Je hebt nog niet-opgeslagen selectorwijzigingen. Toch verlaten?',
+          ),
+        )
       ) {
         return;
       }
@@ -682,7 +851,13 @@
       state.priceParts = [selector];
       state.shippingSkipped = false;
       state.mode = 'idle';
-      setStatus('Main price selected. Add another part if needed.', 'success');
+      setStatus(
+        x(
+          'Main price selected. Add another part if needed.',
+          'Hoofdprijs geselecteerd. Voeg indien nodig een extra deel toe.',
+        ),
+        'success',
+      );
       updateUi();
       return;
     }
@@ -690,7 +865,7 @@
     if (state.mode === 'select-price-extra') {
       state.priceParts.push(selector);
       state.mode = 'idle';
-      setStatus('Extra price part added.', 'success');
+      setStatus(x('Extra price part added.', 'Extra prijsdeel toegevoegd.'), 'success');
       updateUi();
       return;
     }
@@ -703,7 +878,7 @@
       }
       state.shippingSkipped = false;
       state.mode = 'idle';
-      setStatus('Main shipping selected.', 'success');
+      setStatus(x('Main shipping selected.', 'Hoofdverzending geselecteerd.'), 'success');
       updateUi();
       return;
     }
@@ -712,7 +887,10 @@
       state.shippingParts.push(selector);
       state.shippingSkipped = false;
       state.mode = 'idle';
-      setStatus('Extra shipping part added.', 'success');
+      setStatus(
+        x('Extra shipping part added.', 'Extra verzenddeel toegevoegd.'),
+        'success',
+      );
       updateUi();
       return;
     }
@@ -724,7 +902,7 @@
         quantityManualInput.value = '';
       }
       state.mode = 'idle';
-      setStatus('Can count selected.', 'success');
+      setStatus(x('Can count selected.', 'Blik-aantal geselecteerd.'), 'success');
       updateUi();
       return;
     }
@@ -732,7 +910,10 @@
     if (state.mode === 'select-quantity-extra') {
       state.quantityParts.push(selector);
       state.mode = 'idle';
-      setStatus('Extra can-count part added.', 'success');
+      setStatus(
+        x('Extra can-count part added.', 'Extra blik-aantaldeel toegevoegd.'),
+        'success',
+      );
       updateUi();
     }
   };
@@ -750,6 +931,9 @@
   document.addEventListener('click', onClick, true);
   window.addEventListener('beforeunload', onBeforeUnload);
 
-  setStatus('Step 1: click the main price value.', 'info');
+  setStatus(
+    x('Step 1: click the main price value.', 'Stap 1: klik de hoofdprijs.'),
+    'info',
+  );
   updateUi();
 })();

@@ -1,5 +1,6 @@
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
@@ -12,6 +13,8 @@ interface Site {
 }
 
 export default function SitesIndex({ sites }: { sites: Site[] }) {
+    const { x } = useLocale();
+
     const form = useForm({
         name: '',
         domain: '',
@@ -26,10 +29,10 @@ export default function SitesIndex({ sites }: { sites: Site[] }) {
     };
 
     const editSite = (site: Site) => {
-        const name = window.prompt('Site name', site.name);
+        const name = window.prompt(x('Site name', 'Site naam'), site.name);
         if (!name) return;
 
-        const domain = window.prompt('Domain', site.domain);
+        const domain = window.prompt(x('Domain', 'Domein'), site.domain);
         if (!domain) return;
 
         router.put(route('admin.sites.update', site.id), {
@@ -43,17 +46,17 @@ export default function SitesIndex({ sites }: { sites: Site[] }) {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-slate-800">
-                    Admin: Sites
+                    {x('Admin: Sites', 'Admin: Sites')}
                 </h2>
             }
         >
-            <Head title="Admin Sites" />
+            <Head title={x('Admin Sites', 'Admin Sites')} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Create Site</CardTitle>
+                            <CardTitle>{x('Create Site', 'Site Maken')}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <form
@@ -62,7 +65,7 @@ export default function SitesIndex({ sites }: { sites: Site[] }) {
                             >
                                 <input
                                     className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder="Site name"
+                                    placeholder={x('Site name', 'Site naam')}
                                     value={form.data.name}
                                     onChange={(event) =>
                                         form.setData('name', event.target.value)
@@ -71,7 +74,7 @@ export default function SitesIndex({ sites }: { sites: Site[] }) {
                                 />
                                 <input
                                     className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder="Domain"
+                                    placeholder={x('Domain', 'Domein')}
                                     value={form.data.domain}
                                     onChange={(event) =>
                                         form.setData('domain', event.target.value)
@@ -85,7 +88,7 @@ export default function SitesIndex({ sites }: { sites: Site[] }) {
                                     })}
                                     disabled={form.processing}
                                 >
-                                    Add Site
+                                    {x('Add Site', 'Site Toevoegen')}
                                 </button>
                             </form>
                         </CardContent>
@@ -93,16 +96,24 @@ export default function SitesIndex({ sites }: { sites: Site[] }) {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Sites</CardTitle>
+                            <CardTitle>{x('Sites', 'Sites')}</CardTitle>
                         </CardHeader>
                         <CardContent className="overflow-x-auto">
                             <table className="w-full min-w-[700px] text-left text-sm">
                                 <thead>
                                     <tr className="border-b text-xs uppercase tracking-wide text-slate-500">
-                                        <th className="px-3 py-2">Name</th>
-                                        <th className="px-3 py-2">Domain</th>
-                                        <th className="px-3 py-2">Active</th>
-                                        <th className="px-3 py-2">Actions</th>
+                                        <th className="px-3 py-2">
+                                            {x('Name', 'Naam')}
+                                        </th>
+                                        <th className="px-3 py-2">
+                                            {x('Domain', 'Domein')}
+                                        </th>
+                                        <th className="px-3 py-2">
+                                            {x('Active', 'Actief')}
+                                        </th>
+                                        <th className="px-3 py-2">
+                                            {x('Actions', 'Acties')}
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -118,7 +129,9 @@ export default function SitesIndex({ sites }: { sites: Site[] }) {
                                                 {site.domain}
                                             </td>
                                             <td className="px-3 py-2">
-                                                {site.active ? 'Yes' : 'No'}
+                                                {site.active
+                                                    ? x('Yes', 'Ja')
+                                                    : x('No', 'Nee')}
                                             </td>
                                             <td className="px-3 py-2">
                                                 <div className="flex gap-2">
@@ -132,7 +145,7 @@ export default function SitesIndex({ sites }: { sites: Site[] }) {
                                                             editSite(site)
                                                         }
                                                     >
-                                                        Edit
+                                                        {x('Edit', 'Bewerken')}
                                                     </button>
                                                     <button
                                                         type="button"
@@ -149,7 +162,7 @@ export default function SitesIndex({ sites }: { sites: Site[] }) {
                                                             )
                                                         }
                                                     >
-                                                        Delete
+                                                        {x('Delete', 'Verwijderen')}
                                                     </button>
                                                 </div>
                                             </td>

@@ -1,5 +1,6 @@
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 
@@ -29,26 +30,29 @@ export default function AlertsIndex({
         data: AlertRow[];
     };
 }) {
+    const { locale, x } = useLocale();
+    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+
     return (
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-slate-800">
-                    Admin: Alerts
+                    {x('Admin: Alerts', 'Admin: Meldingen')}
                 </h2>
             }
         >
-            <Head title="Admin Alerts" />
+            <Head title={x('Admin Alerts', 'Admin Meldingen')} />
 
             <div className="py-8">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <Card>
                         <CardHeader>
-                            <CardTitle>In-app Alerts</CardTitle>
+                            <CardTitle>{x('In-app Alerts', 'In-app Meldingen')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {alerts.data.length === 0 && (
                                 <p className="text-sm text-slate-600">
-                                    No alerts yet.
+                                    {x('No alerts yet.', 'Nog geen meldingen.')}
                                 </p>
                             )}
 
@@ -64,15 +68,18 @@ export default function AlertsIndex({
                                         <span className="text-xs text-slate-500">
                                             {new Date(
                                                 alert.created_at,
-                                            ).toLocaleString()}
+                                            ).toLocaleString(dateLocale)}
                                         </span>
                                     </div>
                                     <p className="mt-2 text-sm text-slate-700">
                                         {alert.body}
                                     </p>
                                     <p className="mt-2 text-xs text-slate-500">
-                                        Monster: {alert.monster.name} • Store:{' '}
-                                        {alert.monitor.site.name} • Type:{' '}
+                                        {x('Monster:', 'Monster:')}{' '}
+                                        {alert.monster.name} •{' '}
+                                        {x('Store:', 'Winkel:')}{' '}
+                                        {alert.monitor.site.name} •{' '}
+                                        {x('Type:', 'Type:')}{' '}
                                         {alert.type}
                                     </p>
                                     {!alert.read_at && (
@@ -91,7 +98,7 @@ export default function AlertsIndex({
                                                 )
                                             }
                                         >
-                                            Mark Read
+                                            {x('Mark Read', 'Markeer Als Gelezen')}
                                         </button>
                                     )}
                                 </div>

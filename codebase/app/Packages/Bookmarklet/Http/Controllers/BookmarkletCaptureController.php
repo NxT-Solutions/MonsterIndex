@@ -23,8 +23,10 @@ class BookmarkletCaptureController extends Controller
     public function capture(Request $request): JsonResponse|Response
     {
         $payload = $this->normalizePayload($request);
+        $lang = $this->resolveLang($request, $payload);
 
         $validator = Validator::make($payload, [
+            'lang' => ['nullable', 'in:en,nl'],
             'token' => ['required', 'string'],
             'page_url' => ['required', 'url', 'max:2048'],
             'page_title' => ['nullable', 'string', 'max:500'],
@@ -57,14 +59,24 @@ class BookmarkletCaptureController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return $this->errorResponse($request, 'Invalid selector payload.', 422);
+            return $this->errorResponse(
+                $request,
+                $this->translate($lang, 'Invalid selector payload.', 'Ongeldige selector-payload.'),
+                422,
+                $lang,
+            );
         }
 
         $validated = $validator->validated();
 
         $session = $this->bookmarkletSessionService->resolveValidToken($validated['token']);
         if (! $session) {
-            return $this->errorResponse($request, 'Selector token is invalid or expired.', 401);
+            return $this->errorResponse(
+                $request,
+                $this->translate($lang, 'Selector token is invalid or expired.', 'Selectortoken is ongeldig of verlopen.'),
+                401,
+                $lang,
+            );
         }
 
         $monitor = $session->monitor()->with('site', 'monster')->firstOrFail();
@@ -84,8 +96,13 @@ class BookmarkletCaptureController extends Controller
         if ($result->status === 'failed') {
             return $this->errorResponse(
                 request: $request,
-                message: 'Selector capture saved, but validation failed. Please retry with a better price selector.',
+                message: $this->translate(
+                    $lang,
+                    'Selector capture saved, but validation failed. Please retry with a better price selector.',
+                    'Selectoropslag is bewaard, maar validatie faalde. Probeer opnieuw met een betere prijsselector.',
+                ),
                 status: 422,
+                lang: $lang,
             );
         }
 
@@ -111,7 +128,7 @@ class BookmarkletCaptureController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'ok' => true,
-                'message' => 'Selectors captured and validated.',
+                'message' => $this->translate($lang, 'Selectors captured and validated.', 'Selectors opgeslagen en gevalideerd.'),
                 'status' => $result->status,
                 'currency' => $result->currency,
                 'price_cents' => $result->priceCents,
@@ -125,7 +142,11 @@ class BookmarkletCaptureController extends Controller
         return response(
             view('bookmarklet-capture-result', [
                 'ok' => true,
-                'message' => 'Selectors captured and validated successfully. You can close this tab.',
+                'message' => $this->translate(
+                    $lang,
+                    'Selectors captured and validated successfully. You can close this tab.',
+                    'Selectors zijn succesvol opgeslagen en gevalideerd. Je kunt dit tabblad sluiten.',
+                ),
             ]),
             200,
         );
@@ -145,6 +166,7 @@ class BookmarkletCaptureController extends Controller
         }
 
         return [
+            'lang' => $request->query('lang'),
             'token' => $request->query('token'),
             'page_url' => $request->query('page_url'),
             'page_title' => $request->query('page_title'),
@@ -170,7 +192,7 @@ class BookmarkletCaptureController extends Controller
         ];
     }
 
-    private function errorResponse(Request $request, string $message, int $status): JsonResponse|Response
+    private function errorResponse(Request $request, string $message, int $status, string $lang = 'en'): JsonResponse|Response
     {
         if ($request->expectsJson()) {
             return response()->json([
@@ -183,9 +205,25 @@ class BookmarkletCaptureController extends Controller
             view('bookmarklet-capture-result', [
                 'ok' => false,
                 'message' => $message,
+                'lang' => $lang,
             ]),
             $status,
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function resolveLang(Request $request, array $payload): string
+    {
+        $candidate = $payload['lang'] ?? $request->query('lang');
+
+        return $candidate === 'nl' ? 'nl' : 'en';
+    }
+
+    private function translate(string $lang, string $english, string $dutch): string
+    {
+        return $lang === 'nl' ? $dutch : $english;
     }
 
     /**

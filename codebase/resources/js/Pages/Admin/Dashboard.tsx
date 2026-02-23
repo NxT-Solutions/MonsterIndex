@@ -1,29 +1,34 @@
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
 export default function AdminDashboard() {
+    const { x } = useLocale();
+
     return (
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-slate-800">
-                    Admin Console
+                    {x('Admin Console', 'Admin Console')}
                 </h2>
             }
         >
-            <Head title="Admin" />
+            <Head title={x('Admin', 'Admin')} />
 
             <div className="py-12">
                 <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Management</CardTitle>
+                            <CardTitle>{x('Management', 'Beheer')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-slate-700">
                             <p>
-                                Add monsters, attach site records, and configure
-                                selectors from one workflow.
+                                {x(
+                                    'Add monsters, attach site records, and configure selectors from one workflow.',
+                                    'Voeg monsters toe, koppel website-records en configureer selectors vanuit één workflow.',
+                                )}
                             </p>
                             <div className="flex flex-wrap gap-2">
                                 <Link
@@ -33,7 +38,7 @@ export default function AdminDashboard() {
                                         size: 'sm',
                                     })}
                                 >
-                                    Monsters & Records
+                                    {x('Monsters & Records', 'Monsters & Records')}
                                 </Link>
                             </div>
                         </CardContent>
@@ -41,12 +46,14 @@ export default function AdminDashboard() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Signals</CardTitle>
+                            <CardTitle>{x('Signals', 'Signalen')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-slate-700">
                             <p>
-                                Review deal alerts generated from monitored
-                                snapshots.
+                                {x(
+                                    'Review deal alerts generated from monitored snapshots.',
+                                    'Bekijk dealmeldingen die zijn gegenereerd op basis van gemonitorde snapshots.',
+                                )}
                             </p>
                             <Link
                                 href={route('admin.alerts.index')}
@@ -55,7 +62,7 @@ export default function AdminDashboard() {
                                     size: 'sm',
                                 })}
                             >
-                                Open Alerts
+                                {x('Open Alerts', 'Open Meldingen')}
                             </Link>
                         </CardContent>
                     </Card>

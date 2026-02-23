@@ -1,5 +1,6 @@
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
@@ -57,6 +58,9 @@ export default function MonitorsIndex({
     monsters: Option[];
     sites: SiteOption[];
 }) {
+    const { locale, x } = useLocale();
+    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+
     const form = useForm({
         monster_id: monsters[0]?.id ?? 0,
         site_id: sites[0]?.id ?? 0,
@@ -89,7 +93,10 @@ export default function MonitorsIndex({
 
     const openSelectorBrowser = async (monitor: MonitorRow) => {
         const targetUrl = window
-            .prompt('Open selector for URL', monitor.product_url)
+            .prompt(
+                x('Open selector for URL', 'Open selector voor URL'),
+                monitor.product_url,
+            )
             ?.trim();
         if (!targetUrl) {
             return;
@@ -102,6 +109,7 @@ export default function MonitorsIndex({
                 route('api.bookmarklet.session'),
                 {
                     monitor_id: monitor.id,
+                    lang: locale,
                 },
             );
 
@@ -109,6 +117,7 @@ export default function MonitorsIndex({
                 response.data.selector_browser_url,
             );
             selectorBrowserUrl.searchParams.set('url', targetUrl);
+            selectorBrowserUrl.searchParams.set('lang', locale);
             window.open(
                 selectorBrowserUrl.toString(),
                 '_blank',
@@ -116,7 +125,10 @@ export default function MonitorsIndex({
             );
         } catch {
             window.alert(
-                'Could not create a selector session. Reload and try again.',
+                x(
+                    'Could not create a selector session. Reload and try again.',
+                    'Kon geen selectorsessie maken. Herlaad en probeer opnieuw.',
+                ),
             );
         } finally {
             setLoadingSelector(null);
@@ -125,14 +137,20 @@ export default function MonitorsIndex({
 
     const editMonitor = (monitor: MonitorRow) => {
         const productUrl =
-            window.prompt('Product URL', monitor.product_url) ??
+            window.prompt(
+                x('Product URL', 'Product-URL'),
+                monitor.product_url,
+            ) ??
             monitor.product_url;
         const currency =
-            window.prompt('Currency (3-letter)', monitor.currency) ??
+            window.prompt(
+                x('Currency (3-letter)', 'Valuta (3 letters)'),
+                monitor.currency,
+            ) ??
             monitor.currency;
         const interval = Number(
             window.prompt(
-                'Check interval minutes',
+                x('Check interval minutes', 'Controle-interval minuten'),
                 String(monitor.check_interval_minutes),
             ) ?? monitor.check_interval_minutes,
         );
@@ -166,17 +184,17 @@ export default function MonitorsIndex({
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-slate-800">
-                    Admin: Monitors
+                    {x('Admin: Monitors', 'Admin: Monitoren')}
                 </h2>
             }
         >
-            <Head title="Admin Monitors" />
+            <Head title={x('Admin Monitors', 'Admin Monitoren')} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Create Monitor</CardTitle>
+                            <CardTitle>{x('Create Monitor', 'Monitor Maken')}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <form
@@ -222,7 +240,7 @@ export default function MonitorsIndex({
 
                                 <input
                                     className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder="Currency"
+                                    placeholder={x('Currency', 'Valuta')}
                                     value={form.data.currency}
                                     onChange={(event) =>
                                         form.setData('currency', event.target.value)
@@ -232,7 +250,7 @@ export default function MonitorsIndex({
 
                                 <input
                                     className="md:col-span-2 rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    placeholder="Product URL"
+                                    placeholder={x('Product URL', 'Product-URL')}
                                     value={form.data.product_url}
                                     onChange={(event) =>
                                         form.setData(
@@ -248,7 +266,10 @@ export default function MonitorsIndex({
                                         type="number"
                                         min={15}
                                         className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                        placeholder="Interval minutes"
+                                        placeholder={x(
+                                            'Interval minutes',
+                                            'Interval minuten',
+                                        )}
                                         value={form.data.check_interval_minutes}
                                         onChange={(event) =>
                                             form.setData(
@@ -265,7 +286,7 @@ export default function MonitorsIndex({
                                         })}
                                         disabled={form.processing}
                                     >
-                                        Create
+                                        {x('Create', 'Maken')}
                                     </button>
                                 </div>
                             </form>
@@ -274,12 +295,12 @@ export default function MonitorsIndex({
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Monitors</CardTitle>
+                            <CardTitle>{x('Monitors', 'Monitoren')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {monitors.length === 0 && (
                                 <p className="text-sm text-slate-600">
-                                    No monitors yet.
+                                    {x('No monitors yet.', 'Nog geen monitoren.')}
                                 </p>
                             )}
 
@@ -298,30 +319,35 @@ export default function MonitorsIndex({
                                             </p>
                                             <p>{monitor.product_url}</p>
                                             <p>
-                                                Interval:{' '}
+                                                {x('Interval:', 'Interval:')}{' '}
                                                 {
                                                     monitor.check_interval_minutes
                                                 }
-                                                m • Currency: {monitor.currency}{' '}
-                                                • Active:{' '}
-                                                {monitor.active ? 'Yes' : 'No'}
+                                                m • {x('Currency:', 'Valuta:')}{' '}
+                                                {monitor.currency} •{' '}
+                                                {x('Active:', 'Actief:')}{' '}
+                                                {monitor.active
+                                                    ? x('Yes', 'Ja')
+                                                    : x('No', 'Nee')}
                                             </p>
                                             <p>
-                                                Next check:{' '}
+                                                {x('Next check:', 'Volgende check:')}{' '}
                                                 {monitor.next_check_at
                                                     ? new Date(
                                                           monitor.next_check_at,
-                                                      ).toLocaleString()
-                                                    : 'N/A'}
+                                                      ).toLocaleString(
+                                                          dateLocale,
+                                                      )
+                                                    : x('N/A', 'N/B')}
                                             </p>
                                             {monitor.latest_snapshot && (
                                                 <p>
-                                                    Latest:{' '}
+                                                    {x('Latest:', 'Laatste:')}{' '}
                                                     {monitor.latest_snapshot
                                                         .effective_total_cents !==
                                                     null
                                                         ? `${monitor.latest_snapshot.currency} ${(monitor.latest_snapshot.effective_total_cents / 100).toFixed(2)}`
-                                                        : 'N/A'}
+                                                        : x('N/A', 'N/B')}
                                                     {' • '}
                                                     {
                                                         monitor.latest_snapshot
@@ -342,7 +368,7 @@ export default function MonitorsIndex({
                                                     editMonitor(monitor)
                                                 }
                                             >
-                                                Edit
+                                                {x('Edit', 'Bewerken')}
                                             </button>
                                             <button
                                                 type="button"
@@ -355,8 +381,8 @@ export default function MonitorsIndex({
                                                 }
                                             >
                                                 {monitor.active
-                                                    ? 'Disable'
-                                                    : 'Enable'}
+                                                    ? x('Disable', 'Uitschakelen')
+                                                    : x('Enable', 'Inschakelen')}
                                             </button>
                                             <button
                                                 type="button"
@@ -369,7 +395,7 @@ export default function MonitorsIndex({
                                                 }
                                                 onClick={() => runNow(monitor)}
                                             >
-                                                Run Now
+                                                {x('Run Now', 'Nu Draaien')}
                                             </button>
                                             <button
                                                 type="button"
@@ -385,8 +411,11 @@ export default function MonitorsIndex({
                                                 }
                                             >
                                                 {loadingSelector === monitor.id
-                                                    ? 'Opening...'
-                                                    : 'Open Selector'}
+                                                    ? x('Opening...', 'Openen...')
+                                                    : x(
+                                                          'Open Selector',
+                                                          'Open Selector',
+                                                      )}
                                             </button>
                                             <button
                                                 type="button"
@@ -403,7 +432,7 @@ export default function MonitorsIndex({
                                                     )
                                                 }
                                             >
-                                                Delete
+                                                {x('Delete', 'Verwijderen')}
                                             </button>
                                         </div>
                                     </div>

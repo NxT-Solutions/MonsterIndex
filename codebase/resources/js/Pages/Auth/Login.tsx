@@ -6,11 +6,13 @@ import {
     CardHeader,
     CardTitle,
 } from '@/Components/ui/card';
+import { useLocale } from '@/lib/locale';
 import { cn } from '@/lib/utils';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, usePage } from '@inertiajs/react';
 
 export default function Login() {
+    const { x } = useLocale();
     const errors = usePage().props.errors as Record<string, string>;
     const googleRedirectUrl = route('auth.google.redirect');
 
@@ -22,14 +24,18 @@ export default function Login() {
 
     return (
         <GuestLayout>
-            <Head title="Continue with Google" />
+            <Head title={x('Continue with Google', 'Doorgaan met Google')} />
 
             <Card className="border-slate-200 shadow-none">
                 <CardHeader className="space-y-2">
-                    <CardTitle>Sign in to MonsterIndex</CardTitle>
+                    <CardTitle>
+                        {x('Sign in to MonsterIndex', 'Meld je aan bij MonsterIndex')}
+                    </CardTitle>
                     <CardDescription>
-                        OAuth-only authentication is enabled. Continue with your
-                        Google account.
+                        {x(
+                            'OAuth-only authentication is enabled. Continue with your Google account.',
+                            'Alleen OAuth-authenticatie is actief. Ga verder met je Google-account.',
+                        )}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -47,7 +53,7 @@ export default function Login() {
                         )}
                     >
                         <GoogleIcon className="size-4" />
-                        Continue with Google
+                        {x('Continue with Google', 'Doorgaan met Google')}
                     </a>
                     <Button
                         type="button"
@@ -55,7 +61,10 @@ export default function Login() {
                         className="w-full"
                         disabled
                     >
-                        Password login disabled
+                        {x(
+                            'Password login disabled',
+                            'Inloggen met wachtwoord is uitgeschakeld',
+                        )}
                     </Button>
                 </CardContent>
             </Card>
