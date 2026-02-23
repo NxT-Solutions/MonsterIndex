@@ -295,10 +295,10 @@ export default function MonitorsIndex({
                             </CardHeader>
                             <CardContent>
                                 <form
-                                    className="grid gap-3 md:grid-cols-3"
+                                    className="grid gap-3 md:grid-cols-12"
                                     onSubmit={submit}
                                 >
-                                    <div className="space-y-1.5">
+                                    <div className="min-w-0 space-y-1.5 md:col-span-4">
                                         <label
                                             htmlFor="create-monitor-monster"
                                             className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
@@ -307,7 +307,7 @@ export default function MonitorsIndex({
                                         </label>
                                         <select
                                             id="create-monitor-monster"
-                                            className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
+                                            className="w-full min-w-0 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
                                             value={form.data.monster_id}
                                             onChange={(event) =>
                                                 form.setData(
@@ -328,7 +328,7 @@ export default function MonitorsIndex({
                                         </select>
                                     </div>
 
-                                    <div className="space-y-1.5">
+                                    <div className="min-w-0 space-y-1.5 md:col-span-4">
                                         <label
                                             htmlFor="create-monitor-store"
                                             className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
@@ -337,7 +337,7 @@ export default function MonitorsIndex({
                                         </label>
                                         <select
                                             id="create-monitor-store"
-                                            className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
+                                            className="w-full min-w-0 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
                                             value={form.data.site_id}
                                             onChange={(event) =>
                                                 form.setData(
@@ -361,7 +361,7 @@ export default function MonitorsIndex({
                                     </div>
 
                                     {isOtherStoreSelected && (
-                                        <div className="space-y-1.5">
+                                        <div className="min-w-0 space-y-1.5 md:col-span-12">
                                             <label
                                                 htmlFor="create-monitor-site-name"
                                                 className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
@@ -389,7 +389,7 @@ export default function MonitorsIndex({
                                         </div>
                                     )}
 
-                                    <div className="space-y-1.5">
+                                    <div className="min-w-0 space-y-1.5 md:col-span-4">
                                         <label
                                             htmlFor="create-monitor-currency"
                                             className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
@@ -398,7 +398,7 @@ export default function MonitorsIndex({
                                         </label>
                                         <select
                                             id="create-monitor-currency"
-                                            className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
+                                            className="w-full min-w-0 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
                                             value={form.data.currency}
                                             onChange={(event) =>
                                                 form.setData(
@@ -419,7 +419,7 @@ export default function MonitorsIndex({
                                         </select>
                                     </div>
 
-                                    <div className="space-y-1.5 md:col-span-2">
+                                    <div className="min-w-0 space-y-1.5 md:col-span-8">
                                         <label
                                             htmlFor="create-monitor-product-url"
                                             className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
@@ -441,45 +441,52 @@ export default function MonitorsIndex({
                                         />
                                     </div>
 
-                                    <div className="space-y-1.5">
+                                    <div className="min-w-0 space-y-1.5 md:col-span-2">
                                         <label
                                             htmlFor="create-monitor-interval"
                                             className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
                                             {x('Interval (minutes)', 'Interval (minuten)')}
                                         </label>
-                                        <div className="flex gap-3">
-                                            <input
-                                                id="create-monitor-interval"
-                                                type="number"
-                                                min={15}
-                                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                                placeholder={x(
-                                                    'Interval minutes',
-                                                    'Interval minuten',
-                                                )}
-                                                value={form.data.check_interval_minutes}
-                                                onChange={(event) =>
-                                                    form.setData(
-                                                        'check_interval_minutes',
-                                                        Number(event.target.value),
-                                                    )
-                                                }
-                                                required
-                                            />
-                                            <button
-                                                type="submit"
-                                                className={cn(
-                                                    buttonVariants({
-                                                        variant: 'default',
-                                                    }),
-                                                    'shrink-0 bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
-                                                )}
-                                                disabled={form.processing}
-                                            >
-                                                {x('Create', 'Maken')}
-                                            </button>
-                                        </div>
+                                        <input
+                                            id="create-monitor-interval"
+                                            type="number"
+                                            min={15}
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                            placeholder={x(
+                                                'Interval minutes',
+                                                'Interval minuten',
+                                            )}
+                                            value={form.data.check_interval_minutes}
+                                            onChange={(event) =>
+                                                form.setData(
+                                                    'check_interval_minutes',
+                                                    Number(event.target.value),
+                                                )
+                                            }
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="min-w-0 space-y-1.5 md:col-span-2">
+                                        <span
+                                            aria-hidden="true"
+                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-transparent"
+                                        >
+                                            {x('Action', 'Actie')}
+                                        </span>
+                                        <button
+                                            type="submit"
+                                            className={cn(
+                                                buttonVariants({
+                                                    variant: 'default',
+                                                }),
+                                                'w-full bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                            )}
+                                            disabled={form.processing}
+                                        >
+                                            {x('Create', 'Maken')}
+                                        </button>
                                     </div>
                                 </form>
                             </CardContent>
