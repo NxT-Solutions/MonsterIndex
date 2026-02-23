@@ -26,6 +26,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/monsters', [AdminMonsterController::class, 'store'])->name('admin.monsters.store');
     Route::put('/admin/monsters/{monster}', [AdminMonsterController::class, 'update'])->name('admin.monsters.update');
     Route::delete('/admin/monsters/{monster}', [AdminMonsterController::class, 'destroy'])->name('admin.monsters.destroy');
+    Route::post('/admin/monsters/{monster}/records', [AdminMonsterController::class, 'storeRecord'])->name('admin.monsters.records.store');
 
     Route::get('/admin/sites', [AdminSiteController::class, 'index'])->name('admin.sites.index');
     Route::post('/admin/sites', [AdminSiteController::class, 'store'])->name('admin.sites.store');

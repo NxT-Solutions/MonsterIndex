@@ -3,7 +3,9 @@
 namespace Packages\Admin\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Monitor;
 use App\Models\Monster;
+use App\Models\Site;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,6 +19,11 @@ class MonsterController extends Controller
     {
         return Inertia::render('Admin/Monsters/Index', [
             'monsters' => Monster::query()
+                ->with([
+                    'monitors' => fn ($query) => $query
+                        ->with(['site:id,name,domain', 'latestSnapshot'])
+                        ->orderByDesc('id'),
+                ])
                 ->orderBy('name')
                 ->get(),
         ]);
@@ -76,6 +83,64 @@ class MonsterController extends Controller
         $monster->delete();
 
         return back()->with('success', 'Monster deleted.');
+    }
+
+    public function storeRecord(Request $request, Monster $monster): RedirectResponse
+    {
+        $validated = $request->validate([
+            'site_name' => ['nullable', 'string', 'max:255'],
+            'product_url' => ['required', 'url', 'max:2048'],
+            'currency' => ['required', 'string', 'size:3'],
+            'check_interval_minutes' => ['required', 'integer', 'min:15', 'max:1440'],
+            'active' => ['sometimes', 'boolean'],
+        ]);
+
+        $domain = strtolower((string) parse_url($validated['product_url'], PHP_URL_HOST));
+        if ($domain === '') {
+            throw ValidationException::withMessages([
+                'product_url' => 'Could not resolve a domain from the provided product URL.',
+            ]);
+        }
+
+        $siteName = trim((string) ($validated['site_name'] ?? ''));
+        if ($siteName === '') {
+            $siteName = str($domain)->replace(['www.', '.com', '.nl', '.eu', '.be', '.de', '.fr', '.co.uk'], '')->headline()->toString();
+            if ($siteName === '') {
+                $siteName = $domain;
+            }
+        }
+
+        $site = Site::query()->firstOrCreate(
+            ['domain' => $domain],
+            [
+                'name' => $siteName,
+                'active' => true,
+            ],
+        );
+
+        if ($site->name === $site->domain && $siteName !== '') {
+            $site->forceFill([
+                'name' => $siteName,
+            ])->save();
+        }
+
+        $monitor = Monitor::query()->create([
+            'monster_id' => $monster->id,
+            'site_id' => $site->id,
+            'product_url' => $validated['product_url'],
+            'selector_config' => null,
+            'currency' => strtoupper($validated['currency']),
+            'check_interval_minutes' => $validated['check_interval_minutes'],
+            'next_check_at' => now(),
+            'active' => $validated['active'] ?? true,
+        ]);
+
+        if (! $monitor->next_check_at) {
+            $monitor->scheduleNextCheck();
+            $monitor->save();
+        }
+
+        return back()->with('success', 'Site record added. Open selector to configure price fields.');
     }
 
     private function resolveUniqueSlug(string $baseSlug, ?int $ignoreId = null): string
