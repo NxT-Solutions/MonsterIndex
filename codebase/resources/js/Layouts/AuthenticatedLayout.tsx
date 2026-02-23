@@ -55,23 +55,7 @@ export default function Authenticated({
                                                 'admin.monsters.*',
                                             )}
                                         >
-                                            Monsters
-                                        </NavLink>
-                                        <NavLink
-                                            href={route('admin.sites.index')}
-                                            active={route().current(
-                                                'admin.sites.*',
-                                            )}
-                                        >
-                                            Sites
-                                        </NavLink>
-                                        <NavLink
-                                            href={route('admin.monitors.index')}
-                                            active={route().current(
-                                                'admin.monitors.*',
-                                            )}
-                                        >
-                                            Monitors
+                                            Monsters & Records
                                         </NavLink>
                                         <NavLink
                                             href={route('admin.alerts.index')}
@@ -194,19 +178,7 @@ export default function Authenticated({
                                     href={route('admin.monsters.index')}
                                     active={route().current('admin.monsters.*')}
                                 >
-                                    Monsters
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink
-                                    href={route('admin.sites.index')}
-                                    active={route().current('admin.sites.*')}
-                                >
-                                    Sites
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink
-                                    href={route('admin.monitors.index')}
-                                    active={route().current('admin.monitors.*')}
-                                >
-                                    Monitors
+                                    Monsters & Records
                                 </ResponsiveNavLink>
                                 <ResponsiveNavLink
                                     href={route('admin.alerts.index')}

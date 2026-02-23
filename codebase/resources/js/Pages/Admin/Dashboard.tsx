@@ -22,8 +22,8 @@ export default function AdminDashboard() {
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-slate-700">
                             <p>
-                                Configure core entities for monitoring and
-                                extraction.
+                                Add monsters, attach site records, and configure
+                                selectors from one workflow.
                             </p>
                             <div className="flex flex-wrap gap-2">
                                 <Link
@@ -33,25 +33,7 @@ export default function AdminDashboard() {
                                         size: 'sm',
                                     })}
                                 >
-                                    Monsters
-                                </Link>
-                                <Link
-                                    href={route('admin.sites.index')}
-                                    className={buttonVariants({
-                                        variant: 'outline',
-                                        size: 'sm',
-                                    })}
-                                >
-                                    Sites
-                                </Link>
-                                <Link
-                                    href={route('admin.monitors.index')}
-                                    className={buttonVariants({
-                                        variant: 'outline',
-                                        size: 'sm',
-                                    })}
-                                >
-                                    Monitors
+                                    Monsters & Records
                                 </Link>
                             </div>
                         </CardContent>
