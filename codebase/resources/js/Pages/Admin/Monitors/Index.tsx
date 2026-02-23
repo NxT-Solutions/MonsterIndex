@@ -301,7 +301,7 @@ export default function MonitorsIndex({
                                     <div className="min-w-0 space-y-1.5 md:col-span-4">
                                         <label
                                             htmlFor="create-monitor-monster"
-                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                            className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
                                             {x('Monster', 'Monster')}
                                         </label>
@@ -331,7 +331,7 @@ export default function MonitorsIndex({
                                     <div className="min-w-0 space-y-1.5 md:col-span-4">
                                         <label
                                             htmlFor="create-monitor-store"
-                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                            className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
                                             {x('Store', 'Winkel')}
                                         </label>
@@ -360,39 +360,10 @@ export default function MonitorsIndex({
                                         </select>
                                     </div>
 
-                                    {isOtherStoreSelected && (
-                                        <div className="min-w-0 space-y-1.5 md:col-span-12">
-                                            <label
-                                                htmlFor="create-monitor-site-name"
-                                                className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
-                                            >
-                                                {x(
-                                                    'Store name (optional)',
-                                                    'Winkelnaam (optioneel)',
-                                                )}
-                                            </label>
-                                            <input
-                                                id="create-monitor-site-name"
-                                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                                placeholder={x(
-                                                    'Example: Small Energy Shop',
-                                                    'Voorbeeld: Kleine Energy Shop',
-                                                )}
-                                                value={form.data.site_name}
-                                                onChange={(event) =>
-                                                    form.setData(
-                                                        'site_name',
-                                                        event.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                    )}
-
                                     <div className="min-w-0 space-y-1.5 md:col-span-4">
                                         <label
                                             htmlFor="create-monitor-currency"
-                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                            className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
                                             {x('Currency', 'Valuta')}
                                         </label>
@@ -419,10 +390,39 @@ export default function MonitorsIndex({
                                         </select>
                                     </div>
 
-                                    <div className="min-w-0 space-y-1.5 md:col-span-8">
+                                    {isOtherStoreSelected && (
+                                        <div className="min-w-0 space-y-1.5 md:col-span-12">
+                                            <label
+                                                htmlFor="create-monitor-site-name"
+                                                className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                            >
+                                                {x(
+                                                    'Store name (optional)',
+                                                    'Winkelnaam (optioneel)',
+                                                )}
+                                            </label>
+                                            <input
+                                                id="create-monitor-site-name"
+                                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                                placeholder={x(
+                                                    'Example: Small Energy Shop',
+                                                    'Voorbeeld: Kleine Energy Shop',
+                                                )}
+                                                value={form.data.site_name}
+                                                onChange={(event) =>
+                                                    form.setData(
+                                                        'site_name',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="min-w-0 space-y-1.5 md:col-span-9">
                                         <label
                                             htmlFor="create-monitor-product-url"
-                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                            className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
                                             {x('Product URL', 'Product-URL')}
                                         </label>
@@ -441,10 +441,10 @@ export default function MonitorsIndex({
                                         />
                                     </div>
 
-                                    <div className="min-w-0 space-y-1.5 md:col-span-2">
+                                    <div className="min-w-0 space-y-1.5 md:col-span-3">
                                         <label
                                             htmlFor="create-monitor-interval"
-                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                            className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
                                             {x('Interval (minutes)', 'Interval (minuten)')}
                                         </label>
@@ -468,20 +468,14 @@ export default function MonitorsIndex({
                                         />
                                     </div>
 
-                                    <div className="min-w-0 space-y-1.5 md:col-span-2">
-                                        <span
-                                            aria-hidden="true"
-                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-transparent"
-                                        >
-                                            {x('Action', 'Actie')}
-                                        </span>
+                                    <div className="min-w-0 md:col-span-12 md:flex md:justify-end">
                                         <button
                                             type="submit"
                                             className={cn(
                                                 buttonVariants({
                                                     variant: 'default',
                                                 }),
-                                                'w-full bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                                'w-full bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95 sm:w-auto sm:min-w-32',
                                             )}
                                             disabled={form.processing}
                                         >
