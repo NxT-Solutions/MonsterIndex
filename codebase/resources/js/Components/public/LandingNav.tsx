@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { PageProps } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type LandingNavProps = {
     auth: PageProps['auth'];
@@ -16,9 +16,57 @@ type LandingNavProps = {
 export default function LandingNav({ auth, brandName }: LandingNavProps) {
     const { x } = useLocale();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [mobileHidden, setMobileHidden] = useState(false);
+    const lastScrollY = useRef(0);
+
+    useEffect(() => {
+        const syncVisibilityOnScroll = () => {
+            const isMobile = window.innerWidth < 640;
+            const currentScrollY = window.scrollY;
+            const delta = currentScrollY - lastScrollY.current;
+
+            if (!isMobile || mobileOpen) {
+                setMobileHidden(false);
+                lastScrollY.current = currentScrollY;
+                return;
+            }
+
+            if (currentScrollY <= 24) {
+                setMobileHidden(false);
+                lastScrollY.current = currentScrollY;
+                return;
+            }
+
+            if (delta > 6) {
+                setMobileHidden(true);
+            } else if (delta < -4) {
+                setMobileHidden(false);
+            }
+
+            lastScrollY.current = currentScrollY;
+        };
+
+        lastScrollY.current = window.scrollY;
+        window.addEventListener('scroll', syncVisibilityOnScroll, {
+            passive: true,
+        });
+        window.addEventListener('resize', syncVisibilityOnScroll);
+
+        return () => {
+            window.removeEventListener('scroll', syncVisibilityOnScroll);
+            window.removeEventListener('resize', syncVisibilityOnScroll);
+        };
+    }, [mobileOpen]);
 
     return (
-        <header className="sticky top-0 z-30 border-b border-white/10 bg-[color:var(--landing-nav-bg)] backdrop-blur-xl">
+        <header
+            className={cn(
+                'sticky top-0 z-30 border-b border-white/10 bg-[color:var(--landing-nav-bg)] backdrop-blur-xl transition-all duration-300 ease-out',
+                mobileHidden && !mobileOpen
+                    ? 'pointer-events-none -translate-y-full opacity-0 sm:pointer-events-auto sm:translate-y-0 sm:opacity-100'
+                    : 'translate-y-0 opacity-100',
+            )}
+        >
             <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
                 <div className="flex items-center justify-between gap-3">
                     <a
