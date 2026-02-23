@@ -22,8 +22,12 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                     className="inline-flex items-center gap-3"
                     aria-label={`${brandName} ${x('home', 'home')}`}
                 >
-                    <span className="grid h-9 w-9 place-items-center rounded-md border border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-surface-2)] text-[color:var(--landing-accent)]">
-                        M
+                    <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-md border border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-surface-2)]">
+                        <img
+                            src="/brand/monsterindex-mark.svg"
+                            alt={brandName}
+                            className="h-full w-full object-cover"
+                        />
                     </span>
                     <div>
                         <p className="font-display text-lg font-semibold text-white">

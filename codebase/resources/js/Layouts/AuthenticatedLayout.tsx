@@ -71,7 +71,7 @@ export default function AuthenticatedLayout({
                     <div className="flex items-center gap-3">
                         <Link href={route('home')} className="inline-flex items-center gap-2">
                             <span className="grid h-10 w-10 place-items-center rounded-md border border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-surface-2)]">
-                                <ApplicationLogo className="h-6 w-6 fill-current text-[color:var(--landing-accent)]" />
+                                <ApplicationLogo className="h-8 w-8 rounded-sm object-cover" />
                             </span>
                             <div className="hidden sm:block">
                                 <p className="font-display text-lg font-semibold text-white">

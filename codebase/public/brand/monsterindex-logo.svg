@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 240" role="img" aria-labelledby="title desc">
+  <title id="title">MonsterIndex Logo</title>
+  <desc id="desc">MonsterIndex wordmark with neon mark</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#061014"/>
+      <stop offset="55%" stop-color="#0B171C"/>
+      <stop offset="100%" stop-color="#081216"/>
+    </linearGradient>
+    <linearGradient id="claw" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D3FF52"/>
+      <stop offset="100%" stop-color="#8CEB00"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="240" rx="28" fill="none"/>
+
+  <g transform="translate(16,16)">
+    <rect x="0" y="0" width="208" height="208" rx="46" fill="url(#bg)"/>
+    <rect x="4" y="4" width="200" height="200" rx="42" fill="none" stroke="#1C2C32" stroke-width="2"/>
+    <path d="M38 34h36l-18 140H20z" fill="url(#claw)"/>
+    <path d="M88 34h36l-14 102H74z" fill="url(#claw)"/>
+    <path d="M130 34h36l18 140h-36z" fill="url(#claw)"/>
+    <path d="M70 116h64l-4 26H66z" fill="#C7FF38"/>
+  </g>
+
+  <text x="252" y="108" fill="#ECF5F8" font-family="Oxanium, Rajdhani, Arial, sans-serif" font-size="78" font-weight="700" letter-spacing="1.2">MonsterIndex</text>
+  <text x="256" y="156" fill="#95A8AE" font-family="Rajdhani, Arial, sans-serif" font-size="30" font-weight="600" letter-spacing="5.5">ENERGY DEAL TRACKER</text>
+  <rect x="252" y="170" width="370" height="5" rx="2.5" fill="#8CEB00"/>
+</svg>
