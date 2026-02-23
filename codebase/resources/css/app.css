@@ -1,3 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    --landing-bg: #060b0d;
+    --landing-surface: #0f1518;
+    --landing-surface-2: #121d21;
+    --landing-accent: #9dff00;
+    --landing-accent-soft: rgba(157, 255, 0, 0.24);
+    --landing-accent-glow: rgba(157, 255, 0, 0.18);
+}
+
+@layer base {
+    body {
+        @apply antialiased;
+    }
+}
+
+.font-display {
+    font-family: 'Oxanium', 'Segoe UI', sans-serif;
+}
+
+.font-body {
+    font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+}
+
+.landing-root {
+    background-image:
+        radial-gradient(
+            circle at 15% -10%,
+            var(--landing-accent-glow),
+            transparent 38%
+        ),
+        radial-gradient(
+            circle at 90% 6%,
+            rgba(34, 211, 238, 0.13),
+            transparent 34%
+        ),
+        linear-gradient(160deg, #05080a 0%, #091013 55%, #050708 100%);
+}
