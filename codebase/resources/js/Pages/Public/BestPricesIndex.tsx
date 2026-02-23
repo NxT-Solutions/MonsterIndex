@@ -127,12 +127,14 @@ export default function BestPricesIndex({
                                                 ? ` (${row.monster.size_label})`
                                                 : ''}
                                         </CardTitle>
-                                        <span className="text-lg font-semibold text-emerald-700">
-                                            {formatMoney(
-                                                row.effective_total_cents,
-                                                row.currency,
-                                            )}
-                                        </span>
+                                        <div className="text-right">
+                                            <p className="text-lg font-semibold text-emerald-700">
+                                                {topRightPriceLabel(row)}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                {volumeLabel(row.can_count)}
+                                            </p>
+                                        </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-2 text-sm text-slate-600">
@@ -158,16 +160,12 @@ export default function BestPricesIndex({
                                             : 'Unknown'}
                                     </p>
                                     <p>
-                                        <strong>Per can:</strong>{' '}
-                                        {row.price_per_can_cents !== null
-                                            ? formatMoney(
-                                                  row.price_per_can_cents,
-                                                  row.currency,
-                                              )
-                                            : 'Unknown'}
-                                        {row.can_count !== null
-                                            ? ` (${row.can_count} cans)`
-                                            : ''}
+                                        <strong>Total buy:</strong>{' '}
+                                        {formatMoney(
+                                            row.effective_total_cents,
+                                            row.currency,
+                                        )}{' '}
+                                        ({volumeLabel(row.can_count)})
                                     </p>
                                     <p>
                                         <strong>Status:</strong> {row.status ?? 'N/A'}
@@ -204,4 +202,33 @@ export default function BestPricesIndex({
 
 function formatMoney(cents: number, currency: string): string {
     return `${currency} ${(cents / 100).toFixed(2)}`;
+}
+
+function topRightPriceLabel(row: BestPriceRow): string {
+    const perCanCents = effectivePerCanCents(row);
+    if (perCanCents !== null) {
+        return `${formatMoney(perCanCents, row.currency)} / can`;
+    }
+
+    return `${formatMoney(row.effective_total_cents, row.currency)} total`;
+}
+
+function effectivePerCanCents(row: BestPriceRow): number | null {
+    if (row.price_per_can_cents !== null) {
+        return row.price_per_can_cents;
+    }
+
+    if (row.can_count !== null && row.can_count > 0) {
+        return Math.round(row.effective_total_cents / row.can_count);
+    }
+
+    return null;
+}
+
+function volumeLabel(canCount: number | null): string {
+    if (canCount === null || canCount <= 0) {
+        return 'volume unknown';
+    }
+
+    return `${canCount}-pack`;
 }
