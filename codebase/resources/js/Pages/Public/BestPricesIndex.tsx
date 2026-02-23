@@ -86,7 +86,7 @@ export default function BestPricesIndex({
         <>
             <Head title={copy.name} />
 
-            <div className="landing-root dark min-h-screen bg-[color:var(--landing-bg)] text-white">
+            <div className="landing-root min-h-screen bg-[color:var(--landing-bg)] text-white">
                 <LandingNav auth={auth} brandName={copy.name} />
 
                 <main className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">

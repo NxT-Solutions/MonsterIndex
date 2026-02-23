@@ -1,5 +1,6 @@
 import { buttonVariants } from '@/Components/ui/button';
 import LanguageSwitcher from '@/Components/LanguageSwitcher';
+import ThemeToggle from '@/Components/ThemeToggle';
 import { useLocale } from '@/lib/locale';
 import { cn } from '@/lib/utils';
 import { PageProps } from '@/types';
@@ -14,7 +15,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
     const { x } = useLocale();
 
     return (
-        <header className="sticky top-0 z-30 border-b border-white/10 bg-[rgba(8,12,12,0.82)] backdrop-blur-xl">
+        <header className="sticky top-0 z-30 border-b border-white/10 bg-[color:var(--landing-nav-bg)] backdrop-blur-xl">
             <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4 lg:px-8">
                 <a
                     href="#top"
@@ -38,6 +39,11 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                     <LanguageSwitcher
                         compact
                         className="[&>span]:hidden sm:[&>span]:inline sm:[&>span]:text-white/55"
+                    />
+                    <ThemeToggle
+                        compact
+                        inverse
+                        className="[&>span]:hidden sm:[&>span]:inline"
                     />
                     <div className="flex flex-1 flex-wrap items-center justify-end gap-2 sm:flex-none">
                         <a

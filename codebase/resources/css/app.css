@@ -41,12 +41,21 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   --radius: 0.625rem;
 
-  --landing-bg: #060b0d;
-  --landing-surface: #0f1518;
-  --landing-surface-2: #121d21;
+  --landing-bg: #172126;
+  --landing-surface: #223038;
+  --landing-surface-2: #2a3a44;
   --landing-accent: var(--primary);
-  --landing-accent-soft: rgba(157, 255, 0, 0.24);
-  --landing-accent-glow: rgba(157, 255, 0, 0.18);
+  --landing-accent-soft: rgba(157, 255, 0, 0.28);
+  --landing-accent-glow: rgba(157, 255, 0, 0.2);
+  --landing-cyan-glow: rgba(34, 211, 238, 0.14);
+  --landing-gradient-start: #11191e;
+  --landing-gradient-mid: #172126;
+  --landing-gradient-end: #10171b;
+  --admin-gradient-start: #11191e;
+  --admin-gradient-mid: #161f24;
+  --admin-gradient-end: #0f161a;
+  --landing-nav-bg: rgba(20, 30, 35, 0.82);
+  --landing-nav-bg-strong: rgba(24, 35, 40, 0.86);
 }
 
 .dark {
@@ -81,6 +90,20 @@
   --sidebar-accent-foreground: oklch(0.7118 0.0129 286.0665);
   --sidebar-border: oklch(0.4461 0.0263 256.8018);
   --sidebar-ring: oklch(0.7729 0.1535 163.2231);
+  --landing-bg: #060b0d;
+  --landing-surface: #0f1518;
+  --landing-surface-2: #121d21;
+  --landing-accent-soft: rgba(157, 255, 0, 0.24);
+  --landing-accent-glow: rgba(157, 255, 0, 0.18);
+  --landing-cyan-glow: rgba(34, 211, 238, 0.13);
+  --landing-gradient-start: #05080a;
+  --landing-gradient-mid: #091013;
+  --landing-gradient-end: #050708;
+  --admin-gradient-start: #060a0b;
+  --admin-gradient-mid: #090f11;
+  --admin-gradient-end: #06090a;
+  --landing-nav-bg: rgba(8, 12, 12, 0.82);
+  --landing-nav-bg-strong: rgba(8, 12, 12, 0.86);
 }
 
 @theme inline {
@@ -153,13 +176,13 @@
 .landing-root {
   background-image:
     radial-gradient(circle at 15% -10%, var(--landing-accent-glow), transparent 38%),
-    radial-gradient(circle at 90% 6%, rgba(34, 211, 238, 0.13), transparent 34%),
-    linear-gradient(160deg, #05080a 0%, #091013 55%, #050708 100%);
+    radial-gradient(circle at 90% 6%, var(--landing-cyan-glow), transparent 34%),
+    linear-gradient(160deg, var(--landing-gradient-start) 0%, var(--landing-gradient-mid) 55%, var(--landing-gradient-end) 100%);
 }
 
 .admin-root {
   background-image:
     radial-gradient(circle at 10% -8%, rgba(157, 255, 0, 0.15), transparent 34%),
-    radial-gradient(circle at 90% -4%, rgba(56, 189, 248, 0.14), transparent 28%),
-    linear-gradient(165deg, #060a0b 0%, #090f11 60%, #06090a 100%);
+    radial-gradient(circle at 90% -4%, var(--landing-cyan-glow), transparent 28%),
+    linear-gradient(165deg, var(--admin-gradient-start) 0%, var(--admin-gradient-mid) 60%, var(--admin-gradient-end) 100%);
 }

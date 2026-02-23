@@ -1,5 +1,6 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import LanguageSwitcher from '@/Components/LanguageSwitcher';
+import ThemeToggle from '@/Components/ThemeToggle';
 import { buttonVariants } from '@/Components/ui/button';
 import { useLocale } from '@/lib/locale';
 import { cn } from '@/lib/utils';
@@ -69,8 +70,8 @@ export default function AuthenticatedLayout({
     }, [isAdmin, x]);
 
     return (
-        <div className="admin-root dark min-h-screen bg-[color:var(--landing-bg)] text-white">
-            <nav className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(8,12,12,0.86)] backdrop-blur-xl">
+        <div className="admin-root min-h-screen bg-[color:var(--landing-bg)] text-white">
+            <nav className="sticky top-0 z-40 border-b border-white/10 bg-[color:var(--landing-nav-bg-strong)] backdrop-blur-xl">
                 <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-3">
                         <Link href={route('home')} className="inline-flex items-center gap-2">
@@ -110,6 +111,7 @@ export default function AuthenticatedLayout({
                             compact
                             className="hidden sm:inline-flex [&>span]:text-white/55"
                         />
+                        <ThemeToggle compact inverse className="hidden sm:inline-flex" />
                         <div className="hidden text-right sm:block">
                             <p className="max-w-[180px] truncate text-sm font-medium text-white">
                                 {user.name}
@@ -163,7 +165,10 @@ export default function AuthenticatedLayout({
                                 <p className="text-sm font-medium text-white">{user.name}</p>
                                 <p className="text-xs text-white/55">{user.email}</p>
                             </div>
-                            <LanguageSwitcher compact className="[&>span]:text-white/55" />
+                            <div className="flex items-center gap-2">
+                                <LanguageSwitcher compact className="[&>span]:text-white/55" />
+                                <ThemeToggle compact inverse />
+                            </div>
                         </div>
                         <div className="grid gap-2">
                             {navItems.map((item) => (
@@ -187,7 +192,7 @@ export default function AuthenticatedLayout({
             </nav>
 
             {header && (
-                <header className="border-b border-white/10 bg-[rgba(9,14,14,0.7)]">
+                <header className="border-b border-white/10 bg-[color:var(--landing-nav-bg)]">
                     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                         {header}
                     </div>

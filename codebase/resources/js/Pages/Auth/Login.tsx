@@ -26,7 +26,7 @@ export default function Login() {
         <GuestLayout>
             <Head title={x('Continue with Google', 'Doorgaan met Google')} />
 
-            <Card className="border-slate-200 shadow-none">
+            <Card className="border-[color:var(--border)] shadow-none">
                 <CardHeader className="space-y-2">
                     <CardTitle>
                         {x('Sign in to MonsterIndex', 'Meld je aan bij MonsterIndex')}

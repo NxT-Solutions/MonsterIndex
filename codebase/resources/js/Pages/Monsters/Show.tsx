@@ -71,7 +71,7 @@ export default function MonsterShow({
         <>
             <Head title={`${monster.name} ${x('prices', 'prijzen')}`} />
 
-            <div className="landing-root dark min-h-screen bg-[color:var(--landing-bg)] text-white">
+            <div className="landing-root min-h-screen bg-[color:var(--landing-bg)] text-white">
                 <LandingNav auth={auth} brandName="MonsterIndex" />
 
                 <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
