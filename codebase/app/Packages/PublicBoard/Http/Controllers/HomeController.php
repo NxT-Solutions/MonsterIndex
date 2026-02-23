@@ -4,7 +4,7 @@ namespace Packages\PublicBoard\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\BestPrice;
-use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,53 +21,140 @@ class HomeController extends Controller
             ])
             ->orderBy('effective_total_cents')
             ->get()
-            ->map(function (BestPrice $bestPrice): array {
-                $snapshot = $bestPrice->snapshot;
-                $site = $snapshot?->monitor?->site;
-                $manualCanCount = $this->manualCanCountFromSelectorConfig(
-                    $snapshot?->monitor?->selector_config,
-                );
-                $canCount = $snapshot?->can_count ?? $manualCanCount;
-                $pricePerCanCents = $snapshot?->price_per_can_cents;
-                if ($pricePerCanCents === null && $canCount !== null && $canCount > 0) {
-                    $pricePerCanCents = (int) round($bestPrice->effective_total_cents / $canCount);
-                }
+            ->map(fn (BestPrice $bestPrice): array => $this->mapBestPrice($bestPrice))
+            ->values();
+
+        $trendingTracks = $bestPrices
+            ->map(function (array $row): array {
+                $checkedAt = $row['checked_at'];
+                $checkedTimestamp = is_string($checkedAt)
+                    ? Carbon::parse($checkedAt)->timestamp
+                    : 0;
 
                 return [
-                    'id' => $bestPrice->id,
-                    'monster' => [
-                        'name' => $bestPrice->monster->name,
-                        'slug' => $bestPrice->monster->slug,
-                        'size_label' => $bestPrice->monster->size_label,
-                    ],
-                    'site' => $site?->name,
-                    'domain' => $site?->domain,
-                    'currency' => $bestPrice->currency,
-                    'price_cents' => $snapshot?->price_cents,
-                    'shipping_cents' => $snapshot?->shipping_cents,
-                    'can_count' => $canCount,
-                    'price_per_can_cents' => $pricePerCanCents,
-                    'effective_total_cents' => $bestPrice->effective_total_cents,
-                    'effective_total' => $this->formatMoney($bestPrice->effective_total_cents, $bestPrice->currency),
-                    'checked_at' => $snapshot?->checked_at?->toIso8601String(),
-                    'status' => $snapshot?->status,
-                    'detail_url' => route('monsters.show', $bestPrice->monster),
+                    ...$row,
+                    '_fresh_priority' => $this->isFreshSnapshot($checkedAt) ? 0 : 1,
+                    '_effective_per_can_cents' => $this->effectivePerCanCents($row),
+                    '_checked_timestamp' => $checkedTimestamp,
+                ];
+            })
+            ->sort(function (array $left, array $right): int {
+                if ($left['_fresh_priority'] !== $right['_fresh_priority']) {
+                    return $left['_fresh_priority'] <=> $right['_fresh_priority'];
+                }
+
+                if ($left['_effective_per_can_cents'] !== $right['_effective_per_can_cents']) {
+                    return $left['_effective_per_can_cents'] <=> $right['_effective_per_can_cents'];
+                }
+
+                if ($left['_checked_timestamp'] !== $right['_checked_timestamp']) {
+                    return $right['_checked_timestamp'] <=> $left['_checked_timestamp'];
+                }
+
+                return strcmp(
+                    (string) ($left['monster']['name'] ?? ''),
+                    (string) ($right['monster']['name'] ?? ''),
+                );
+            })
+            ->take(6)
+            ->map(function (array $row): array {
+                return [
+                    'id' => $row['id'],
+                    'monster' => $row['monster'],
+                    'site' => $row['site'],
+                    'domain' => $row['domain'],
+                    'currency' => $row['currency'],
+                    'effective_total_cents' => $row['effective_total_cents'],
+                    'can_count' => $row['can_count'],
+                    'price_per_can_cents' => $row['price_per_can_cents'],
+                    'checked_at' => $row['checked_at'],
+                    'detail_url' => $row['detail_url'],
                 ];
             })
             ->values();
 
         return Inertia::render('Public/BestPricesIndex', [
             'bestPrices' => $bestPrices,
+            'trendingTracks' => $trendingTracks,
             'stats' => [
                 'tracked_monsters' => $bestPrices->unique(fn ($row) => $row['monster']['slug'])->count(),
                 'offers' => $bestPrices->count(),
             ],
+            'branding' => [
+                'name' => (string) config('branding.name', 'MonsterIndex'),
+                'tagline' => (string) config('branding.tagline', ''),
+                'hero_kicker' => (string) config('branding.hero_kicker', ''),
+                'hero_title' => (string) config('branding.hero_title', ''),
+                'hero_subtitle' => (string) config('branding.hero_subtitle', ''),
+                'primary_cta_label' => (string) config('branding.primary_cta_label', 'Browse Deals'),
+                'secondary_cta_label' => (string) config('branding.secondary_cta_label', 'View Trending Tracks'),
+                'accent_hex' => (string) config('branding.accent_hex', '#9DFF00'),
+                'github_url' => config('branding.github_url'),
+            ],
         ]);
     }
 
-    private function formatMoney(int $cents, string $currency): string
+    private function mapBestPrice(BestPrice $bestPrice): array
     {
-        return Str::of(sprintf('%s %0.2f', $currency, $cents / 100))->toString();
+        $snapshot = $bestPrice->snapshot;
+        $site = $snapshot?->monitor?->site;
+        $manualCanCount = $this->manualCanCountFromSelectorConfig(
+            $snapshot?->monitor?->selector_config,
+        );
+        $canCount = $snapshot?->can_count ?? $manualCanCount;
+        $pricePerCanCents = $snapshot?->price_per_can_cents;
+        if ($pricePerCanCents === null && $canCount !== null && $canCount > 0) {
+            $pricePerCanCents = (int) round($bestPrice->effective_total_cents / $canCount);
+        }
+
+        return [
+            'id' => $bestPrice->id,
+            'monster' => [
+                'name' => $bestPrice->monster->name,
+                'slug' => $bestPrice->monster->slug,
+                'size_label' => $bestPrice->monster->size_label,
+            ],
+            'site' => $site?->name,
+            'domain' => $site?->domain,
+            'currency' => $bestPrice->currency,
+            'price_cents' => $snapshot?->price_cents,
+            'shipping_cents' => $snapshot?->shipping_cents,
+            'can_count' => $canCount,
+            'price_per_can_cents' => $pricePerCanCents,
+            'effective_total_cents' => $bestPrice->effective_total_cents,
+            'effective_total' => sprintf('%s %0.2f', $bestPrice->currency, $bestPrice->effective_total_cents / 100),
+            'checked_at' => $snapshot?->checked_at?->toIso8601String(),
+            'status' => $snapshot?->status,
+            'detail_url' => route('monsters.show', $bestPrice->monster),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function effectivePerCanCents(array $row): int
+    {
+        $storedPerCan = $row['price_per_can_cents'] ?? null;
+        if (is_int($storedPerCan) && $storedPerCan > 0) {
+            return $storedPerCan;
+        }
+
+        $canCount = $row['can_count'] ?? null;
+        $effectiveTotal = $row['effective_total_cents'] ?? null;
+        if (is_int($canCount) && $canCount > 0 && is_int($effectiveTotal)) {
+            return (int) round($effectiveTotal / $canCount);
+        }
+
+        return is_int($effectiveTotal) ? $effectiveTotal : PHP_INT_MAX;
+    }
+
+    private function isFreshSnapshot(?string $checkedAt): bool
+    {
+        if (! is_string($checkedAt)) {
+            return false;
+        }
+
+        return Carbon::parse($checkedAt)->greaterThanOrEqualTo(now()->subHours(72));
     }
 
     /**
