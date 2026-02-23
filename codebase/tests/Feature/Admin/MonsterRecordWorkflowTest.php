@@ -17,11 +17,8 @@ it('allows admin to add a site record directly from the monster workflow', funct
         ->post(route('admin.monsters.records.store', $monster->slug), [
             'site_name' => 'Small Shop',
             'product_url' => 'https://shop.example.com/products/monster-12-pack',
-            'currency' => 'usd',
-            'check_interval_minutes' => 60,
-            'active' => true,
         ])
-        ->assertRedirect();
+        ->assertRedirect(route('admin.monsters.show', $monster->slug));
 
     $site = Site::query()->where('domain', 'shop.example.com')->first();
 

@@ -19,13 +19,22 @@ class MonsterController extends Controller
     {
         return Inertia::render('Admin/Monsters/Index', [
             'monsters' => Monster::query()
-                ->with([
-                    'monitors' => fn ($query) => $query
-                        ->with(['site:id,name,domain', 'latestSnapshot'])
-                        ->orderByDesc('id'),
-                ])
                 ->orderBy('name')
-                ->get(),
+                ->withCount('monitors')
+                ->get(['id', 'name', 'slug', 'size_label', 'active']),
+        ]);
+    }
+
+    public function show(Monster $monster): Response
+    {
+        $monster->load([
+            'monitors' => fn ($query) => $query
+                ->with(['site:id,name,domain', 'latestSnapshot'])
+                ->orderByDesc('id'),
+        ]);
+
+        return Inertia::render('Admin/Monsters/Show', [
+            'monster' => $monster,
         ]);
     }
 
@@ -90,8 +99,8 @@ class MonsterController extends Controller
         $validated = $request->validate([
             'site_name' => ['nullable', 'string', 'max:255'],
             'product_url' => ['required', 'url', 'max:2048'],
-            'currency' => ['required', 'string', 'size:3'],
-            'check_interval_minutes' => ['required', 'integer', 'min:15', 'max:1440'],
+            'currency' => ['nullable', 'string', 'size:3'],
+            'check_interval_minutes' => ['nullable', 'integer', 'min:15', 'max:1440'],
             'active' => ['sometimes', 'boolean'],
         ]);
 
@@ -129,8 +138,8 @@ class MonsterController extends Controller
             'site_id' => $site->id,
             'product_url' => $validated['product_url'],
             'selector_config' => null,
-            'currency' => strtoupper($validated['currency']),
-            'check_interval_minutes' => $validated['check_interval_minutes'],
+            'currency' => strtoupper((string) ($validated['currency'] ?? 'USD')),
+            'check_interval_minutes' => (int) ($validated['check_interval_minutes'] ?? 60),
             'next_check_at' => now(),
             'active' => $validated['active'] ?? true,
         ]);
@@ -140,7 +149,9 @@ class MonsterController extends Controller
             $monitor->save();
         }
 
-        return back()->with('success', 'Site record added. Open selector to configure price fields.');
+        return redirect()
+            ->route('admin.monsters.show', $monster->slug)
+            ->with('success', 'Site record added. Open selector to configure price fields.');
     }
 
     private function resolveUniqueSlug(string $baseSlug, ?int $ignoreId = null): string
