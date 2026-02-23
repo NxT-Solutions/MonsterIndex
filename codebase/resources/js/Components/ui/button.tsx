@@ -3,13 +3,15 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 
 const buttonVariants = cva(
-    'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ring-offset-white',
+    'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ring-offset-[color:var(--background)]',
     {
         variants: {
             variant: {
-                default: 'bg-slate-900 text-white hover:bg-slate-800',
-                secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200',
-                outline: 'border border-slate-300 bg-white hover:bg-slate-50',
+                default: 'bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:brightness-95',
+                secondary:
+                    'bg-[color:var(--secondary)] text-[color:var(--secondary-foreground)] hover:brightness-95',
+                outline:
+                    'border border-[color:var(--border)] bg-[color:var(--card)] text-[color:var(--foreground)] hover:bg-[color:var(--accent)] hover:text-[color:var(--accent-foreground)]',
             },
             size: {
                 default: 'h-10 px-4 py-2',

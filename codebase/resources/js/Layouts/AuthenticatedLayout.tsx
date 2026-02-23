@@ -1,7 +1,9 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import { useLocale } from '@/lib/locale';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState } from 'react';
 
@@ -10,6 +12,7 @@ export default function Authenticated({
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
     const user = usePage().props.auth.user;
+    const { x } = useLocale();
 
     if (!user) {
         return null;
@@ -37,7 +40,7 @@ export default function Authenticated({
                                     href={route('dashboard')}
                                     active={route().current('dashboard')}
                                 >
-                                    Dashboard
+                                    {x('Dashboard', 'Dashboard')}
                                 </NavLink>
                                 {isAdmin && (
                                     <>
@@ -47,7 +50,7 @@ export default function Authenticated({
                                                 'admin.dashboard',
                                             )}
                                         >
-                                            Admin
+                                            {x('Admin', 'Admin')}
                                         </NavLink>
                                         <NavLink
                                             href={route('admin.monsters.index')}
@@ -55,7 +58,10 @@ export default function Authenticated({
                                                 'admin.monsters.*',
                                             )}
                                         >
-                                            Monsters & Records
+                                            {x(
+                                                'Monsters & Records',
+                                                'Monsters & Records',
+                                            )}
                                         </NavLink>
                                         <NavLink
                                             href={route('admin.alerts.index')}
@@ -63,15 +69,16 @@ export default function Authenticated({
                                                 'admin.alerts.*',
                                             )}
                                         >
-                                            Alerts
+                                            {x('Alerts', 'Meldingen')}
                                         </NavLink>
                                     </>
                                 )}
                             </div>
                         </div>
 
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
+                        <div className="hidden items-center gap-3 sm:ms-6 sm:flex">
+                            <LanguageSwitcher compact />
+                            <div className="relative ms-1">
                                 <Dropdown>
                                     <Dropdown.Trigger>
                                         <span className="inline-flex rounded-md">
@@ -103,7 +110,7 @@ export default function Authenticated({
                                             method="post"
                                             as="button"
                                         >
-                                            Log Out
+                                            {x('Log Out', 'Uitloggen')}
                                         </Dropdown.Link>
                                     </Dropdown.Content>
                                 </Dropdown>
@@ -164,7 +171,7 @@ export default function Authenticated({
                             href={route('dashboard')}
                             active={route().current('dashboard')}
                         >
-                            Dashboard
+                            {x('Dashboard', 'Dashboard')}
                         </ResponsiveNavLink>
                         {isAdmin && (
                             <>
@@ -172,19 +179,22 @@ export default function Authenticated({
                                     href={route('admin.dashboard')}
                                     active={route().current('admin.dashboard')}
                                 >
-                                    Admin
+                                    {x('Admin', 'Admin')}
                                 </ResponsiveNavLink>
                                 <ResponsiveNavLink
                                     href={route('admin.monsters.index')}
                                     active={route().current('admin.monsters.*')}
                                 >
-                                    Monsters & Records
+                                    {x(
+                                        'Monsters & Records',
+                                        'Monsters & Records',
+                                    )}
                                 </ResponsiveNavLink>
                                 <ResponsiveNavLink
                                     href={route('admin.alerts.index')}
                                     active={route().current('admin.alerts.*')}
                                 >
-                                    Alerts
+                                    {x('Alerts', 'Meldingen')}
                                 </ResponsiveNavLink>
                             </>
                         )}
@@ -198,6 +208,9 @@ export default function Authenticated({
                             <div className="text-sm font-medium text-gray-500">
                                 {user.email}
                             </div>
+                            <div className="mt-3">
+                                <LanguageSwitcher compact />
+                            </div>
                         </div>
 
                         <div className="mt-3 space-y-1">
@@ -206,7 +219,7 @@ export default function Authenticated({
                                 href={route('logout')}
                                 as="button"
                             >
-                                Log Out
+                                {x('Log Out', 'Uitloggen')}
                             </ResponsiveNavLink>
                         </div>
                     </div>
