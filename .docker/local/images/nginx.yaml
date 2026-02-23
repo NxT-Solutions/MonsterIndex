@@ -1,0 +1,9 @@
+---
+services:
+  www:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - ${APP_EXPOSED_PORT}:80

@@ -1,0 +1,96 @@
+---
+services:
+  php:
+    extends:
+      file: ./images/php.yaml
+      service: php
+    container_name: ${COMPOSE_PROJECT_NAME}-php
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - ../../codebase:/var/www/html
+      - ../../.persistent/laravel/storage:/var/www/html/storage
+      - ../../.persistent/laravel/storage-public:/var/www/html/public/storage
+
+  scheduler:
+    extends:
+      file: ./images/php-cli.yaml
+      service: php
+    container_name: ${COMPOSE_PROJECT_NAME}-scheduler
+    depends_on:
+      - php
+    restart: always
+    environment:
+      CONTAINER_ROLE: scheduler
+    volumes:
+      - ../../codebase:/var/www/html
+      - ../../.persistent/laravel/storage:/var/www/html/storage
+      - ../../.persistent/laravel/storage-public:/var/www/html/public/storage
+
+  queue:
+    extends:
+      file: ./images/php-cli.yaml
+      service: php
+    container_name: ${COMPOSE_PROJECT_NAME}-queue
+    depends_on:
+      - php
+    restart: always
+    environment:
+      CONTAINER_ROLE: queue
+    volumes:
+      - ../../codebase:/var/www/html
+      - ../../.persistent/laravel/storage:/var/www/html/storage
+      - ../../.persistent/laravel/storage-public:/var/www/html/public/storage
+
+  www:
+    extends:
+      file: ./images/nginx.yaml
+      service: www
+    container_name: ${COMPOSE_PROJECT_NAME}-www
+    depends_on:
+      - php
+    volumes:
+      - ../../codebase:/var/www/html
+
+  mysql:
+    extends:
+      file: ./images/mysql.yaml
+      service: mysql
+    container_name: ${COMPOSE_PROJECT_NAME}-mysql
+    ports:
+      - ${MYSQL_EXPOSED_PORT}:3306
+    volumes:
+      - ../../.persistent/db/mysql:/var/lib/mysql
+
+  redis:
+    extends:
+      file: ./images/redis.yaml
+      service: redis
+    container_name: ${COMPOSE_PROJECT_NAME}-redis
+    ports:
+      - ${REDIS_EXPOSED_PORT}:6379
+
+  node:
+    extends:
+      file: ./images/node.yaml
+      service: node
+    container_name: ${COMPOSE_PROJECT_NAME}-node
+    restart: unless-stopped
+    working_dir: /app
+    command:
+      - /bin/sh
+      - -lc
+      - npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port ${VITE_EXPOSED_PORT}
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      VITE_BACKEND_URL: "http://www"
+    ports:
+      - ${VITE_EXPOSED_PORT}:${VITE_EXPOSED_PORT}
+    volumes:
+      - ../../codebase:/app
+      - node_modules:/app/node_modules
+
+volumes:
+  node_modules:

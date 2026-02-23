@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">MonsterIndex Mark</title>
+  <desc id="desc">Neon green claw-inspired M mark for MonsterIndex</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#061014"/>
+      <stop offset="55%" stop-color="#0B171C"/>
+      <stop offset="100%" stop-color="#081216"/>
+    </linearGradient>
+    <linearGradient id="claw" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D3FF52"/>
+      <stop offset="100%" stop-color="#8CEB00"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="12" y="12" width="488" height="488" rx="108" fill="url(#bg)"/>
+  <rect x="20" y="20" width="472" height="472" rx="100" fill="none" stroke="#1C2C32" stroke-width="4"/>
+
+  <g filter="url(#glow)">
+    <path d="M106 110h86l-42 292h-86z" fill="url(#claw)"/>
+    <path d="M228 110h86l-32 212h-86z" fill="url(#claw)"/>
+    <path d="M330 110h86l42 292h-86z" fill="url(#claw)"/>
+    <path d="M182 278h148l-10 66H172z" fill="#C7FF38"/>
+  </g>
+</svg>

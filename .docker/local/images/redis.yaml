@@ -1,0 +1,8 @@
+---
+services:
+  redis:
+    build:
+      context: ./redis
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]

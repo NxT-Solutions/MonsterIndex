@@ -1,0 +1,158 @@
+<?php
+
+namespace Packages\PriceExtraction\Services;
+
+use Packages\Base\Data\ExtractionResult;
+
+class ManualSelectorExtractor
+{
+    public function __construct(
+        private readonly SelectorTextExtractor $selectorTextExtractor,
+        private readonly MoneyParser $moneyParser,
+    ) {}
+
+    /**
+     * @param  array<string, mixed>  $selectorConfig
+     */
+    public function extract(string $html, array $selectorConfig, string $defaultCurrency = 'EUR'): ExtractionResult
+    {
+        $priceSelector = $selectorConfig['price'] ?? null;
+        if (! is_array($priceSelector)) {
+            return ExtractionResult::failed($defaultCurrency, 'PRICE_SELECTOR_MISSING');
+        }
+
+        $priceText = $this->selectorTextExtractor->extract($html, $priceSelector);
+        $priceParsed = $this->moneyParser->parse($priceText, $defaultCurrency);
+
+        if ($priceParsed['cents'] === null) {
+            return ExtractionResult::failed(
+                currency: $priceParsed['currency'],
+                errorCode: 'PRICE_NOT_FOUND',
+                rawText: $priceText,
+            );
+        }
+
+        $shippingSelector = $selectorConfig['shipping'] ?? null;
+        $shippingText = is_array($shippingSelector)
+            ? $this->selectorTextExtractor->extract($html, $shippingSelector)
+            : null;
+        $manualShippingValue = is_array($shippingSelector)
+            ? $this->manualValue($shippingSelector)
+            : null;
+
+        $shippingParsed = $this->moneyParser->parse($shippingText, $priceParsed['currency']);
+        $manualShippingParsed = $this->moneyParser->parse($manualShippingValue, $priceParsed['currency']);
+        $shippingCents = $manualShippingParsed['cents'] ?? $shippingParsed['cents'];
+        $shippingRaw = $manualShippingParsed['cents'] !== null ? $manualShippingValue : $shippingText;
+
+        $hasShippingInput = (is_array($shippingSelector) && $this->hasSelector($shippingSelector))
+            || $manualShippingValue !== null;
+
+        $status = ($hasShippingInput && $shippingCents === null)
+            ? 'partial'
+            : 'ok';
+
+        $effectiveTotal = $priceParsed['cents'] + ($shippingCents ?? 0);
+        $quantitySelector = $selectorConfig['quantity'] ?? null;
+        $quantityText = is_array($quantitySelector)
+            ? $this->selectorTextExtractor->extract($html, $quantitySelector)
+            : null;
+        $manualCanCountValue = is_array($quantitySelector)
+            ? $this->manualValue($quantitySelector)
+            : null;
+        $manualCanCount = $this->parseCanCount($manualCanCountValue);
+        $canCount = $manualCanCount ?? $this->parseCanCount($quantityText);
+        $quantityRaw = $manualCanCount !== null ? $manualCanCountValue : $quantityText;
+        $pricePerCanCents = ($canCount !== null && $canCount > 0)
+            ? (int) round($effectiveTotal / $canCount)
+            : null;
+
+        return new ExtractionResult(
+            priceCents: $priceParsed['cents'],
+            shippingCents: $shippingCents,
+            effectiveTotalCents: $effectiveTotal,
+            currency: $priceParsed['currency'],
+            status: $status,
+            rawText: trim(implode(' | ', array_filter([$priceText, $shippingRaw, $quantityRaw]))),
+            canCount: $canCount,
+            pricePerCanCents: $pricePerCanCents,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $selector
+     */
+    private function hasSelector(array $selector): bool
+    {
+        if (is_string($selector['css'] ?? null) && trim($selector['css']) !== '') {
+            return true;
+        }
+
+        if (is_string($selector['xpath'] ?? null) && trim($selector['xpath']) !== '') {
+            return true;
+        }
+
+        $parts = $selector['parts'] ?? null;
+        if (! is_array($parts)) {
+            return false;
+        }
+
+        foreach ($parts as $part) {
+            if (! is_array($part)) {
+                continue;
+            }
+
+            if ((is_string($part['css'] ?? null) && trim($part['css']) !== '')
+                || (is_string($part['xpath'] ?? null) && trim($part['xpath']) !== '')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array<string, mixed>  $selector
+     */
+    private function manualValue(array $selector): ?string
+    {
+        if (! is_string($selector['manual_value'] ?? null)) {
+            return null;
+        }
+
+        $value = trim($selector['manual_value']);
+
+        return $value === '' ? null : $value;
+    }
+
+    private function parseCanCount(?string $value): ?int
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $normalized = trim(preg_replace('/\s+/', ' ', $value) ?? '');
+        if ($normalized === '') {
+            return null;
+        }
+
+        $patterns = [
+            '/(\d{1,4})\s*(?:pack|pk|ct|count|cans?|x)\b/i',
+            '/(?:pack|pk|ct|count|cans?)\s*(?:of\s*)?(\d{1,4})\b/i',
+            '/\b(\d{1,4})\b/',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $normalized, $matches) !== 1) {
+                continue;
+            }
+
+            $count = isset($matches[1]) ? (int) $matches[1] : 0;
+            if ($count > 0 && $count <= 500) {
+                return $count;
+            }
+        }
+
+        return null;
+    }
+}
