@@ -136,52 +136,88 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                     className="grid gap-3 md:grid-cols-4"
                                     onSubmit={submit}
                                 >
-                                    <input
-                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                        placeholder={x('Name', 'Naam')}
-                                        value={form.data.name}
-                                        onChange={(event) =>
-                                            form.setData('name', event.target.value)
-                                        }
-                                        required
-                                    />
-                                    <input
-                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                        placeholder={x(
-                                            'Slug (optional)',
-                                            'Slug (optioneel)',
-                                        )}
-                                        value={form.data.slug}
-                                        onChange={(event) =>
-                                            form.setData('slug', event.target.value)
-                                        }
-                                    />
-                                    <input
-                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                        placeholder={x(
-                                            'Size label (optional)',
-                                            'Formaatlabel (optioneel)',
-                                        )}
-                                        value={form.data.size_label}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'size_label',
-                                                event.target.value,
-                                            )
-                                        }
-                                    />
-                                    <button
-                                        type="submit"
-                                        className={cn(
-                                            buttonVariants({
-                                                variant: 'default',
-                                            }),
-                                            'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
-                                        )}
-                                        disabled={form.processing}
-                                    >
-                                        {x('Add Monster', 'Monster Toevoegen')}
-                                    </button>
+                                    <div className="space-y-1.5">
+                                        <label
+                                            htmlFor="create-monster-name"
+                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                        >
+                                            {x('Name', 'Naam')}
+                                        </label>
+                                        <input
+                                            id="create-monster-name"
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                            placeholder={x('Name', 'Naam')}
+                                            value={form.data.name}
+                                            onChange={(event) =>
+                                                form.setData('name', event.target.value)
+                                            }
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label
+                                            htmlFor="create-monster-slug"
+                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                        >
+                                            {x('Slug (optional)', 'Slug (optioneel)')}
+                                        </label>
+                                        <input
+                                            id="create-monster-slug"
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                            placeholder={x(
+                                                'Slug (optional)',
+                                                'Slug (optioneel)',
+                                            )}
+                                            value={form.data.slug}
+                                            onChange={(event) =>
+                                                form.setData('slug', event.target.value)
+                                            }
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label
+                                            htmlFor="create-monster-size-label"
+                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                        >
+                                            {x('Size label (optional)', 'Formaatlabel (optioneel)')}
+                                        </label>
+                                        <input
+                                            id="create-monster-size-label"
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                            placeholder={x(
+                                                'Size label (optional)',
+                                                'Formaatlabel (optioneel)',
+                                            )}
+                                            value={form.data.size_label}
+                                            onChange={(event) =>
+                                                form.setData(
+                                                    'size_label',
+                                                    event.target.value,
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label
+                                            htmlFor="create-monster-submit"
+                                            className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                        >
+                                            {x('Action', 'Actie')}
+                                        </label>
+                                        <button
+                                            id="create-monster-submit"
+                                            type="submit"
+                                            className={cn(
+                                                buttonVariants({
+                                                    variant: 'default',
+                                                }),
+                                                'w-full bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                            )}
+                                            disabled={form.processing}
+                                        >
+                                            {x('Add Monster', 'Monster Toevoegen')}
+                                        </button>
+                                    </div>
                                 </form>
                             </CardContent>
                         </Card>
