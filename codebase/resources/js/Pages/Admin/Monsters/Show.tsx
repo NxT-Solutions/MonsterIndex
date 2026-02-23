@@ -4,8 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
-import type { FormEvent } from 'react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 
 type MonsterDetail = {
     id: number;
@@ -37,10 +36,22 @@ type MonitorRecord = {
         currency: string;
         status: string;
     } | null;
+    latest_run?: {
+        id: number;
+        status: string;
+        started_at: string | null;
+        finished_at: string | null;
+        error_message: string | null;
+    } | null;
 };
 
 type BookmarkletSession = {
     selector_browser_url: string;
+};
+
+type RunsEventPayload = {
+    running_monitor_ids: number[];
+    timestamp: string;
 };
 
 export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
@@ -54,6 +65,82 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
 
     const [loadingSelector, setLoadingSelector] = useState<number | null>(null);
     const [loadingRun, setLoadingRun] = useState<number | null>(null);
+    const [runningMonitorIds, setRunningMonitorIds] = useState<number[]>(
+        () => initialRunningMonitorIds(monster.monitors),
+    );
+    const runningMonitorSet = useMemo(
+        () => new Set(runningMonitorIds),
+        [runningMonitorIds],
+    );
+
+    useEffect(() => {
+        setRunningMonitorIds(initialRunningMonitorIds(monster.monitors));
+    }, [monster.monitors]);
+
+    useEffect(() => {
+        let source: EventSource | null = null;
+        let reconnectTimer: number | null = null;
+
+        const connect = () => {
+            source = new EventSource(
+                route('api.admin.monsters.records.events', monster.slug),
+            );
+
+            source.addEventListener('monitor-runs', (event) => {
+                if (!(event instanceof MessageEvent)) {
+                    return;
+                }
+
+                const payload = parseRunsEvent(event.data);
+                if (!payload) {
+                    return;
+                }
+
+                const nextRunning = payload.running_monitor_ids;
+                setRunningMonitorIds((currentRunning) => {
+                    const completed = currentRunning.filter(
+                        (monitorId) => !nextRunning.includes(monitorId),
+                    );
+
+                    if (completed.length > 0) {
+                        router.reload({
+                            only: ['monster'],
+                        });
+                    }
+
+                    return nextRunning;
+                });
+            });
+
+            source.onerror = () => {
+                if (source) {
+                    source.close();
+                    source = null;
+                }
+
+                if (reconnectTimer !== null) {
+                    return;
+                }
+
+                reconnectTimer = window.setTimeout(() => {
+                    reconnectTimer = null;
+                    connect();
+                }, 1500);
+            };
+        };
+
+        connect();
+
+        return () => {
+            if (reconnectTimer !== null) {
+                window.clearTimeout(reconnectTimer);
+            }
+
+            if (source) {
+                source.close();
+            }
+        };
+    }, [monster.slug]);
 
     const submitRecord = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -85,10 +172,26 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
     };
 
     const runNow = async (record: MonitorRecord) => {
+        if (runningMonitorSet.has(record.id)) {
+            return;
+        }
+
         setLoadingRun(record.id);
+        setRunningMonitorIds((currentRunning) => {
+            if (currentRunning.includes(record.id)) {
+                return currentRunning;
+            }
+
+            return [...currentRunning, record.id].sort((a, b) => a - b);
+        });
 
         try {
             await axios.post(route('api.admin.monitors.run-now', record.id));
+        } catch {
+            setRunningMonitorIds((currentRunning) =>
+                currentRunning.filter((monitorId) => monitorId !== record.id),
+            );
+            window.alert('Could not queue this scrape run. Please retry.');
         } finally {
             setLoadingRun(null);
         }
@@ -175,6 +278,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                             <th className="px-3 py-2">Selector</th>
                                             <th className="px-3 py-2">Latest</th>
                                             <th className="px-3 py-2">Next Check</th>
+                                            <th className="px-3 py-2">Scrape</th>
                                             <th className="px-3 py-2">Actions</th>
                                         </tr>
                                     </thead>
@@ -220,6 +324,25 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                         : 'N/A'}
                                                 </td>
                                                 <td className="px-3 py-2">
+                                                    {runningMonitorSet.has(
+                                                        record.id,
+                                                    ) ? (
+                                                        <div className="min-w-[160px] space-y-1.5">
+                                                            <div className="flex items-center gap-2 text-xs font-medium text-orange-700">
+                                                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
+                                                                Scraping now...
+                                                            </div>
+                                                            <div className="h-1.5 overflow-hidden rounded bg-orange-100">
+                                                                <div className="h-full w-1/2 animate-pulse rounded bg-orange-500" />
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-500">
+                                                            Idle
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-3 py-2">
                                                     <div className="flex flex-wrap gap-2">
                                                         <button
                                                             type="button"
@@ -254,13 +377,23 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                             )}
                                                             disabled={
                                                                 loadingRun ===
-                                                                record.id
+                                                                    record.id ||
+                                                                runningMonitorSet.has(
+                                                                    record.id,
+                                                                )
                                                             }
                                                             onClick={() =>
                                                                 runNow(record)
                                                             }
                                                         >
-                                                            Run Now
+                                                            {loadingRun ===
+                                                            record.id
+                                                                ? 'Queueing...'
+                                                                : runningMonitorSet.has(
+                                                                      record.id,
+                                                                  )
+                                                                ? 'Running...'
+                                                                : 'Run Now'}
                                                         </button>
                                                         <button
                                                             type="button"
@@ -337,4 +470,43 @@ function latestSnapshotLabel(record: MonitorRecord): string {
             : '';
 
     return `${total}${perCan} (${latest.status})`;
+}
+
+function initialRunningMonitorIds(records: MonitorRecord[]): number[] {
+    return records
+        .filter(
+            (record) =>
+                isActiveRunStatus(record.latest_run?.status) &&
+                record.latest_run?.finished_at === null,
+        )
+        .map((record) => record.id)
+        .sort((a, b) => a - b);
+}
+
+function parseRunsEvent(rawData: string): RunsEventPayload | null {
+    try {
+        const payload = JSON.parse(rawData) as Partial<RunsEventPayload>;
+        if (!Array.isArray(payload.running_monitor_ids)) {
+            return null;
+        }
+
+        const runningMonitorIds = payload.running_monitor_ids
+            .map((value) => Number(value))
+            .filter((value) => Number.isInteger(value) && value > 0)
+            .sort((a, b) => a - b);
+
+        return {
+            running_monitor_ids: Array.from(new Set(runningMonitorIds)),
+            timestamp:
+                typeof payload.timestamp === 'string'
+                    ? payload.timestamp
+                    : new Date().toISOString(),
+        };
+    } catch {
+        return null;
+    }
+}
+
+function isActiveRunStatus(status: string | undefined | null): boolean {
+    return status === 'queued' || status === 'running';
 }

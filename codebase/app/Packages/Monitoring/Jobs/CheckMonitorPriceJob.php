@@ -32,6 +32,7 @@ class CheckMonitorPriceJob implements ShouldQueue
     public function __construct(
         private readonly int $monitorId,
         private readonly string $triggeredBy = 'manual',
+        private readonly ?int $monitorRunId = null,
     ) {}
 
     /**
@@ -50,12 +51,7 @@ class CheckMonitorPriceJob implements ShouldQueue
             return;
         }
 
-        $run = MonitorRun::query()->create([
-            'monitor_id' => $monitor->id,
-            'started_at' => now(),
-            'status' => 'running',
-            'attempt' => $this->attempts(),
-        ]);
+        $run = $this->resolveRun($monitor->id);
 
         try {
             $domain = $monitor->site?->domain ?: (string) parse_url($monitor->product_url, PHP_URL_HOST);
@@ -105,5 +101,34 @@ class CheckMonitorPriceJob implements ShouldQueue
 
             throw $exception;
         }
+    }
+
+    private function resolveRun(int $monitorId): MonitorRun
+    {
+        if ($this->monitorRunId !== null) {
+            $existingRun = MonitorRun::query()
+                ->where('id', $this->monitorRunId)
+                ->where('monitor_id', $monitorId)
+                ->first();
+
+            if ($existingRun) {
+                $existingRun->update([
+                    'started_at' => now(),
+                    'finished_at' => null,
+                    'status' => 'running',
+                    'attempt' => $this->attempts(),
+                    'error_message' => null,
+                ]);
+
+                return $existingRun->refresh();
+            }
+        }
+
+        return MonitorRun::query()->create([
+            'monitor_id' => $monitorId,
+            'started_at' => now(),
+            'status' => 'running',
+            'attempt' => $this->attempts(),
+        ]);
     }
 }

@@ -45,6 +45,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::post('/api/bookmarklet/session', [AdminBookmarkletController::class, 'session'])->name('api.bookmarklet.session');
     Route::post('/api/admin/monitors/{monitor}/run-now', [AdminMonitorController::class, 'runNow'])->name('api.admin.monitors.run-now');
+    Route::get('/api/admin/monsters/{monster:slug}/records/events', [AdminMonsterController::class, 'recordsEvents'])->name('api.admin.monsters.records.events');
 });
 
 Route::get('/bookmarklet/selector.js', [AdminBookmarkletController::class, 'script'])->name('bookmarklet.script');

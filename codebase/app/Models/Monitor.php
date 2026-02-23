@@ -60,6 +60,11 @@ class Monitor extends Model
         return $this->hasOne(PriceSnapshot::class)->latestOfMany('checked_at');
     }
 
+    public function latestRun(): HasOne
+    {
+        return $this->hasOne(MonitorRun::class)->latestOfMany('started_at');
+    }
+
     public function runs(): HasMany
     {
         return $this->hasMany(MonitorRun::class);

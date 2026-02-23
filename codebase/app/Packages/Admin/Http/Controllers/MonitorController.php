@@ -5,6 +5,7 @@ namespace Packages\Admin\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Packages\Monitoring\Jobs\CheckMonitorPriceJob;
 use App\Models\Monitor;
+use App\Models\MonitorRun;
 use App\Models\Monster;
 use App\Models\Site;
 use Illuminate\Http\JsonResponse;
@@ -77,11 +78,19 @@ class MonitorController extends Controller
 
     public function runNow(Monitor $monitor): JsonResponse
     {
-        CheckMonitorPriceJob::dispatch($monitor->id, 'manual');
+        $run = MonitorRun::query()->create([
+            'monitor_id' => $monitor->id,
+            'started_at' => now(),
+            'status' => 'queued',
+            'attempt' => 1,
+        ]);
+
+        CheckMonitorPriceJob::dispatch($monitor->id, 'manual', $run->id);
 
         return response()->json([
             'ok' => true,
             'message' => 'Monitor run queued.',
+            'monitor_run_id' => $run->id,
         ]);
     }
 
