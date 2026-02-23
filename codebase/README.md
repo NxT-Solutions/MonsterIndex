@@ -33,10 +33,11 @@ Then initialize app dependencies:
 
 ```bash
 docker compose --env-file .docker/local/.env -f .docker/local/compose.yaml exec php composer install
-docker compose --env-file .docker/local/.env -f .docker/local/compose.yaml run --rm node npm install
 docker compose --env-file .docker/local/.env -f .docker/local/compose.yaml exec php php artisan key:generate
 docker compose --env-file .docker/local/.env -f .docker/local/compose.yaml exec php php artisan migrate
 ```
+
+Hot reload is automatic via the persistent `node` service (Vite watch mode).
 
 ## OAuth Configuration
 

@@ -29,11 +29,12 @@ function dcomposer {
 }
 
 function dnpm {
-  compose_cmd run --rm node npm "$@"
+  compose_cmd exec node npm "$@"
 }
 
 function devite {
-  compose_cmd run --rm --service-ports node npm run dev -- --host 0.0.0.0 --port 5173
+  compose_cmd up -d node
+  compose_cmd logs -f node
 }
 
 function dup {
