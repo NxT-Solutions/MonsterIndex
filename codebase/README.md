@@ -13,8 +13,8 @@ This folder contains the Laravel + Inertia React application for MonsterIndex.
 ## Package-Oriented App Structure
 
 - `app/Packages/Base` shared contracts/data objects
-- `app/Packages/Bookmarklet` bookmarklet session + script services
-- `app/Packages/PriceExtraction` adapters + extractor services
+- `app/Packages/Bookmarklet` selector session + capture services
+- `app/Packages/PriceExtraction` selector-based extractor services
 - `app/Packages/Monitoring` monitor jobs + best-price projection services
 - `app/Packages/*/.example` package template for new bounded contexts
 

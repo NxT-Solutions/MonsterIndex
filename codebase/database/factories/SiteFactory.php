@@ -21,7 +21,6 @@ class SiteFactory extends Factory
         return [
             'name' => ucfirst(strtok($domain, '.')),
             'domain' => $domain,
-            'adapter_key' => null,
             'active' => true,
         ];
     }

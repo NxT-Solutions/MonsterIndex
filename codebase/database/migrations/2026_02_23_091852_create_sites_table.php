@@ -15,11 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('domain')->unique();
-            $table->string('adapter_key')->nullable();
             $table->boolean('active')->default(true);
             $table->timestamps();
 
-            $table->index(['active', 'adapter_key']);
+            $table->index(['active', 'domain']);
         });
     }
 

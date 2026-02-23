@@ -19,7 +19,7 @@ class MonitorController extends Controller
     public function index(): Response
     {
         $monitors = Monitor::query()
-            ->with(['monster:id,name,slug', 'site:id,name,domain,adapter_key', 'latestSnapshot'])
+            ->with(['monster:id,name,slug', 'site:id,name,domain', 'latestSnapshot'])
             ->orderByDesc('id')
             ->get();
 

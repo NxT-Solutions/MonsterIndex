@@ -8,28 +8,20 @@ interface Site {
     id: number;
     name: string;
     domain: string;
-    adapter_key: string | null;
     active: boolean;
 }
 
-export default function SitesIndex({
-    sites,
-    adapterKeys,
-}: {
-    sites: Site[];
-    adapterKeys: string[];
-}) {
+export default function SitesIndex({ sites }: { sites: Site[] }) {
     const form = useForm({
         name: '',
         domain: '',
-        adapter_key: '',
         active: true,
     });
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         form.post(route('admin.sites.store'), {
-            onSuccess: () => form.reset('name', 'domain', 'adapter_key'),
+            onSuccess: () => form.reset('name', 'domain'),
         });
     };
 
@@ -40,16 +32,9 @@ export default function SitesIndex({
         const domain = window.prompt('Domain', site.domain);
         if (!domain) return;
 
-        const adapterKey =
-            window.prompt(
-                `Adapter key (${adapterKeys.join(', ') || 'none'})`,
-                site.adapter_key ?? '',
-            ) ?? '';
-
         router.put(route('admin.sites.update', site.id), {
             name,
             domain,
-            adapter_key: adapterKey,
             active: site.active,
         });
     };
@@ -72,7 +57,7 @@ export default function SitesIndex({
                         </CardHeader>
                         <CardContent>
                             <form
-                                className="grid gap-3 md:grid-cols-4"
+                                className="grid gap-3 md:grid-cols-3"
                                 onSubmit={submit}
                             >
                                 <input
@@ -93,23 +78,6 @@ export default function SitesIndex({
                                     }
                                     required
                                 />
-                                <select
-                                    className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                    value={form.data.adapter_key}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'adapter_key',
-                                            event.target.value,
-                                        )
-                                    }
-                                >
-                                    <option value="">Manual selectors</option>
-                                    {adapterKeys.map((key) => (
-                                        <option key={key} value={key}>
-                                            {key}
-                                        </option>
-                                    ))}
-                                </select>
                                 <button
                                     type="submit"
                                     className={buttonVariants({
@@ -133,7 +101,6 @@ export default function SitesIndex({
                                     <tr className="border-b text-xs uppercase tracking-wide text-slate-500">
                                         <th className="px-3 py-2">Name</th>
                                         <th className="px-3 py-2">Domain</th>
-                                        <th className="px-3 py-2">Adapter</th>
                                         <th className="px-3 py-2">Active</th>
                                         <th className="px-3 py-2">Actions</th>
                                     </tr>
@@ -149,9 +116,6 @@ export default function SitesIndex({
                                             </td>
                                             <td className="px-3 py-2">
                                                 {site.domain}
-                                            </td>
-                                            <td className="px-3 py-2">
-                                                {site.adapter_key ?? 'manual'}
                                             </td>
                                             <td className="px-3 py-2">
                                                 {site.active ? 'Yes' : 'No'}

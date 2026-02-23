@@ -10,7 +10,6 @@ use Throwable;
 class PriceExtractionService
 {
     public function __construct(
-        private readonly SiteAdapterRegistry $siteAdapterRegistry,
         private readonly ManualSelectorExtractor $manualSelectorExtractor,
         private readonly HeadlessExtractorClient $headlessExtractorClient,
     ) {}
@@ -31,11 +30,6 @@ class PriceExtractionService
             );
         }
 
-        $adapterResult = $this->extractViaAdapter($monitor, $html, $defaultCurrency);
-        if ($adapterResult !== null && $adapterResult->status !== 'failed') {
-            return $adapterResult;
-        }
-
         $selectorConfig = $monitor->selector_config;
         if (is_array($selectorConfig)) {
             $manualResult = $this->manualSelectorExtractor->extract(
@@ -48,14 +42,19 @@ class PriceExtractionService
                 return $manualResult;
             }
 
-            $adapterResult = $manualResult;
+            return $this->maybeFallback(
+                monitor: $monitor,
+                defaultCurrency: $defaultCurrency,
+                allowHeadlessFallback: $allowHeadlessFallback,
+                fallbackError: $manualResult,
+            );
         }
 
         return $this->maybeFallback(
             monitor: $monitor,
             defaultCurrency: $defaultCurrency,
             allowHeadlessFallback: $allowHeadlessFallback,
-            fallbackError: $adapterResult ?? ExtractionResult::failed($defaultCurrency, 'PRICE_NOT_FOUND'),
+            fallbackError: ExtractionResult::failed($defaultCurrency, 'SELECTOR_CONFIG_MISSING'),
         );
     }
 
@@ -77,38 +76,6 @@ class PriceExtractionService
         } catch (Throwable) {
             return null;
         }
-    }
-
-    private function extractViaAdapter(Monitor $monitor, string $html, string $defaultCurrency): ?ExtractionResult
-    {
-        $adapter = $this->siteAdapterRegistry->forKey($monitor->site?->adapter_key);
-
-        if (! $adapter) {
-            $domain = strtolower((string) parse_url($monitor->product_url, PHP_URL_HOST));
-            $adapter = $this->siteAdapterRegistry->forDomain($domain);
-        }
-
-        if (! $adapter) {
-            return null;
-        }
-
-        $result = $adapter->extract($html, $monitor->product_url);
-
-        if ($result->currency === '') {
-            return new ExtractionResult(
-                priceCents: $result->priceCents,
-                shippingCents: $result->shippingCents,
-                effectiveTotalCents: $result->effectiveTotalCents,
-                currency: $defaultCurrency,
-                status: $result->status,
-                rawText: $result->rawText,
-                availability: $result->availability,
-                errorCode: $result->errorCode,
-                usedHeadlessFallback: $result->usedHeadlessFallback,
-            );
-        }
-
-        return $result;
     }
 
     private function maybeFallback(

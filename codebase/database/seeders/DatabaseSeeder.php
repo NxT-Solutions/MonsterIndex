@@ -57,7 +57,6 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Amazon',
                 'domain' => 'amazon.com',
-                'adapter_key' => 'amazon',
                 'active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -65,7 +64,6 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Walmart',
                 'domain' => 'walmart.com',
-                'adapter_key' => 'walmart',
                 'active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -73,7 +71,6 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Target',
                 'domain' => 'target.com',
-                'adapter_key' => 'target',
                 'active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),

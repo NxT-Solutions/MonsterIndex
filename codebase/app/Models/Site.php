@@ -16,7 +16,6 @@ class Site extends Model
     protected $fillable = [
         'name',
         'domain',
-        'adapter_key',
         'active',
     ];
 
