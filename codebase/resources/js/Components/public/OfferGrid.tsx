@@ -43,11 +43,11 @@ export default function OfferGrid({ offers, query }: OfferGridProps) {
                 return (
                     <article
                         key={offer.id}
-                        className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface)] p-6 shadow-[0_12px_35px_rgba(0,0,0,.28)]"
+                        className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface)] p-4 shadow-[0_12px_35px_rgba(0,0,0,.28)] sm:p-6"
                     >
-                        <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div>
-                                <h3 className="font-display text-2xl font-semibold text-white">
+                                <h3 className="font-display text-xl font-semibold text-white sm:text-2xl">
                                     {offer.monster.name}
                                     {offer.monster.size_label
                                         ? ` (${offer.monster.size_label})`
@@ -61,8 +61,8 @@ export default function OfferGrid({ offers, query }: OfferGridProps) {
                                     {offer.domain ? ` (${offer.domain})` : ''}
                                 </p>
                             </div>
-                            <div className="text-right">
-                                <p className="font-display text-2xl font-bold text-[color:var(--landing-accent)]">
+                            <div className="sm:text-right">
+                                <p className="font-display text-xl font-bold text-[color:var(--landing-accent)] sm:text-2xl">
                                     {perCan !== null
                                         ? `${formatMoney(perCan, offer.currency)} / ${x('can', 'blik')}`
                                         : `${formatMoney(offer.effective_total_cents, offer.currency)} ${x('total', 'totaal')}`}
@@ -117,7 +117,7 @@ export default function OfferGrid({ offers, query }: OfferGridProps) {
                             </p>
                         </div>
 
-                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <p className="font-body text-xs uppercase tracking-[0.18em] text-white/45">
                                 {x('status', 'status')}: {offer.status ?? x('unknown', 'onbekend')}
                             </p>

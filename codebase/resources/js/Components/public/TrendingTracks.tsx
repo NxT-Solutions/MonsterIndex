@@ -54,14 +54,14 @@ export default function TrendingTracks({ tracks }: TrendingTracksProps) {
                                 key={track.id}
                                 className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface)] p-5 shadow-[0_16px_45px_rgba(0,0,0,.35)]"
                             >
-                                <div className="flex items-start justify-between gap-3">
-                                    <h3 className="font-display text-xl font-semibold text-white">
+                                <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                                    <h3 className="font-display text-lg font-semibold text-white sm:text-xl">
                                         {track.monster.name}
                                         {track.monster.size_label
                                             ? ` (${track.monster.size_label})`
                                             : ''}
                                     </h3>
-                                    <p className="font-display text-lg font-bold text-[color:var(--landing-accent)]">
+                                    <p className="font-display text-base font-bold text-[color:var(--landing-accent)] sm:text-lg sm:text-right">
                                         {perCanCents !== null
                                             ? `${formatMoney(perCanCents, track.currency)} / ${x('can', 'blik')}`
                                             : `${formatMoney(track.effective_total_cents, track.currency)} ${x('total', 'totaal')}`}

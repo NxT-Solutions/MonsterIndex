@@ -97,7 +97,7 @@ export default function MonsterShow({
                                 href={route('home')}
                                 className={cn(
                                     buttonVariants({ variant: 'outline' }),
-                                    'border-white/20 bg-transparent text-white hover:bg-white/10',
+                                    'w-full border-white/20 bg-transparent text-white hover:bg-white/10 sm:w-auto',
                                 )}
                             >
                                 {x('Back to Board', 'Terug naar Bord')}
@@ -143,7 +143,123 @@ export default function MonsterShow({
                             </h2>
                         </div>
 
-                        <div className="overflow-x-auto">
+                        {snapshots.length === 0 && (
+                            <div className="px-6 py-5 font-body text-sm text-white/70">
+                                {x(
+                                    'No snapshots yet for this monster.',
+                                    'Nog geen snapshots voor deze monster.',
+                                )}
+                            </div>
+                        )}
+
+                        <div className="grid gap-3 p-4 md:hidden">
+                            {snapshots.map((snapshot) => {
+                                const perCan = effectivePerCanCents(snapshot);
+
+                                return (
+                                    <article
+                                        key={snapshot.id}
+                                        className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p className="font-body text-sm font-semibold text-white">
+                                                    {snapshot.site.name}
+                                                </p>
+                                                <p className="font-body text-xs text-white/55">
+                                                    {snapshot.site.domain}
+                                                </p>
+                                            </div>
+                                            <p className="font-body text-xs text-white/60">
+                                                {snapshot.checked_at
+                                                    ? new Date(
+                                                          snapshot.checked_at,
+                                                      ).toLocaleString(
+                                                          dateLocale,
+                                                      )
+                                                    : x('N/A', 'N/B')}
+                                            </p>
+                                        </div>
+
+                                        <div className="mt-3 grid grid-cols-2 gap-2 font-body text-xs text-white/75">
+                                            <p>
+                                                <span className="text-white/55">
+                                                    {x('Price', 'Prijs')}:
+                                                </span>{' '}
+                                                {snapshot.price_cents !== null
+                                                    ? formatMoney(
+                                                          snapshot.price_cents,
+                                                          snapshot.currency,
+                                                      )
+                                                    : x('N/A', 'N/B')}
+                                            </p>
+                                            <p>
+                                                <span className="text-white/55">
+                                                    {x(
+                                                        'Shipping',
+                                                        'Verzending',
+                                                    )}
+                                                    :
+                                                </span>{' '}
+                                                {snapshot.shipping_cents !== null
+                                                    ? formatMoney(
+                                                          snapshot.shipping_cents,
+                                                          snapshot.currency,
+                                                      )
+                                                    : x('Unknown', 'Onbekend')}
+                                            </p>
+                                            <p>
+                                                <span className="text-white/55">
+                                                    {x('Total', 'Totaal')}:
+                                                </span>{' '}
+                                                <span className="font-semibold text-[color:var(--landing-accent)]">
+                                                    {snapshot.effective_total_cents !==
+                                                    null
+                                                        ? formatMoney(
+                                                              snapshot.effective_total_cents,
+                                                              snapshot.currency,
+                                                          )
+                                                        : x('N/A', 'N/B')}
+                                                </span>
+                                            </p>
+                                            <p>
+                                                <span className="text-white/55">
+                                                    {x('Per Can', 'Per Blik')}:
+                                                </span>{' '}
+                                                {perCan !== null
+                                                    ? formatMoney(
+                                                          perCan,
+                                                          snapshot.currency,
+                                                      )
+                                                    : x('Unknown', 'Onbekend')}
+                                                {snapshot.can_count !== null
+                                                    ? ` (${snapshot.can_count}-${x('pack', 'pack')})`
+                                                    : ''}
+                                            </p>
+                                        </div>
+
+                                        <div className="mt-3 flex items-center justify-between gap-3">
+                                            <p className="font-body text-xs text-white/70">
+                                                {x('Status', 'Status')}: {snapshot.status}
+                                                {snapshot.error_code
+                                                    ? ` (${snapshot.error_code})`
+                                                    : ''}
+                                            </p>
+                                            <a
+                                                href={snapshot.site.product_url}
+                                                className="font-body text-xs text-[color:var(--landing-accent)] underline underline-offset-4"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                {x('Open', 'Open')}
+                                            </a>
+                                        </div>
+                                    </article>
+                                );
+                            })}
+                        </div>
+
+                        <div className="hidden overflow-x-auto md:block">
                             <table className="w-full min-w-[960px] text-left text-sm">
                                 <thead>
                                     <tr className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-white/55">

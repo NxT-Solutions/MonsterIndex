@@ -15,7 +15,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
 
     return (
         <header className="sticky top-0 z-30 border-b border-white/10 bg-[rgba(8,12,12,0.82)] backdrop-blur-xl">
-            <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4 lg:px-8">
                 <a
                     href="#top"
                     className="inline-flex items-center gap-3"
@@ -34,60 +34,81 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                     </div>
                 </a>
 
-                <div className="flex items-center gap-2">
+                <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
                     <LanguageSwitcher
                         compact
-                        className="mr-1 [&>span]:text-white/55"
+                        className="[&>span]:hidden sm:[&>span]:inline sm:[&>span]:text-white/55"
                     />
-                    <a
-                        href="#live-offers"
-                        className={cn(
-                            buttonVariants({ variant: 'secondary', size: 'sm' }),
-                            'border border-white/10 bg-white/5 text-white hover:bg-white/10',
-                        )}
-                    >
-                        {x('Browse Deals', 'Bekijk Deals')}
-                    </a>
-                    {auth.user ? (
-                        <>
-                            <Link
-                                href={route('dashboard')}
-                                className={cn(
-                                    buttonVariants({
-                                        variant: 'secondary',
-                                        size: 'sm',
-                                    }),
-                                    'border border-white/10 bg-white/5 text-white hover:bg-white/10',
-                                )}
-                            >
-                                {x('Dashboard', 'Dashboard')}
-                            </Link>
-                            {auth.user.role === 'admin' && (
+                    <div className="flex flex-1 flex-wrap items-center justify-end gap-2 sm:flex-none">
+                        <a
+                            href="#live-offers"
+                            className={cn(
+                                buttonVariants({
+                                    variant: 'secondary',
+                                    size: 'sm',
+                                }),
+                                'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                            )}
+                        >
+                            <span className="sm:hidden">
+                                {x('Deals', 'Deals')}
+                            </span>
+                            <span className="hidden sm:inline">
+                                {x('Browse Deals', 'Bekijk Deals')}
+                            </span>
+                        </a>
+                        {auth.user ? (
+                            <>
                                 <Link
-                                    href={route('admin.dashboard')}
+                                    href={route('dashboard')}
                                     className={cn(
                                         buttonVariants({
+                                            variant: 'secondary',
+                                            size: 'sm',
+                                        }),
+                                        'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                    )}
+                                >
+                                    {x('Dashboard', 'Dashboard')}
+                                </Link>
+                                {auth.user.role === 'admin' && (
+                                    <Link
+                                        href={route('admin.dashboard')}
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'default',
+                                                size: 'sm',
+                                            }),
+                                            'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                        )}
+                                    >
+                                        {x('Admin', 'Admin')}
+                                    </Link>
+                                )}
+                            </>
+                        ) : (
+                            <Link
+                                href={route('login')}
+                                className={cn(
+                                    buttonVariants({
                                         variant: 'default',
                                         size: 'sm',
                                     }),
                                     'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                 )}
                             >
-                                    {x('Admin', 'Admin')}
-                                </Link>
-                            )}
-                        </>
-                    ) : (
-                        <Link
-                            href={route('login')}
-                            className={cn(
-                                buttonVariants({ variant: 'default', size: 'sm' }),
-                                'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
-                            )}
-                        >
-                            {x('Continue with Google', 'Doorgaan met Google')}
-                        </Link>
-                    )}
+                                <span className="sm:hidden">
+                                    {x('Google', 'Google')}
+                                </span>
+                                <span className="hidden sm:inline">
+                                    {x(
+                                        'Continue with Google',
+                                        'Doorgaan met Google',
+                                    )}
+                                </span>
+                            </Link>
+                        )}
+                    </div>
                 </div>
             </div>
         </header>

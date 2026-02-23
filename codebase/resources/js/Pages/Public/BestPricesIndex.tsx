@@ -105,7 +105,7 @@ export default function BestPricesIndex({
                                     )}
                                 </h2>
                             </div>
-                            <p className="font-body text-sm text-white/60">
+                            <p className="w-full font-body text-sm text-white/60 sm:w-auto sm:text-right">
                                 {filteredOffers.length}{' '}
                                 {x('matching offer', 'passende aanbieding')}
                                 {filteredOffers.length === 1
@@ -154,7 +154,7 @@ export default function BestPricesIndex({
                                     )}
                                 </h2>
                             </div>
-                            <p className="font-body text-sm text-white/60">
+                            <p className="w-full font-body text-sm text-white/60 sm:w-auto sm:text-right">
                                 {x(
                                     'Public snapshots with per-can and pack-level context',
                                     'Publieke snapshots met prijs per blik en pack-context',
@@ -226,7 +226,7 @@ export default function BestPricesIndex({
                     </section>
 
                     <footer className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface)] px-6 py-5 sm:px-8">
-                        <div className="flex flex-wrap items-center justify-between gap-3 font-body text-sm text-white/70">
+                        <div className="flex flex-col gap-3 font-body text-sm text-white/70 sm:flex-row sm:items-center sm:justify-between">
                             <p>
                                 {x(
                                     'MonsterIndex is an independent Monster deals tracking platform.',
