@@ -80,17 +80,6 @@ class HomeController extends Controller
                 'tracked_monsters' => $bestPrices->unique(fn ($row) => $row['monster']['slug'])->count(),
                 'offers' => $bestPrices->count(),
             ],
-            'branding' => [
-                'name' => (string) config('branding.name', 'MonsterIndex'),
-                'tagline' => (string) config('branding.tagline', ''),
-                'hero_kicker' => (string) config('branding.hero_kicker', ''),
-                'hero_title' => (string) config('branding.hero_title', ''),
-                'hero_subtitle' => (string) config('branding.hero_subtitle', ''),
-                'primary_cta_label' => (string) config('branding.primary_cta_label', 'Browse Deals'),
-                'secondary_cta_label' => (string) config('branding.secondary_cta_label', 'View Trending Tracks'),
-                'accent_hex' => (string) config('branding.accent_hex', '#9DFF00'),
-                'github_url' => config('branding.github_url'),
-            ],
         ]);
     }
 

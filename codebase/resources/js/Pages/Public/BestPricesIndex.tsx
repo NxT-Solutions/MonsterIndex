@@ -3,12 +3,13 @@ import LandingNav from '@/Components/public/LandingNav';
 import OfferGrid from '@/Components/public/OfferGrid';
 import TrendingTracks from '@/Components/public/TrendingTracks';
 import { Card, CardContent } from '@/Components/ui/card';
+import { useLocale } from '@/lib/locale';
 import { PublicOfferRow, TrendingTrackRow } from '@/lib/publicPricing';
 import { PageProps } from '@/types';
 import { Head } from '@inertiajs/react';
-import { type CSSProperties, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
-type LandingBranding = {
+type LandingCopy = {
     name: string;
     tagline: string;
     hero_kicker: string;
@@ -16,8 +17,32 @@ type LandingBranding = {
     hero_subtitle: string;
     primary_cta_label: string;
     secondary_cta_label: string;
-    accent_hex: string;
-    github_url: string | null;
+    github_url: string;
+};
+
+const LANDING_COPY: Record<'en' | 'nl', LandingCopy> = {
+    en: {
+        name: 'MonsterIndex',
+        tagline: 'Track the best Monster offers in one place.',
+        hero_kicker: 'Live price intelligence',
+        hero_title: 'Find your next Monster deal before it disappears.',
+        hero_subtitle:
+            'Search your favorite Monster variants, compare live offers, and spot the strongest pack value in seconds.',
+        primary_cta_label: 'Browse Deals',
+        secondary_cta_label: 'View Trending Tracks',
+        github_url: 'https://github.com/NoahNxT/MonsterIndex',
+    },
+    nl: {
+        name: 'MonsterIndex',
+        tagline: 'Volg de beste Monster aanbiedingen op één plek.',
+        hero_kicker: 'Live prijsintelligentie',
+        hero_title: 'Vind je volgende Monster-deal voordat die verdwijnt.',
+        hero_subtitle:
+            'Zoek je favoriete Monster-variant, vergelijk live aanbiedingen en zie direct de beste packwaarde.',
+        primary_cta_label: 'Bekijk Deals',
+        secondary_cta_label: 'Bekijk Trending Tracks',
+        github_url: 'https://github.com/NoahNxT/MonsterIndex',
+    },
 };
 
 export default function BestPricesIndex({
@@ -25,7 +50,6 @@ export default function BestPricesIndex({
     bestPrices,
     trendingTracks,
     stats,
-    branding,
 }: PageProps<{
     bestPrices: PublicOfferRow[];
     trendingTracks: TrendingTrackRow[];
@@ -33,10 +57,11 @@ export default function BestPricesIndex({
         tracked_monsters: number;
         offers: number;
     };
-    branding: LandingBranding;
 }>) {
+    const { locale, x } = useLocale();
     const [query, setQuery] = useState('');
     const normalizedQuery = query.trim().toLowerCase();
+    const copy = LANDING_COPY[locale];
 
     const filteredOffers = useMemo(() => {
         if (normalizedQuery === '') {
@@ -57,49 +82,58 @@ export default function BestPricesIndex({
         });
     }, [bestPrices, normalizedQuery]);
 
-    const rootStyle = {
-        '--landing-accent': normalizeHexColor(branding.accent_hex),
-        '--landing-accent-soft': hexToRgba(branding.accent_hex, 0.24),
-        '--landing-accent-glow': hexToRgba(branding.accent_hex, 0.18),
-    } as CSSProperties;
-
     return (
         <>
-            <Head title={branding.name} />
+            <Head title={copy.name} />
 
-            <div style={rootStyle} className="landing-root min-h-screen bg-[color:var(--landing-bg)] text-white">
-                <LandingNav auth={auth} brandName={branding.name} />
+            <div className="landing-root dark min-h-screen bg-[color:var(--landing-bg)] text-white">
+                <LandingNav auth={auth} brandName={copy.name} />
 
                 <main className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-                    <Hero branding={branding} stats={stats} />
+                    <Hero copy={copy} stats={stats} />
 
                     <section className="space-y-4 rounded-2xl border border-white/10 bg-[color:var(--landing-surface)] p-6 sm:p-8">
                         <div className="flex flex-wrap items-end justify-between gap-3">
                             <div>
                                 <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--landing-accent)]">
-                                    Search Radar
+                                    {x('Search Radar', 'Zoek Radar')}
                                 </p>
                                 <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
-                                    Find Your Favorite Monster
+                                    {x(
+                                        'Find Your Favorite Monster',
+                                        'Zoek Je Favoriete Monster',
+                                    )}
                                 </h2>
                             </div>
                             <p className="font-body text-sm text-white/60">
-                                {filteredOffers.length} matching offer
-                                {filteredOffers.length === 1 ? '' : 's'}
+                                {filteredOffers.length}{' '}
+                                {x('matching offer', 'passende aanbieding')}
+                                {filteredOffers.length === 1
+                                    ? ''
+                                    : x('s', 'en')}
                             </p>
                         </div>
 
                         <label htmlFor="monster-search" className="sr-only">
-                            Search monsters by name, size, or store
+                            {x(
+                                'Search monsters by name, size, or store',
+                                'Zoek monsters op naam, formaat of winkel',
+                            )}
                         </label>
                         <input
                             id="monster-search"
                             type="search"
                             value={query}
                             onChange={(event) => setQuery(event.target.value)}
-                            placeholder="Search Monster Ultra, Mango Loco, Amazon, 16oz..."
+                            placeholder={x(
+                                'Search Monster Ultra, Mango Loco, Amazon, 16oz...',
+                                'Zoek Monster Ultra, Mango Loco, Amazon, 16oz...',
+                            )}
                             className="h-12 w-full rounded-xl border border-white/15 bg-[color:var(--landing-surface-2)] px-4 font-body text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
-                            aria-label="Search favorite monster"
+                            aria-label={x(
+                                'Search favorite monster',
+                                'Zoek favoriete monster',
+                            )}
                         />
                     </section>
 
@@ -111,14 +145,20 @@ export default function BestPricesIndex({
                         <div className="flex flex-wrap items-end justify-between gap-3">
                             <div>
                                 <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--landing-accent)]">
-                                    Live Offers
+                                    {x('Live Offers', 'Live Aanbiedingen')}
                                 </p>
                                 <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
-                                    Real-Time Monster Deal Board
+                                    {x(
+                                        'Real-Time Monster Deal Board',
+                                        'Realtime Monster Deal Board',
+                                    )}
                                 </h2>
                             </div>
                             <p className="font-body text-sm text-white/60">
-                                Public snapshots with per-can and pack-level context
+                                {x(
+                                    'Public snapshots with per-can and pack-level context',
+                                    'Publieke snapshots met prijs per blik en pack-context',
+                                )}
                             </p>
                         </div>
 
@@ -129,39 +169,57 @@ export default function BestPricesIndex({
                         <Card className="border-white/10 bg-[color:var(--landing-surface)] shadow-[0_14px_40px_rgba(0,0,0,.3)]">
                             <CardContent className="space-y-2 p-6">
                                 <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--landing-accent)]">
-                                    Public snapshots
+                                    {x('Public snapshots', 'Publieke snapshots')}
                                 </p>
                                 <h3 className="font-display text-xl font-semibold text-white">
-                                    Transparent Price Signals
+                                    {x(
+                                        'Transparent Price Signals',
+                                        'Transparante Prijssignalen',
+                                    )}
                                 </h3>
                                 <p className="font-body text-sm text-white/70">
-                                    Every deal card is backed by stored snapshots so you can verify timing, totals, and pack value.
+                                    {x(
+                                        'Every deal card is backed by stored snapshots so you can verify timing, totals, and pack value.',
+                                        'Elke dealkaart is gebaseerd op opgeslagen snapshots zodat je timing, totalen en packwaarde kunt controleren.',
+                                    )}
                                 </p>
                             </CardContent>
                         </Card>
                         <Card className="border-white/10 bg-[color:var(--landing-surface)] shadow-[0_14px_40px_rgba(0,0,0,.3)]">
                             <CardContent className="space-y-2 p-6">
                                 <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">
-                                    Open-source transparency
+                                    {x(
+                                        'Open-source transparency',
+                                        'Open-source transparantie',
+                                    )}
                                 </p>
                                 <h3 className="font-display text-xl font-semibold text-white">
-                                    Community-Built Tracker
+                                    {x(
+                                        'Community-Built Tracker',
+                                        'Tracker Gebouwd Door De Community',
+                                    )}
                                 </h3>
                                 <p className="font-body text-sm text-white/70">
-                                    Built in public so extraction logic, scoring, and improvements stay visible and auditable.
+                                    {x(
+                                        'Built in public so extraction logic, scoring, and improvements stay visible and auditable.',
+                                        'Publiek gebouwd zodat extractielogica, scoring en verbeteringen zichtbaar en controleerbaar blijven.',
+                                    )}
                                 </p>
                             </CardContent>
                         </Card>
                         <Card className="border-white/10 bg-[color:var(--landing-surface)] shadow-[0_14px_40px_rgba(0,0,0,.3)]">
                             <CardContent className="space-y-2 p-6">
                                 <p className="text-xs uppercase tracking-[0.18em] text-emerald-300">
-                                    Updated on schedule
+                                    {x('Updated on schedule', 'Geüpdatet op schema')}
                                 </p>
                                 <h3 className="font-display text-xl font-semibold text-white">
-                                    Monitoring First
+                                    {x('Monitoring First', 'Monitoring Eerst')}
                                 </h3>
                                 <p className="font-body text-sm text-white/70">
-                                    Hourly checks keep offers fresh while preserving historical context for quick market reads.
+                                    {x(
+                                        'Hourly checks keep offers fresh while preserving historical context for quick market reads.',
+                                        'Uurlijkse checks houden aanbiedingen vers en bewaren historische context voor snelle marktinzichten.',
+                                    )}
                                 </p>
                             </CardContent>
                         </Card>
@@ -170,50 +228,26 @@ export default function BestPricesIndex({
                     <footer className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface)] px-6 py-5 sm:px-8">
                         <div className="flex flex-wrap items-center justify-between gap-3 font-body text-sm text-white/70">
                             <p>
-                                {branding.name} is an independent Monster deals tracking platform.
+                                {x(
+                                    'MonsterIndex is an independent Monster deals tracking platform.',
+                                    'MonsterIndex is een onafhankelijk platform voor het volgen van Monster-deals.',
+                                )}
                             </p>
-                            {branding.github_url ? (
-                                <a
-                                    href={branding.github_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-[color:var(--landing-accent)] underline-offset-4 hover:underline"
-                                >
-                                    View Open Source Repo
-                                </a>
-                            ) : (
-                                <span className="text-white/50">
-                                    Open-source release in progress
-                                </span>
-                            )}
+                            <a
+                                href={copy.github_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[color:var(--landing-accent)] underline-offset-4 hover:underline"
+                            >
+                                {x(
+                                    'View Open Source Repo',
+                                    'Bekijk Open Source Repo',
+                                )}
+                            </a>
                         </div>
                     </footer>
                 </main>
             </div>
         </>
     );
-}
-
-function normalizeHexColor(value: string): string {
-    const normalized = value.trim();
-    const isHex = /^#(?:[a-fA-F0-9]{3}){1,2}$/.test(normalized);
-
-    return isHex ? normalized : '#9DFF00';
-}
-
-function hexToRgba(value: string, alpha: number): string {
-    const normalized = normalizeHexColor(value).replace('#', '');
-    const expanded =
-        normalized.length === 3
-            ? normalized
-                  .split('')
-                  .map((segment) => segment + segment)
-                  .join('')
-            : normalized;
-
-    const red = Number.parseInt(expanded.slice(0, 2), 16);
-    const green = Number.parseInt(expanded.slice(2, 4), 16);
-    const blue = Number.parseInt(expanded.slice(4, 6), 16);
-
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }

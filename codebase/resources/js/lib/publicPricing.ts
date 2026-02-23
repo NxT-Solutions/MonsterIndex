@@ -56,18 +56,25 @@ export function effectivePerCanCents(row: {
     return null;
 }
 
-export function volumeLabel(canCount: number | null): string {
+export function volumeLabel(
+    canCount: number | null,
+    fallback = 'volume unknown',
+): string {
     if (canCount === null || canCount <= 0) {
-        return 'volume unknown';
+        return fallback;
     }
 
     return `${canCount}-pack`;
 }
 
-export function readableCheckedAt(value: string | null): string {
+export function readableCheckedAt(
+    value: string | null,
+    locale = 'en-US',
+    fallback = 'N/A',
+): string {
     if (!value) {
-        return 'N/A';
+        return fallback;
     }
 
-    return new Date(value).toLocaleString();
+    return new Date(value).toLocaleString(locale);
 }

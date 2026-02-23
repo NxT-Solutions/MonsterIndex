@@ -7,7 +7,7 @@ use App\Models\PriceSnapshot;
 use App\Models\Site;
 use Inertia\Testing\AssertableInertia as Assert;
 
-it('returns landing page with branding, trending tracks, and best prices props', function () {
+it('returns landing page with trending tracks and best prices props', function () {
     seedOffer(
         slug: 'monster-landing-one',
         effectiveTotalCents: 2899,
@@ -22,9 +22,6 @@ it('returns landing page with branding, trending tracks, and best prices props',
             ->component('Public/BestPricesIndex')
             ->has('bestPrices', 1)
             ->has('trendingTracks', 1)
-            ->where('branding.name', config('branding.name'))
-            ->where('branding.primary_cta_label', config('branding.primary_cta_label'))
-            ->where('branding.secondary_cta_label', config('branding.secondary_cta_label'))
             ->where('bestPrices.0.monster.slug', 'monster-landing-one'));
 });
 
