@@ -62,6 +62,16 @@ export default function BestPricesIndex({
     const [query, setQuery] = useState('');
     const normalizedQuery = query.trim().toLowerCase();
     const copy = LANDING_COPY[locale];
+    const canonicalUrl = route('home');
+    const pageTitle = x(
+        'MonsterIndex | Live Monster Energy Deal Tracker',
+        'MonsterIndex | Live Monster Energy Deal Tracker',
+    );
+    const pageDescription = x(
+        'Compare live Monster Energy prices, track per-can value, and discover the best current offer across stores.',
+        'Vergelijk live Monster Energy prijzen, volg de prijs per blik en ontdek de beste huidige aanbieding over winkels heen.',
+    );
+    const ogImageUrl = new URL('/brand/monsterindex-og.png', canonicalUrl).toString();
 
     const filteredOffers = useMemo(() => {
         if (normalizedQuery === '') {
@@ -84,7 +94,30 @@ export default function BestPricesIndex({
 
     return (
         <>
-            <Head title={copy.name} />
+            <Head title={pageTitle}>
+                <meta head-key="description" name="description" content={pageDescription} />
+                <meta head-key="robots" name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
+                <link head-key="canonical" rel="canonical" href={canonicalUrl} />
+                <meta head-key="og:type" property="og:type" content="website" />
+                <meta head-key="og:site_name" property="og:site_name" content="MonsterIndex" />
+                <meta head-key="og:title" property="og:title" content={pageTitle} />
+                <meta head-key="og:description" property="og:description" content={pageDescription} />
+                <meta head-key="og:url" property="og:url" content={canonicalUrl} />
+                <meta head-key="og:image" property="og:image" content={ogImageUrl} />
+                <meta head-key="twitter:card" name="twitter:card" content="summary_large_image" />
+                <meta head-key="twitter:title" name="twitter:title" content={pageTitle} />
+                <meta head-key="twitter:description" name="twitter:description" content={pageDescription} />
+                <meta head-key="twitter:image" name="twitter:image" content={ogImageUrl} />
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'CollectionPage',
+                        name: pageTitle,
+                        description: pageDescription,
+                        url: canonicalUrl,
+                    })}
+                </script>
+            </Head>
 
             <div className="landing-root min-h-screen bg-[color:var(--landing-bg)] text-white">
                 <LandingNav auth={auth} brandName={copy.name} />

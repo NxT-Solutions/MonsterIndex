@@ -39,6 +39,16 @@ export default function MonsterShow({
 }>) {
     const { locale, x } = useLocale();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const canonicalUrl = route('monsters.show', monster.slug);
+    const pageTitle = `${monster.name}${monster.size_label ? ` (${monster.size_label})` : ''} | ${x(
+        'Monster Price History',
+        'Monster Prijshistoriek',
+    )}`;
+    const pageDescription = x(
+        `Compare recent prices for ${monster.name}, including total buy and per-can value from tracked stores.`,
+        `Vergelijk recente prijzen voor ${monster.name}, inclusief totaalaankoop en prijs per blik van gevolgde winkels.`,
+    );
+    const ogImageUrl = new URL('/brand/monsterindex-og.png', canonicalUrl).toString();
 
     const bestSnapshot = useMemo(() => {
         return [...snapshots]
@@ -69,7 +79,35 @@ export default function MonsterShow({
 
     return (
         <>
-            <Head title={`${monster.name} ${x('prices', 'prijzen')}`} />
+            <Head title={pageTitle}>
+                <meta head-key="description" name="description" content={pageDescription} />
+                <meta head-key="robots" name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
+                <link head-key="canonical" rel="canonical" href={canonicalUrl} />
+                <meta head-key="og:type" property="og:type" content="article" />
+                <meta head-key="og:site_name" property="og:site_name" content="MonsterIndex" />
+                <meta head-key="og:title" property="og:title" content={pageTitle} />
+                <meta head-key="og:description" property="og:description" content={pageDescription} />
+                <meta head-key="og:url" property="og:url" content={canonicalUrl} />
+                <meta head-key="og:image" property="og:image" content={ogImageUrl} />
+                <meta head-key="twitter:card" name="twitter:card" content="summary_large_image" />
+                <meta head-key="twitter:title" name="twitter:title" content={pageTitle} />
+                <meta head-key="twitter:description" name="twitter:description" content={pageDescription} />
+                <meta head-key="twitter:image" name="twitter:image" content={ogImageUrl} />
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'Product',
+                        name: `${monster.name}${monster.size_label ? ` (${monster.size_label})` : ''}`,
+                        category: 'Energy Drink',
+                        brand: {
+                            '@type': 'Brand',
+                            name: 'Monster Energy',
+                        },
+                        url: canonicalUrl,
+                        description: pageDescription,
+                    })}
+                </script>
+            </Head>
 
             <div className="landing-root min-h-screen bg-[color:var(--landing-bg)] text-white">
                 <LandingNav auth={auth} brandName="MonsterIndex" />

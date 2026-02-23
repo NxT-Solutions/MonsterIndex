@@ -7,11 +7,13 @@ use Packages\Admin\Http\Controllers\MonitorController as AdminMonitorController;
 use Packages\Admin\Http\Controllers\MonsterController as AdminMonsterController;
 use Packages\PublicBoard\Http\Controllers\HomeController;
 use Packages\PublicBoard\Http\Controllers\MonsterController as PublicMonsterController;
+use Packages\PublicBoard\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/monsters/{monster:slug}', [PublicMonsterController::class, 'show'])->name('monsters.show');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
