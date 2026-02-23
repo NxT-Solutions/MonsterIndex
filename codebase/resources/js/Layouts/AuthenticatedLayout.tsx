@@ -54,11 +54,6 @@ export default function AuthenticatedLayout({
                     active: route().current('admin.monitors.*'),
                 },
                 {
-                    label: x('Sites', 'Sites'),
-                    href: route('admin.sites.index'),
-                    active: route().current('admin.sites.*'),
-                },
-                {
                     label: x('Alerts', 'Meldingen'),
                     href: route('admin.alerts.index'),
                     active: route().current('admin.alerts.*'),
