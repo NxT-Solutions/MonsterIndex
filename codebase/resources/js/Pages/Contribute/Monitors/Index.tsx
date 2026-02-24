@@ -335,6 +335,9 @@ export default function ContributionMonitorsIndex({
                             ) : (
                                 monitors.map((monitor) => {
                                     const isApproved = monitor.submission_status === 'approved';
+                                    const selectorConfigured = hasPriceSelectorConfig(
+                                        monitor.selector_config,
+                                    );
 
                                     return (
                                         <div
@@ -377,60 +380,71 @@ export default function ContributionMonitorsIndex({
                                         </div>
 
                                         {!isApproved ? (
-                                            <div className="mt-3 flex flex-wrap gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openSelector(monitor)}
-                                                    className={cn(
-                                                        buttonVariants({ variant: 'secondary', size: 'sm' }),
-                                                        'border border-white/10 bg-white/5 text-white hover:bg-white/10',
-                                                    )}
-                                                    disabled={loadingSelector === monitor.id}
-                                                >
-                                                    {loadingSelector === monitor.id
-                                                        ? x('Opening...', 'Openen...')
-                                                        : x('Configure Selectors', 'Configureer Selectors')}
-                                                </button>
+                                            <>
+                                                <div className="mt-3 flex flex-wrap gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openSelector(monitor)}
+                                                        className={cn(
+                                                            buttonVariants({ variant: 'secondary', size: 'sm' }),
+                                                            'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                                        )}
+                                                        disabled={loadingSelector === monitor.id}
+                                                    >
+                                                        {loadingSelector === monitor.id
+                                                            ? x('Opening...', 'Openen...')
+                                                            : x('Configure Selectors', 'Configureer Selectors')}
+                                                    </button>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() => submitForReview(monitor)}
-                                                    className={cn(
-                                                        buttonVariants({ size: 'sm' }),
-                                                        'bg-[color:var(--landing-accent)] text-[#0b1201]',
-                                                    )}
-                                                    disabled={
-                                                        submittingMonitor === monitor.id
-                                                        || monitor.submission_status === 'pending_review'
-                                                    }
-                                                >
-                                                    {submittingMonitor === monitor.id
-                                                        ? x('Submitting...', 'Indienen...')
-                                                        : x('Submit for Review', 'Indienen voor Review')}
-                                                </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => submitForReview(monitor)}
+                                                        className={cn(
+                                                            buttonVariants({ size: 'sm' }),
+                                                            'bg-[color:var(--landing-accent)] text-[#0b1201]',
+                                                        )}
+                                                        disabled={
+                                                            submittingMonitor === monitor.id
+                                                            || monitor.submission_status === 'pending_review'
+                                                            || !selectorConfigured
+                                                        }
+                                                    >
+                                                        {submittingMonitor === monitor.id
+                                                            ? x('Submitting...', 'Indienen...')
+                                                            : x('Submit for Review', 'Indienen voor Review')}
+                                                    </button>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openEditModal(monitor)}
-                                                    className={cn(
-                                                        buttonVariants({ variant: 'secondary', size: 'sm' }),
-                                                        'border border-white/10 bg-white/5 text-white hover:bg-white/10',
-                                                    )}
-                                                >
-                                                    {x('Edit', 'Bewerk')}
-                                                </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openEditModal(monitor)}
+                                                        className={cn(
+                                                            buttonVariants({ variant: 'secondary', size: 'sm' }),
+                                                            'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                                        )}
+                                                    >
+                                                        {x('Edit', 'Bewerk')}
+                                                    </button>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() => deleteOrWithdraw(monitor)}
-                                                    className={cn(
-                                                        buttonVariants({ variant: 'secondary', size: 'sm' }),
-                                                        'border border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20',
-                                                    )}
-                                                >
-                                                    {x('Delete', 'Verwijderen')}
-                                                </button>
-                                            </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => deleteOrWithdraw(monitor)}
+                                                        className={cn(
+                                                            buttonVariants({ variant: 'secondary', size: 'sm' }),
+                                                            'border border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20',
+                                                        )}
+                                                    >
+                                                        {x('Delete', 'Verwijderen')}
+                                                    </button>
+                                                </div>
+                                                {!selectorConfigured && (
+                                                    <p className="mt-2 text-xs text-amber-200">
+                                                        {x(
+                                                            'Configure a price selector before submitting for review.',
+                                                            'Configureer eerst een prijsselector voordat je kunt indienen.',
+                                                        )}
+                                                    </p>
+                                                )}
+                                            </>
                                         ) : (
                                             <p className="mt-3 text-xs text-white/60">
                                                 {x(
@@ -520,5 +534,27 @@ export default function ContributionMonitorsIndex({
                 </div>
             )}
         </AuthenticatedLayout>
+    );
+}
+
+function hasPriceSelectorConfig(selectorConfig: Record<string, unknown> | null): boolean {
+    if (!selectorConfig) {
+        return false;
+    }
+
+    const price = selectorConfig.price as
+        | {
+              css?: string;
+              xpath?: string;
+              parts?: Array<{ css?: string; xpath?: string }>;
+          }
+        | undefined;
+
+    if ((price?.css ?? '').trim() || (price?.xpath ?? '').trim()) {
+        return true;
+    }
+
+    return (price?.parts ?? []).some(
+        (part) => (part.css ?? '').trim() !== '' || (part.xpath ?? '').trim() !== '',
     );
 }

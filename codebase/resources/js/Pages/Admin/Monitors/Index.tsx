@@ -1,5 +1,6 @@
 import BarMeter from '@/Components/admin/BarMeter';
 import KpiCard from '@/Components/admin/KpiCard';
+import Modal from '@/Components/Modal';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
@@ -77,6 +78,14 @@ export default function MonitorsIndex({
 
     const [loadingRun, setLoadingRun] = useState<number | null>(null);
     const [loadingSelector, setLoadingSelector] = useState<number | null>(null);
+    const [editingMonitor, setEditingMonitor] = useState<MonitorRow | null>(null);
+    const editForm = useForm({
+        monster_id: 0,
+        site_id: 0,
+        product_url: '',
+        check_interval_minutes: 60,
+        active: true,
+    });
 
     const stats = useMemo(() => {
         const active = monitors.filter((monitor) => monitor.active).length;
@@ -188,30 +197,36 @@ export default function MonitorsIndex({
         }
     };
 
-    const editMonitor = (monitor: MonitorRow) => {
-        const productUrl =
-            window.prompt(
-                x('Product URL', 'Product-URL'),
-                monitor.product_url,
-            ) ??
-            monitor.product_url;
-        const interval = Number(
-            window.prompt(
-                x('Check interval minutes', 'Controle-interval minuten'),
-                String(monitor.check_interval_minutes),
-            ) ?? monitor.check_interval_minutes,
-        );
+    const openEditModal = (monitor: MonitorRow) => {
+        setEditingMonitor(monitor);
+        editForm.setData('monster_id', monitor.monster_id);
+        editForm.setData('site_id', monitor.site_id);
+        editForm.setData('product_url', monitor.product_url);
+        editForm.setData('check_interval_minutes', monitor.check_interval_minutes);
+        editForm.setData('active', monitor.active);
+        editForm.clearErrors();
+    };
 
-        if (!productUrl || !Number.isFinite(interval)) {
+    const closeEditModal = () => {
+        setEditingMonitor(null);
+        editForm.reset();
+        editForm.clearErrors();
+    };
+
+    const submitEditMonitor = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!editingMonitor) {
             return;
         }
 
-        router.put(route('admin.monitors.update', monitor.id), {
-            monster_id: monitor.monster_id,
-            site_id: monitor.site_id,
-            product_url: productUrl,
-            check_interval_minutes: interval,
-            active: monitor.active,
+        editForm.transform((data) => ({
+            ...data,
+            product_url: data.product_url.trim(),
+        }));
+
+        editForm.put(route('admin.monitors.update', editingMonitor.id), {
+            preserveScroll: true,
+            onSuccess: closeEditModal,
         });
     };
 
@@ -543,7 +558,7 @@ export default function MonitorsIndex({
                                                     }),
                                                     'border-white/20 bg-transparent text-white hover:bg-white/10',
                                                 )}
-                                                onClick={() => editMonitor(monitor)}
+                                                onClick={() => openEditModal(monitor)}
                                             >
                                                 {x('Edit', 'Bewerken')}
                                             </button>
@@ -629,6 +644,140 @@ export default function MonitorsIndex({
                     </Card>
                 </div>
             </div>
+
+            <Modal show={editingMonitor !== null} maxWidth="2xl" onClose={closeEditModal}>
+                <form
+                    onSubmit={submitEditMonitor}
+                    className="space-y-5 bg-[color:var(--landing-surface)] p-6 text-white"
+                >
+                    <div>
+                        <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--landing-accent)]">
+                            {x('Monitor', 'Monitor')}
+                        </p>
+                        <h3 className="mt-1 font-display text-xl font-semibold">
+                            {x('Edit Monitor', 'Monitor Bewerken')}
+                        </h3>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-1">
+                            <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
+                                {x('Monster', 'Monster')}
+                            </label>
+                            <input
+                                value={editingMonitor?.monster.name ?? ''}
+                                disabled
+                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
+                                {x('Store', 'Winkel')}
+                            </label>
+                            <input
+                                value={
+                                    editingMonitor
+                                        ? `${editingMonitor.site.name} (${editingMonitor.site.domain})`
+                                        : ''
+                                }
+                                disabled
+                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label
+                            htmlFor="edit-monitor-product-url"
+                            className="block text-xs uppercase tracking-[0.12em] text-white/60"
+                        >
+                            {x('Product URL', 'Product-URL')}
+                        </label>
+                        <input
+                            id="edit-monitor-product-url"
+                            value={editForm.data.product_url}
+                            onChange={(event) =>
+                                editForm.setData('product_url', event.target.value)
+                            }
+                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
+                            placeholder="https://example.com/product-url"
+                            required
+                        />
+                        {editForm.errors.product_url && (
+                            <p className="text-xs text-red-300">{editForm.errors.product_url}</p>
+                        )}
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+                        <div className="space-y-1">
+                            <label
+                                htmlFor="edit-monitor-interval"
+                                className="block text-xs uppercase tracking-[0.12em] text-white/60"
+                            >
+                                {x('Interval (minutes)', 'Interval (minuten)')}
+                            </label>
+                            <input
+                                id="edit-monitor-interval"
+                                type="number"
+                                min={15}
+                                max={1440}
+                                value={editForm.data.check_interval_minutes}
+                                onChange={(event) =>
+                                    editForm.setData(
+                                        'check_interval_minutes',
+                                        Number(event.target.value),
+                                    )
+                                }
+                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
+                                required
+                            />
+                            {editForm.errors.check_interval_minutes && (
+                                <p className="text-xs text-red-300">
+                                    {editForm.errors.check_interval_minutes}
+                                </p>
+                            )}
+                        </div>
+
+                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white">
+                            <input
+                                type="checkbox"
+                                checked={editForm.data.active}
+                                onChange={(event) =>
+                                    editForm.setData('active', event.target.checked)
+                                }
+                                className="h-4 w-4 rounded border-white/40 bg-transparent text-[color:var(--landing-accent)] focus:ring-[color:var(--landing-accent)]"
+                            />
+                            {x('Active', 'Actief')}
+                        </label>
+                    </div>
+
+                    <div className="flex flex-wrap justify-end gap-2">
+                        <button
+                            type="button"
+                            className={cn(
+                                buttonVariants({ variant: 'outline' }),
+                                'border-white/20 bg-transparent text-white hover:bg-white/10',
+                            )}
+                            onClick={closeEditModal}
+                            disabled={editForm.processing}
+                        >
+                            {x('Cancel', 'Annuleren')}
+                        </button>
+                        <button
+                            type="submit"
+                            className={cn(
+                                buttonVariants({ variant: 'default' }),
+                                'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                            )}
+                            disabled={editForm.processing}
+                        >
+                            {editForm.processing
+                                ? x('Saving...', 'Opslaan...')
+                                : x('Save Changes', 'Wijzigingen Opslaan')}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </AuthenticatedLayout>
     );
 }
