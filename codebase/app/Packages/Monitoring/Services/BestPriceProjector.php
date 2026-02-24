@@ -108,8 +108,24 @@ class BestPriceProjector
             ->where('price_snapshots.currency', $currency)
             ->where('price_snapshots.status', '!=', 'failed')
             ->whereNotNull('price_snapshots.effective_total_cents')
+            ->whereRaw(
+                <<<'SQL'
+price_snapshots.id = (
+    select latest.id
+    from price_snapshots as latest
+    where latest.monitor_id = monitors.id
+      and latest.currency = ?
+      and latest.status != ?
+      and latest.effective_total_cents is not null
+    order by latest.checked_at desc, latest.id desc
+    limit 1
+)
+SQL,
+                [$currency, 'failed'],
+            )
             ->orderBy('price_snapshots.effective_total_cents')
             ->orderByDesc('price_snapshots.checked_at')
+            ->orderByDesc('price_snapshots.id')
             ->first();
 
         if (! $bestSnapshot) {

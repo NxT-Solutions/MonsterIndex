@@ -6,8 +6,8 @@ import { Card, CardContent } from "@/Components/ui/card";
 import { useLocale } from "@/lib/locale";
 import { PublicOfferRow, TrendingTrackRow } from "@/lib/publicPricing";
 import { PageProps } from "@/types";
-import { Head } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { Head, router } from "@inertiajs/react";
+import { useEffect, useMemo, useState } from "react";
 
 type LandingCopy = {
     name: string;
@@ -94,6 +94,20 @@ export default function BestPricesIndex({
             return haystack.includes(normalizedQuery);
         });
     }, [bestPrices, normalizedQuery]);
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            if (document.visibilityState !== "visible") {
+                return;
+            }
+
+            router.reload({
+                only: ["bestPrices", "trendingTracks", "stats"],
+            });
+        }, 30000);
+
+        return () => window.clearInterval(intervalId);
+    }, []);
 
     return (
         <>

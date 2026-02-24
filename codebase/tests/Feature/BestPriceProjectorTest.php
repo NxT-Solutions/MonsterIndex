@@ -107,3 +107,48 @@ it('creates alert when a newly added monitor improves per-can price', function (
         'currency' => 'EUR',
     ]);
 });
+
+it('recomputes best prices from each monitor latest snapshot so board values stay current', function () {
+    Queue::fake();
+
+    $monitor = Monitor::factory()->create([
+        'currency' => 'EUR',
+    ]);
+
+    $oldSnapshot = PriceSnapshot::factory()->create([
+        'monitor_id' => $monitor->id,
+        'checked_at' => now()->subHour(),
+        'effective_total_cents' => 2200,
+        'price_cents' => 2200,
+        'shipping_cents' => 0,
+        'currency' => 'EUR',
+        'status' => 'ok',
+    ]);
+
+    BestPrice::query()->create([
+        'monster_id' => $monitor->monster_id,
+        'snapshot_id' => $oldSnapshot->id,
+        'effective_total_cents' => 2200,
+        'currency' => 'EUR',
+        'computed_at' => now()->subHour(),
+    ]);
+
+    $newSnapshot = PriceSnapshot::factory()->create([
+        'monitor_id' => $monitor->id,
+        'checked_at' => now(),
+        'effective_total_cents' => 2900,
+        'price_cents' => 2900,
+        'shipping_cents' => 0,
+        'currency' => 'EUR',
+        'status' => 'ok',
+    ]);
+
+    app(BestPriceProjector::class)->projectFromSnapshot($newSnapshot);
+
+    $this->assertDatabaseHas('best_prices', [
+        'monster_id' => $monitor->monster_id,
+        'snapshot_id' => $newSnapshot->id,
+        'effective_total_cents' => 2900,
+        'currency' => 'EUR',
+    ]);
+});
