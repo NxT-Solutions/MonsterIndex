@@ -595,9 +595,8 @@ export default function MonitorsIndex({
                             )}
 
                             {monitors.map((monitor) => {
-                                const isRunning =
-                                    loadingRun === monitor.id ||
-                                    runningMonitorSet.has(monitor.id);
+                                const isQueueing = loadingRun === monitor.id;
+                                const isRunning = runningMonitorSet.has(monitor.id);
 
                                 return (
                                     <article
@@ -642,9 +641,9 @@ export default function MonitorsIndex({
                                                         }
                                                     </p>
                                                 )}
-                                                <div className="mt-2 space-y-1.5">
+                                                <div className="mt-3">
                                                     {isRunning ? (
-                                                        <div className="rounded-md border border-orange-300/20 bg-orange-900/20 p-2.5">
+                                                        <div className="max-w-xs space-y-1.5">
                                                             <div className="flex items-center gap-2 text-xs font-medium text-orange-200">
                                                                 <span className="h-3 w-3 animate-spin rounded-full border-2 border-orange-300 border-t-transparent" />
                                                                 {x(
@@ -704,12 +703,14 @@ export default function MonitorsIndex({
                                                     }),
                                                     'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                                 )}
-                                                disabled={isRunning}
+                                                disabled={isQueueing || isRunning}
                                                 onClick={() => runNow(monitor)}
                                             >
-                                                {isRunning
-                                                    ? x('Running...', 'Draait...')
-                                                    : x('Run Now', 'Nu Draaien')}
+                                                {isQueueing
+                                                    ? x('Queueing...', 'In wachtrij...')
+                                                    : isRunning
+                                                      ? x('Running...', 'Draait...')
+                                                      : x('Run Now', 'Nu Draaien')}
                                             </button>
                                             <button
                                                 type="button"
