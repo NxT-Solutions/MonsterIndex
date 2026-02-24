@@ -103,7 +103,8 @@ it('creates alert when a newly added monitor improves per-can price', function (
 
     $this->assertDatabaseHas('best_prices', [
         'monster_id' => $monster->id,
-        'snapshot_id' => $oldSnapshot->id,
+        'snapshot_id' => $newSnapshot->id,
+        'effective_total_cents' => 3600,
         'currency' => 'EUR',
     ]);
 });
@@ -149,6 +150,61 @@ it('recomputes best prices from each monitor latest snapshot so board values sta
         'monster_id' => $monitor->monster_id,
         'snapshot_id' => $newSnapshot->id,
         'effective_total_cents' => 2900,
+        'currency' => 'EUR',
+    ]);
+});
+
+it('prefers lower per-can value over lower total when recomputing best prices', function () {
+    Queue::fake();
+
+    $monster = Monster::factory()->create();
+    $lowerTotalMonitor = Monitor::factory()->create([
+        'monster_id' => $monster->id,
+        'currency' => 'EUR',
+    ]);
+    $lowerPerCanMonitor = Monitor::factory()->create([
+        'monster_id' => $monster->id,
+        'currency' => 'EUR',
+    ]);
+
+    $lowerTotalSnapshot = PriceSnapshot::factory()->create([
+        'monitor_id' => $lowerTotalMonitor->id,
+        'checked_at' => now()->subMinutes(5),
+        'effective_total_cents' => 249,
+        'price_cents' => 249,
+        'shipping_cents' => 0,
+        'can_count' => 2,
+        'price_per_can_cents' => 125,
+        'currency' => 'EUR',
+        'status' => 'ok',
+    ]);
+
+    $lowerPerCanSnapshot = PriceSnapshot::factory()->create([
+        'monitor_id' => $lowerPerCanMonitor->id,
+        'checked_at' => now(),
+        'effective_total_cents' => 349,
+        'price_cents' => 349,
+        'shipping_cents' => 0,
+        'can_count' => 4,
+        'price_per_can_cents' => 87,
+        'currency' => 'EUR',
+        'status' => 'ok',
+    ]);
+
+    BestPrice::query()->create([
+        'monster_id' => $monster->id,
+        'snapshot_id' => $lowerTotalSnapshot->id,
+        'effective_total_cents' => 249,
+        'currency' => 'EUR',
+        'computed_at' => now()->subMinutes(5),
+    ]);
+
+    app(BestPriceProjector::class)->projectFromSnapshot($lowerPerCanSnapshot);
+
+    $this->assertDatabaseHas('best_prices', [
+        'monster_id' => $monster->id,
+        'snapshot_id' => $lowerPerCanSnapshot->id,
+        'effective_total_cents' => 349,
         'currency' => 'EUR',
     ]);
 });

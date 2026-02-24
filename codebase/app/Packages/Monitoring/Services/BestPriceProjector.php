@@ -123,6 +123,7 @@ price_snapshots.id = (
 SQL,
                 [$currency, 'failed'],
             )
+            ->orderByRaw($this->perCanOrderExpression().' asc')
             ->orderBy('price_snapshots.effective_total_cents')
             ->orderByDesc('price_snapshots.checked_at')
             ->orderByDesc('price_snapshots.id')
