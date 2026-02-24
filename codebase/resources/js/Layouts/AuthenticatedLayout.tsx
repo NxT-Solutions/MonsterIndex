@@ -20,6 +20,10 @@ type LayoutProps = PageProps<{
         pending_monitors: number;
         pending_suggestions: number;
     } | null;
+    contributorAlerts?: {
+        unread: number;
+        total: number;
+    } | null;
 }>;
 
 function badgeClasses(count: number): string {
@@ -44,6 +48,10 @@ export default function AuthenticatedLayout({
     const reviewCounts = page.props.adminReview ?? {
         pending_monitors: 0,
         pending_suggestions: 0,
+    };
+    const contributorAlerts = page.props.contributorAlerts ?? {
+        unread: 0,
+        total: 0,
     };
 
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -73,8 +81,32 @@ export default function AuthenticatedLayout({
             });
         }
 
+        if (user.can.monster_follow) {
+            items.push({
+                label: x('Following', 'Volgend'),
+                href: route('contribute.follows.index'),
+                active: route().current('contribute.follows.*'),
+            });
+        }
+
+        if (user.can.contributor_alert_view) {
+            items.push({
+                label: x('Alerts', 'Meldingen'),
+                href: route('contribute.alerts.index'),
+                active: route().current('contribute.alerts.*'),
+                badge: contributorAlerts.unread,
+            });
+        }
+
         return items;
-    }, [user.can.monitor_submit, user.can.monster_suggestion_submit, x]);
+    }, [
+        contributorAlerts.unread,
+        user.can.monitor_submit,
+        user.can.monster_suggestion_submit,
+        user.can.monster_follow,
+        user.can.contributor_alert_view,
+        x,
+    ]);
 
     const adminNavItems = useMemo<NavItem[]>(() => {
         if (!isAdmin) {
@@ -216,13 +248,23 @@ export default function AuthenticatedLayout({
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
-                                        'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                        'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                                         item.active
                                             ? 'bg-[color:var(--landing-accent)] text-[#0b1201]'
                                             : 'text-white/70 hover:bg-white/10 hover:text-white',
                                     )}
                                 >
-                                    {item.label}
+                                    <span>{item.label}</span>
+                                    {item.badge !== undefined && (
+                                        <span
+                                            className={cn(
+                                                'inline-flex min-w-6 items-center justify-center rounded-full border px-1.5 py-0.5 text-xs font-semibold',
+                                                badgeClasses(item.badge),
+                                            )}
+                                        >
+                                            {item.badge}
+                                        </span>
+                                    )}
                                 </Link>
                             ))}
 
@@ -314,13 +356,23 @@ export default function AuthenticatedLayout({
                                         href={item.href}
                                         onClick={() => setMobileOpen(false)}
                                         className={cn(
-                                            'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                            'inline-flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors',
                                             item.active
                                                 ? 'bg-[color:var(--landing-accent)] text-[#0b1201]'
                                                 : 'bg-white/5 text-white/80 hover:bg-white/10',
                                         )}
                                     >
-                                        {item.label}
+                                        <span>{item.label}</span>
+                                        {item.badge !== undefined && (
+                                            <span
+                                                className={cn(
+                                                    'inline-flex min-w-6 items-center justify-center rounded-full border px-1.5 py-0.5 text-xs font-semibold',
+                                                    badgeClasses(item.badge),
+                                                )}
+                                            >
+                                                {item.badge}
+                                            </span>
+                                        )}
                                     </Link>
                                 ))}
                             </div>

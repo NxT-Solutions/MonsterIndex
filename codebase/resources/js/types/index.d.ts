@@ -15,6 +15,9 @@ export interface User {
         monster_suggestion_review: boolean;
         stores_manage: boolean;
         monsters_manage: boolean;
+        monster_follow: boolean;
+        contributor_alert_view: boolean;
+        contributor_alert_mark_read: boolean;
     };
 }
 
@@ -27,5 +30,9 @@ export type PageProps<
     adminReview?: {
         pending_monitors: number;
         pending_suggestions: number;
+    } | null;
+    contributorAlerts?: {
+        unread: number;
+        total: number;
     } | null;
 };

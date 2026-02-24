@@ -8,7 +8,10 @@ import {
     readableCheckedAt,
     volumeLabel,
 } from '@/lib/publicPricing';
-import { Link } from '@inertiajs/react';
+import { PageProps } from '@/types';
+import axios from 'axios';
+import { Link, usePage } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
 
 type OfferGridProps = {
     offers: PublicOfferRow[];
@@ -18,6 +21,23 @@ type OfferGridProps = {
 export default function OfferGrid({ offers, query }: OfferGridProps) {
     const { locale, x } = useLocale();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const page = usePage<PageProps>();
+    const user = page.props.auth.user;
+    const canFollow = Boolean(user?.can.monster_follow);
+    const [loadingFollowKey, setLoadingFollowKey] = useState<string | null>(null);
+
+    const initialFollowState = useMemo<Record<string, boolean>>(() => {
+        return offers.reduce<Record<string, boolean>>((carry, offer) => {
+            carry[followKey(offer)] = offer.is_following ?? false;
+
+            return carry;
+        }, {});
+    }, [offers]);
+
+    const [followState, setFollowState] = useState<Record<string, boolean>>(initialFollowState);
+    useEffect(() => {
+        setFollowState(initialFollowState);
+    }, [initialFollowState]);
 
     if (offers.length === 0) {
         return (
@@ -39,6 +59,9 @@ export default function OfferGrid({ offers, query }: OfferGridProps) {
         <div className="space-y-4">
             {offers.map((offer) => {
                 const perCan = effectivePerCanCents(offer);
+                const key = followKey(offer);
+                const isFollowing = followState[key] ?? offer.is_following ?? false;
+                const followLoading = loadingFollowKey === key;
 
                 return (
                     <article
@@ -121,22 +144,96 @@ export default function OfferGrid({ offers, query }: OfferGridProps) {
                             <p className="font-body text-xs uppercase tracking-[0.18em] text-white/45">
                                 {x('status', 'status')}: {offer.status ?? x('unknown', 'onbekend')}
                             </p>
-                            <Link
-                                href={offer.detail_url}
-                                className={cn(
-                                    buttonVariants({
-                                        variant: 'outline',
-                                        size: 'sm',
-                                    }),
-                                    'border-white/20 bg-transparent text-white hover:bg-white/10',
+                            <div className="flex flex-wrap items-center gap-2">
+                                {user && canFollow ? (
+                                    <button
+                                        type="button"
+                                        disabled={followLoading}
+                                        onClick={async () => {
+                                            setLoadingFollowKey(key);
+                                            try {
+                                                if (isFollowing) {
+                                                    await axios.delete(
+                                                        route('monsters.follow.destroy', offer.monster.slug),
+                                                        {
+                                                            data: { currency: 'EUR' },
+                                                            headers: { Accept: 'application/json' },
+                                                        },
+                                                    );
+                                                } else {
+                                                    await axios.post(
+                                                        route('monsters.follow.store', offer.monster.slug),
+                                                        { currency: 'EUR' },
+                                                        { headers: { Accept: 'application/json' } },
+                                                    );
+                                                }
+
+                                                setFollowState((currentState) => ({
+                                                    ...currentState,
+                                                    [key]: !isFollowing,
+                                                }));
+                                            } catch {
+                                                window.alert(
+                                                    x(
+                                                        'Could not update follow status right now.',
+                                                        'Kon de volgstatus nu niet bijwerken.',
+                                                    ),
+                                                );
+                                            } finally {
+                                                setLoadingFollowKey(null);
+                                            }
+                                        }}
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'outline',
+                                                size: 'sm',
+                                            }),
+                                            isFollowing
+                                                ? 'border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95'
+                                                : 'border-white/20 bg-transparent text-white hover:bg-white/10',
+                                        )}
+                                    >
+                                        {followLoading
+                                            ? x('Saving...', 'Opslaan...')
+                                            : isFollowing
+                                              ? x('Following', 'Volgend')
+                                              : x('Follow', 'Volgen')}
+                                    </button>
+                                ) : (
+                                    <Link
+                                        href={route('login')}
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'outline',
+                                                size: 'sm',
+                                            }),
+                                            'border-white/20 bg-transparent text-white hover:bg-white/10',
+                                        )}
+                                    >
+                                        {x('Sign in to follow', 'Log in om te volgen')}
+                                    </Link>
                                 )}
-                            >
-                                {x('View History', 'Bekijk Historiek')}
-                            </Link>
+                                <Link
+                                    href={offer.detail_url}
+                                    className={cn(
+                                        buttonVariants({
+                                            variant: 'outline',
+                                            size: 'sm',
+                                        }),
+                                        'border-white/20 bg-transparent text-white hover:bg-white/10',
+                                    )}
+                                >
+                                    {x('View History', 'Bekijk Historiek')}
+                                </Link>
+                            </div>
                         </div>
                     </article>
                 );
             })}
         </div>
     );
+}
+
+function followKey(offer: PublicOfferRow): string {
+    return `${offer.monster.id}:EUR`;
 }

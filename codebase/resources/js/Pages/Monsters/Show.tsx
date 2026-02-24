@@ -3,8 +3,9 @@ import { buttonVariants } from '@/Components/ui/button';
 import { useLocale } from '@/lib/locale';
 import { cn } from '@/lib/utils';
 import { PageProps } from '@/types';
+import axios from 'axios';
 import { Head, Link } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type Snapshot = {
     id: number;
@@ -28,6 +29,8 @@ export default function MonsterShow({
     auth,
     monster,
     snapshots,
+    available_currencies,
+    followed_currencies,
 }: PageProps<{
     monster: {
         id: number;
@@ -36,9 +39,17 @@ export default function MonsterShow({
         size_label: string | null;
     };
     snapshots: Snapshot[];
+    available_currencies: string[];
+    followed_currencies: string[];
 }>) {
     const { locale, x } = useLocale();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const canFollow = Boolean(auth.user?.can.monster_follow);
+    const followCurrencies = ['EUR'];
+    const [followedCurrenciesState, setFollowedCurrenciesState] = useState<string[]>(
+        followed_currencies,
+    );
+    const [loadingCurrency, setLoadingCurrency] = useState<string | null>(null);
     const canonicalUrl = route('monsters.show', monster.slug);
     const pageTitle = `${monster.name}${monster.size_label ? ` (${monster.size_label})` : ''} | ${x(
         'Monster Price History',
@@ -76,6 +87,10 @@ export default function MonsterShow({
     }, [snapshots]);
 
     const bestPerCan = bestSnapshot ? effectivePerCanCents(bestSnapshot) : null;
+
+    useEffect(() => {
+        setFollowedCurrenciesState(followed_currencies);
+    }, [followed_currencies]);
 
     return (
         <>
@@ -129,6 +144,108 @@ export default function MonsterShow({
                                         'Snapshotgeschiedenis, winkelvergelijking en prestaties per blik in één overzicht.',
                                     )}
                                 </p>
+                                {canFollow && (
+                                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                                        <p className="text-xs uppercase tracking-[0.16em] text-white/55">
+                                            {x('Follow alerts', 'Volg meldingen')}
+                                        </p>
+                                        {followCurrencies.map((currency) => {
+                                            const isFollowing =
+                                                followedCurrenciesState.includes(currency);
+                                            const isLoading = loadingCurrency === currency;
+
+                                            return (
+                                                <button
+                                                    key={currency}
+                                                    type="button"
+                                                    disabled={isLoading}
+                                                    onClick={async () => {
+                                                        setLoadingCurrency(currency);
+                                                        try {
+                                                            if (isFollowing) {
+                                                                await axios.delete(
+                                                                    route(
+                                                                        'monsters.follow.destroy',
+                                                                        monster.slug,
+                                                                    ),
+                                                                    {
+                                                                        data: {
+                                                                            currency,
+                                                                        },
+                                                                        headers: {
+                                                                            Accept: 'application/json',
+                                                                        },
+                                                                    },
+                                                                );
+                                                                setFollowedCurrenciesState(
+                                                                    (current) =>
+                                                                        current.filter(
+                                                                            (value) =>
+                                                                                value !== currency,
+                                                                        ),
+                                                                );
+                                                            } else {
+                                                                await axios.post(
+                                                                    route(
+                                                                        'monsters.follow.store',
+                                                                        monster.slug,
+                                                                    ),
+                                                                    {
+                                                                        currency,
+                                                                    },
+                                                                    {
+                                                                        headers: {
+                                                                            Accept: 'application/json',
+                                                                        },
+                                                                    },
+                                                                );
+                                                                setFollowedCurrenciesState(
+                                                                    (current) =>
+                                                                        current.includes(currency)
+                                                                            ? current
+                                                                            : [
+                                                                                  ...current,
+                                                                                  currency,
+                                                                              ],
+                                                                );
+                                                            }
+                                                        } catch {
+                                                            window.alert(
+                                                                x(
+                                                                    'Could not update follow status right now.',
+                                                                    'Kon de volgstatus nu niet bijwerken.',
+                                                                ),
+                                                            );
+                                                        } finally {
+                                                            setLoadingCurrency(null);
+                                                        }
+                                                    }}
+                                                    className={cn(
+                                                        buttonVariants({
+                                                            variant: 'outline',
+                                                            size: 'sm',
+                                                        }),
+                                                        isFollowing
+                                                            ? 'border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95'
+                                                            : 'border-white/20 bg-transparent text-white hover:bg-white/10',
+                                                    )}
+                                                >
+                                                    {isLoading
+                                                        ? x('Saving...', 'Opslaan...')
+                                                        : isFollowing
+                                                          ? `${currency} ${x('Following', 'Volgend')}`
+                                                          : `${currency} ${x('Follow', 'Volgen')}`}
+                                                </button>
+                                            );
+                                        })}
+                                        <span className="text-xs text-white/55">
+                                            {x(
+                                                'Price alerts are currently EUR-only.',
+                                                'Prijsmeldingen zijn momenteel enkel EUR.',
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
 
                             <Link
@@ -142,7 +259,7 @@ export default function MonsterShow({
                             </Link>
                         </div>
 
-                        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <div className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-white/60">
                                     {x('Snapshots', 'Snapshots')}
@@ -169,6 +286,19 @@ export default function MonsterShow({
                                     {latestCheckedAt
                                         ? new Date(latestCheckedAt).toLocaleString(dateLocale)
                                         : x('N/A', 'N/B')}
+                                </p>
+                            </div>
+                            <div className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4">
+                                <p className="text-xs uppercase tracking-[0.18em] text-white/60">
+                                    {x('Currencies', 'Valuta')}
+                                </p>
+                                <p className="mt-2 font-body text-sm font-medium text-white/85">
+                                    {available_currencies.length > 0
+                                        ? available_currencies.join(', ')
+                                        : 'EUR'}
+                                </p>
+                                <p className="mt-1 text-xs text-white/55">
+                                    {x('Following supports EUR only.', 'Volgen ondersteunt enkel EUR.')}
                                 </p>
                             </div>
                         </div>

@@ -1,6 +1,7 @@
 export type PublicOfferRow = {
     id: number;
     monster: {
+        id: number;
         name: string;
         slug: string;
         size_label: string | null;
@@ -17,11 +18,13 @@ export type PublicOfferRow = {
     checked_at: string | null;
     status: string | null;
     detail_url: string;
+    is_following?: boolean;
 };
 
 export type TrendingTrackRow = {
     id: number;
     monster: {
+        id: number;
         name: string;
         slug: string;
         size_label: string | null;
