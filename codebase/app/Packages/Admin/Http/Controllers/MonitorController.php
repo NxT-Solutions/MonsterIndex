@@ -72,6 +72,10 @@ class MonitorController extends Controller
             $monitor->save();
         }
 
+        if ($monitor->canRunScheduledChecks()) {
+            $this->queueImmediateRun($monitor, 'admin-create');
+        }
+
         return back()->with('success', 'Monitor created.');
     }
 
@@ -111,6 +115,9 @@ class MonitorController extends Controller
         }
         if ($monitor->canRunScheduledChecks()) {
             $this->bestPriceProjector->recomputeForMonsterCurrency((int) $monitor->monster_id, (string) $monitor->currency);
+        }
+        if (! $wasPubliclyVisible && $monitor->canRunScheduledChecks()) {
+            $this->queueImmediateRun($monitor, 'admin-update-activated');
         }
 
         return back()->with('success', 'Monitor updated.');
@@ -236,5 +243,17 @@ class MonitorController extends Controller
             ->toString();
 
         return $name !== '' ? $name : $domain;
+    }
+
+    private function queueImmediateRun(Monitor $monitor, string $triggeredBy): void
+    {
+        $run = MonitorRun::query()->create([
+            'monitor_id' => $monitor->id,
+            'started_at' => now(),
+            'status' => 'queued',
+            'attempt' => 1,
+        ]);
+
+        CheckMonitorPriceJob::dispatch($monitor->id, $triggeredBy, $run->id);
     }
 }

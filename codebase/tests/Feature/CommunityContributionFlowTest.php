@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\Authorization\PermissionBootstrapper;
 use Illuminate\Support\Facades\Queue;
 use Packages\Base\Data\ExtractionResult;
+use Packages\Monitoring\Jobs\CheckMonitorPriceJob;
 use Packages\PriceExtraction\Services\PriceExtractionService;
 
 it('allows contributors to create draft monitor proposals and blocks canonical duplicates', function () {
@@ -114,6 +115,8 @@ it('submits a monitor for review and allows admin approval with immediate queuei
     expect($monitor->submission_status)->toBe(Monitor::STATUS_APPROVED)
         ->and($monitor->active)->toBeTrue()
         ->and((int) $monitor->approved_by_user_id)->toBe((int) $admin->id);
+
+    Queue::assertPushed(CheckMonitorPriceJob::class);
 });
 
 it('allows admin force-approval for failed validation proposals', function () {
@@ -137,6 +140,8 @@ it('allows admin force-approval for failed validation proposals', function () {
     expect($monitor->submission_status)->toBe(Monitor::STATUS_APPROVED)
         ->and($monitor->active)->toBeTrue()
         ->and($monitor->validation_result['forced_approval'] ?? false)->toBeTrue();
+
+    Queue::assertPushed(CheckMonitorPriceJob::class);
 });
 
 it('keeps public board visibility limited to approved monitors only', function () {
