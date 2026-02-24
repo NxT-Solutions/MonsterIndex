@@ -12,7 +12,7 @@ COMPOSE_FILE="$DOCKER_DIR/compose.yaml"
 ENV_FILE="$DOCKER_DIR/.env"
 
 # Avoid zsh alias collisions when these helper names already exist.
-for helper_name in compose_cmd dartisan dcomposer dbun dnpm devite dup ddown dlogs dfresh; do
+for helper_name in compose_cmd dartisan dcomposer dbun devite dup ddown dlogs dfresh; do
   unalias "$helper_name" >/dev/null 2>&1 || true
 done
 
@@ -58,11 +58,6 @@ function dbun {
   compose_cmd exec node bun "$@"
 }
 
-# Backward-compatible alias for older docs and shell habits.
-function dnpm {
-  dbun "$@"
-}
-
 function devite {
   compose_cmd up -d node
   compose_cmd logs -f node
@@ -80,4 +75,4 @@ function dlogs {
   compose_cmd logs -f "$@"
 }
 
-echo "Loaded MonsterIndex docker helpers: dup, ddown, dlogs, dartisan, dfresh, dcomposer, dbun, devite (dnpm -> dbun)"
+echo "Loaded MonsterIndex docker helpers: dup, ddown, dlogs, dartisan, dfresh, dcomposer, dbun, devite"

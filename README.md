@@ -63,5 +63,4 @@ Available:
 - `dartisan` run artisan inside php container
 - `dcomposer` run composer inside php container
 - `dbun` run bun inside node container
-- `dnpm` compatibility alias to `dbun`
 - `devite` tail Vite container logs
