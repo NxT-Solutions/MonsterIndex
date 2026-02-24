@@ -52,6 +52,12 @@ class CheckMonitorPriceJob implements ShouldQueue
             ->find($this->monitorId);
 
         if (! $monitor || ! $monitor->canRunScheduledChecks()) {
+            $this->markRunSkipped(
+                $monitor
+                    ? 'Monitor is not active or approved anymore.'
+                    : 'Monitor was deleted before processing started.',
+            );
+
             return;
         }
 
@@ -143,5 +149,22 @@ class CheckMonitorPriceJob implements ShouldQueue
             'status' => 'running',
             'attempt' => $this->attempts(),
         ]);
+    }
+
+    private function markRunSkipped(string $reason): void
+    {
+        if ($this->monitorRunId === null) {
+            return;
+        }
+
+        MonitorRun::query()
+            ->where('id', $this->monitorRunId)
+            ->whereNull('finished_at')
+            ->update([
+                'status' => 'skipped',
+                'finished_at' => now(),
+                'attempt' => $this->attempts(),
+                'error_message' => $reason,
+            ]);
     }
 }

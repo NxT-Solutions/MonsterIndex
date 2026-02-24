@@ -328,7 +328,13 @@ class MonitorController extends Controller
             ->whereIn('monitor_id', $monitorIds)
             ->whereIn('status', ['queued', 'running'])
             ->whereNull('finished_at')
-            ->pluck('monitor_id')
+            ->whereNotExists(function ($query): void {
+                $query->selectRaw('1')
+                    ->from('monitor_runs as newer_runs')
+                    ->whereColumn('newer_runs.monitor_id', 'monitor_runs.monitor_id')
+                    ->whereColumn('newer_runs.id', '>', 'monitor_runs.id');
+            })
+            ->pluck('monitor_runs.monitor_id')
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->sort()

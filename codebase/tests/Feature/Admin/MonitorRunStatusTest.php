@@ -98,3 +98,60 @@ it('streams running monitor ids for admin monitor index page', function () {
     expect($content)->toContain('event: monitor-runs')
         ->toContain('"running_monitor_ids":['.$monitor->id.']');
 });
+
+it('marks a queued run as skipped when monitor is no longer runnable', function () {
+    $monitor = Monitor::factory()->create([
+        'active' => false,
+        'submission_status' => Monitor::STATUS_APPROVED,
+    ]);
+
+    $run = MonitorRun::query()->create([
+        'monitor_id' => $monitor->id,
+        'started_at' => now(),
+        'status' => 'queued',
+        'attempt' => 1,
+    ]);
+
+    dispatch_sync(new CheckMonitorPriceJob($monitor->id, 'manual', $run->id));
+
+    $run->refresh();
+
+    expect($run->status)->toBe('skipped')
+        ->and($run->finished_at)->not->toBeNull()
+        ->and($run->error_message)->toContain('not active or approved');
+});
+
+it('ignores stale unfinished runs when a newer run already exists', function () {
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $monitor = Monitor::factory()->create();
+
+    MonitorRun::query()->create([
+        'monitor_id' => $monitor->id,
+        'started_at' => now()->subMinute(),
+        'status' => 'queued',
+        'attempt' => 1,
+        'finished_at' => null,
+    ]);
+
+    MonitorRun::query()->create([
+        'monitor_id' => $monitor->id,
+        'started_at' => now(),
+        'status' => 'success',
+        'attempt' => 1,
+        'finished_at' => now(),
+    ]);
+
+    $response = $this->actingAs($admin)->get(
+        route('api.admin.monitors.events', [
+            'once' => 1,
+        ]),
+    );
+
+    $response->assertOk();
+    $content = $response->streamedContent();
+    expect($content)->toContain('event: monitor-runs')
+        ->toContain('"running_monitor_ids":[]');
+});
