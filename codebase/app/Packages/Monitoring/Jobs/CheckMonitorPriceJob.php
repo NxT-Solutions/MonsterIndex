@@ -7,9 +7,10 @@ use App\Models\MonitorRun;
 use App\Models\PriceSnapshot;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Packages\Contributions\Services\ContributorAlertService;
 use Packages\Monitoring\Services\BestPriceProjector;
 use Packages\Monitoring\Services\DomainRateLimiter;
-use Packages\Contributions\Services\ContributorAlertService;
+use Packages\Monitoring\Services\MonitorFailureGuardService;
 use Packages\PriceExtraction\Services\PriceExtractionService;
 use Throwable;
 
@@ -44,6 +45,7 @@ class CheckMonitorPriceJob implements ShouldQueue
         DomainRateLimiter $domainRateLimiter,
         BestPriceProjector $bestPriceProjector,
         ContributorAlertService $contributorAlertService,
+        MonitorFailureGuardService $monitorFailureGuardService,
     ): void {
         $monitor = Monitor::query()
             ->with(['site', 'monster'])
@@ -86,6 +88,14 @@ class CheckMonitorPriceJob implements ShouldQueue
                 'status' => $result->status,
                 'error_code' => $result->errorCode,
             ]);
+
+            $wasAutoRemoved = $monitorFailureGuardService->handleFailedSnapshot($monitor, $snapshot);
+            if ($wasAutoRemoved) {
+                $bestPriceProjector->recomputeForMonsterCurrency(
+                    (int) $monitor->monster_id,
+                    (string) ($monitor->currency ?: Monitor::DEFAULT_CURRENCY),
+                );
+            }
 
             $bestPriceProjector->projectFromSnapshot($snapshot);
             $contributorAlertService->handleSnapshot($snapshot, $monitor);
