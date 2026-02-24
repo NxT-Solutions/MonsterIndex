@@ -60,9 +60,10 @@ class PermissionBootstrapper
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        foreach (self::allPermissions() as $permissionName) {
-            Permission::findOrCreate($permissionName, 'web');
-        }
+        $permissionModels = collect(self::allPermissions())
+            ->mapWithKeys(fn (string $permissionName): array => [
+                $permissionName => Permission::findOrCreate($permissionName, 'web'),
+            ]);
 
         $adminRole = Role::findOrCreate(self::ROLE_ADMIN, 'web');
         $contributorRole = Role::findOrCreate(self::ROLE_CONTRIBUTOR, 'web');
@@ -70,14 +71,22 @@ class PermissionBootstrapper
         $expectedAdmin = collect(self::allPermissions())->sort()->values()->all();
         $existingAdmin = $adminRole->permissions()->pluck('name')->sort()->values()->all();
         if ($expectedAdmin !== $existingAdmin) {
-            $adminRole->syncPermissions($expectedAdmin);
+            $adminRole->syncPermissions($permissionModels->values()->all());
         }
 
         $expectedContributor = collect(self::contributorPermissions())->sort()->values()->all();
         $existingContributor = $contributorRole->permissions()->pluck('name')->sort()->values()->all();
         if ($expectedContributor !== $existingContributor) {
-            $contributorRole->syncPermissions($expectedContributor);
+            $contributorRole->syncPermissions(
+                collect(self::contributorPermissions())
+                    ->map(fn (string $permissionName): Permission => $permissionModels->get($permissionName))
+                    ->filter()
+                    ->values()
+                    ->all(),
+            );
         }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     }
 
