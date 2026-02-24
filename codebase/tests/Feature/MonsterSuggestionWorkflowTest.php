@@ -13,8 +13,8 @@ it('supports monster suggestion submission and admin approval flow', function ()
 
     $this->actingAs($contributor)
         ->post(route('contribute.suggestions.store'), [
-            'name' => 'Monster Nitro Cosmic Peach 16oz',
-            'size_label' => '16oz',
+            'name' => 'Monster Nitro Cosmic Peach 500ml',
+            'size_label' => '500ml',
             'notes' => 'Popular in nearby stores.',
         ])
         ->assertRedirect();
@@ -30,7 +30,7 @@ it('supports monster suggestion submission and admin approval flow', function ()
         ->assertRedirect();
 
     $suggestion->refresh();
-    $monster = Monster::query()->where('name', 'Monster Nitro Cosmic Peach 16oz')->first();
+    $monster = Monster::query()->where('name', 'Monster Nitro Cosmic Peach 500ml')->first();
     expect($monster)->not->toBeNull();
     expect($suggestion->status)->toBe(MonsterSuggestion::STATUS_APPROVED)
         ->and((int) $suggestion->monster_id)->toBe((int) $monster?->id);
@@ -42,15 +42,15 @@ it('blocks duplicate suggestions by normalized name while pending or approved ex
 
     MonsterSuggestion::factory()->create([
         'user_id' => $contributor->id,
-        'name' => 'Monster Reserve Kiwi Strawberry 16oz',
-        'normalized_name' => 'monster reserve kiwi strawberry 16oz',
+        'name' => 'Monster Reserve Kiwi Strawberry 500ml',
+        'normalized_name' => 'monster reserve kiwi strawberry 500ml',
         'status' => MonsterSuggestion::STATUS_PENDING,
     ]);
 
     $this->actingAs($contributor)
         ->post(route('contribute.suggestions.store'), [
-            'name' => '  MONSTER   reserve kiwi strawberry 16oz ',
-            'size_label' => '16oz',
+            'name' => '  MONSTER   reserve kiwi strawberry 500ml ',
+            'size_label' => '500ml',
         ])
         ->assertSessionHasErrors('name');
 });
@@ -63,7 +63,7 @@ it('throttles suggestion creation after the daily limit', function () {
         $this->actingAs($contributor)
             ->post(route('contribute.suggestions.store'), [
                 'name' => "Monster Test Suggestion {$attempt}",
-                'size_label' => '16oz',
+                'size_label' => '500ml',
             ])
             ->assertRedirect();
     }
@@ -71,7 +71,7 @@ it('throttles suggestion creation after the daily limit', function () {
     $this->actingAs($contributor)
         ->post(route('contribute.suggestions.store'), [
             'name' => 'Monster Test Suggestion Overflow',
-            'size_label' => '16oz',
+            'size_label' => '500ml',
         ])
         ->assertStatus(429);
 });

@@ -23,13 +23,14 @@ class MonsterSuggestionFactory extends Factory
      */
     public function definition(): array
     {
-        $name = 'Monster '.fake()->unique()->word().' '.fake()->numberBetween(12, 24).'oz';
+        $sizeLabel = fake()->randomElement(['355ml', '500ml', '710ml']);
+        $name = 'Monster '.fake()->unique()->word().' '.$sizeLabel;
 
         return [
             'user_id' => User::factory(),
             'name' => $name,
             'normalized_name' => mb_strtolower(trim($name)),
-            'size_label' => fake()->randomElement(['12oz', '16oz', '500ml', null]),
+            'size_label' => fake()->randomElement([$sizeLabel, null]),
             'notes' => fake()->optional()->sentence(),
             'status' => MonsterSuggestion::STATUS_PENDING,
             'reviewed_by_user_id' => null,
