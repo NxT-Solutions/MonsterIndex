@@ -2,13 +2,43 @@ import KpiCard from '@/Components/admin/KpiCard';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
+import {
+    disablePushNotifications,
+    enablePushNotifications,
+    isPushSupported,
+} from '@/lib/push';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
 import { PageProps } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 
-export default function Dashboard({ auth }: PageProps) {
+export default function Dashboard({ auth, push }: PageProps) {
     const { x } = useLocale();
+    const [pushBusy, setPushBusy] = useState(false);
+    const [pushFeedback, setPushFeedback] = useState<string | null>(null);
+    const [permission, setPermission] = useState<
+        NotificationPermission | 'unsupported'
+    >('unsupported');
+    const pushSupported = isPushSupported();
+    const pushConfigured = Boolean(push?.vapid_configured);
+    const pushEnabled = Boolean(push?.has_active_subscription);
+
+    useEffect(() => {
+        if (!pushSupported) {
+            setPermission('unsupported');
+
+            return;
+        }
+
+        setPermission(Notification.permission);
+    }, [pushSupported]);
+
+    const refreshPushState = () => {
+        router.reload({
+            only: ['push'],
+        });
+    };
 
     return (
         <AuthenticatedLayout
@@ -139,6 +169,128 @@ export default function Dashboard({ auth }: PageProps) {
                                 </CardContent>
                             </Card>
                         )}
+                    </section>
+
+                    <section>
+                        <Card className="border-white/10 bg-[color:var(--landing-surface)]">
+                            <CardHeader>
+                                <CardTitle className="font-display text-lg text-white">
+                                    {x('Notification Settings', 'Meldingsinstellingen')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3 text-sm text-white/75">
+                                <p>
+                                    {x(
+                                        'Enable web push to receive alert notifications in your browser/PWA.',
+                                        'Schakel web push in om alertmeldingen in je browser/PWA te ontvangen.',
+                                    )}
+                                </p>
+                                <p className="text-xs text-white/60">
+                                    {x('Browser support', 'Browserondersteuning')}: {pushSupported ? x('Yes', 'Ja') : x('No', 'Nee')}
+                                    {' • '}
+                                    {x('Permission', 'Permissie')}: {permission}
+                                    {' • '}
+                                    {x('Configured', 'Geconfigureerd')}: {pushConfigured ? x('Yes', 'Ja') : x('No', 'Nee')}
+                                    {' • '}
+                                    {x('Subscribed', 'Geabonneerd')}: {pushEnabled ? x('Yes', 'Ja') : x('No', 'Nee')}
+                                </p>
+                                {pushFeedback && (
+                                    <p className="text-xs text-[color:var(--landing-accent)]">
+                                        {pushFeedback}
+                                    </p>
+                                )}
+                                <div className="flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'default',
+                                                size: 'sm',
+                                            }),
+                                            'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                        )}
+                                        disabled={
+                                            pushBusy ||
+                                            !pushSupported ||
+                                            !pushConfigured
+                                        }
+                                        onClick={async () => {
+                                            setPushBusy(true);
+                                            setPushFeedback(null);
+                                            try {
+                                                const result = await enablePushNotifications();
+                                                setPermission(result.permission);
+                                                if (result.ok) {
+                                                    setPushFeedback(
+                                                        x(
+                                                            'Push notifications enabled.',
+                                                            'Pushmeldingen ingeschakeld.',
+                                                        ),
+                                                    );
+                                                } else {
+                                                    setPushFeedback(
+                                                        x(
+                                                            'Could not enable push notifications.',
+                                                            'Kon pushmeldingen niet inschakelen.',
+                                                        ),
+                                                    );
+                                                }
+                                            } catch {
+                                                setPushFeedback(
+                                                    x(
+                                                        'Push setup failed. Check browser permissions and VAPID config.',
+                                                        'Pushinstelling mislukt. Controleer browserrechten en VAPID-configuratie.',
+                                                    ),
+                                                );
+                                            } finally {
+                                                setPushBusy(false);
+                                                refreshPushState();
+                                            }
+                                        }}
+                                    >
+                                        {pushBusy
+                                            ? x('Processing...', 'Verwerken...')
+                                            : x('Enable Push', 'Push Inschakelen')}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'secondary',
+                                                size: 'sm',
+                                            }),
+                                            'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                        )}
+                                        disabled={pushBusy || !pushSupported}
+                                        onClick={async () => {
+                                            setPushBusy(true);
+                                            setPushFeedback(null);
+                                            try {
+                                                await disablePushNotifications();
+                                                setPushFeedback(
+                                                    x(
+                                                        'Push notifications disabled.',
+                                                        'Pushmeldingen uitgeschakeld.',
+                                                    ),
+                                                );
+                                            } catch {
+                                                setPushFeedback(
+                                                    x(
+                                                        'Could not disable push notifications.',
+                                                        'Kon pushmeldingen niet uitschakelen.',
+                                                    ),
+                                                );
+                                            } finally {
+                                                setPushBusy(false);
+                                                refreshPushState();
+                                            }
+                                        }}
+                                    >
+                                        {x('Disable Push', 'Push Uitschakelen')}
+                                    </button>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </section>
                 </div>
             </div>
