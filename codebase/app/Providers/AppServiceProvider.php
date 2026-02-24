@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Alert;
+use App\Models\ContributorAlert;
 use App\Models\Monitor;
 use App\Models\MonsterSuggestion;
 use App\Observers\AlertObserver;
-use App\Models\Alert;
+use App\Observers\ContributorAlertObserver;
 use App\Policies\MonitorPolicy;
 use App\Policies\MonsterSuggestionPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -34,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Monitor::class, MonitorPolicy::class);
         Gate::policy(MonsterSuggestion::class, MonsterSuggestionPolicy::class);
         Alert::observe(AlertObserver::class);
+        ContributorAlert::observe(ContributorAlertObserver::class);
 
         RateLimiter::for('monitor-create', function (Request $request): array {
             $key = $this->throttleKey($request);

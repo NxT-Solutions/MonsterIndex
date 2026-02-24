@@ -1,8 +1,10 @@
 <?php
 
 use App\Models\Alert;
+use App\Models\ContributorAlert;
 use App\Models\Monitor;
 use App\Models\Monster;
+use App\Models\PriceSnapshot;
 use App\Models\PushSubscription;
 use App\Models\Site;
 use App\Models\User;
@@ -10,6 +12,8 @@ use App\Support\Authorization\PermissionBootstrapper;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Queue;
 use Packages\Notifications\Jobs\DispatchAlertPushJob;
+use Packages\Notifications\Jobs\DispatchContributorAlertPushJob;
+use Packages\Notifications\Services\ContributorAlertPushService;
 use Packages\Notifications\Services\WebPushService;
 
 it('allows authenticated users to upsert and delete push subscriptions', function () {
@@ -180,6 +184,86 @@ it('queues push dispatch when an in-app alert is created', function () {
     ]);
 
     Queue::assertPushed(DispatchAlertPushJob::class);
+});
+
+it('queues push dispatch when a followed price-drop alert is created', function () {
+    Queue::fake();
+
+    $user = User::factory()->create(['role' => User::ROLE_USER]);
+    PermissionBootstrapper::syncUserRole($user, false);
+
+    $monster = Monster::factory()->create();
+    $monitor = Monitor::factory()->create([
+        'monster_id' => $monster->id,
+        'site_id' => Site::factory()->create()->id,
+    ]);
+    $snapshot = PriceSnapshot::factory()->create([
+        'monitor_id' => $monitor->id,
+        'currency' => 'EUR',
+        'effective_total_cents' => 2990,
+    ]);
+
+    ContributorAlert::query()->create([
+        'user_id' => $user->id,
+        'monster_id' => $monster->id,
+        'monitor_id' => $monitor->id,
+        'price_snapshot_id' => $snapshot->id,
+        'type' => 'price_drop',
+        'currency' => 'EUR',
+        'effective_total_cents' => 2990,
+        'title' => 'Drop',
+        'body' => 'Body',
+    ]);
+
+    Queue::assertPushed(DispatchContributorAlertPushJob::class);
+});
+
+it('sends followed price-drop push notifications to admin followers', function () {
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+    PermissionBootstrapper::syncUserRole($admin, true);
+
+    $monster = Monster::factory()->create();
+    $monitor = Monitor::factory()->create([
+        'monster_id' => $monster->id,
+        'site_id' => Site::factory()->create()->id,
+    ]);
+    $snapshot = PriceSnapshot::factory()->create([
+        'monitor_id' => $monitor->id,
+        'currency' => 'EUR',
+        'effective_total_cents' => 2590,
+    ]);
+
+    $alert = ContributorAlert::query()->create([
+        'user_id' => $admin->id,
+        'monster_id' => $monster->id,
+        'monitor_id' => $monitor->id,
+        'price_snapshot_id' => $snapshot->id,
+        'type' => 'price_drop',
+        'currency' => 'EUR',
+        'effective_total_cents' => 2590,
+        'title' => 'Price drop alert',
+        'body' => 'Drop detected',
+    ]);
+
+    $mock = Mockery::mock(WebPushService::class);
+    $mock->shouldReceive('hasValidConfiguration')
+        ->once()
+        ->andReturn(true);
+    $mock->shouldReceive('sendToUser')
+        ->once()
+        ->withArgs(function (User $user, array $notification) use ($admin): bool {
+            return $user->is($admin)
+                && ($notification['url'] ?? null) === route('admin.alerts.index', absolute: false);
+        })
+        ->andReturn([
+            'success_count' => 1,
+            'failure_count' => 0,
+            'invalid_endpoints' => [],
+        ]);
+
+    $this->app->instance(WebPushService::class, $mock);
+
+    app(ContributorAlertPushService::class)->dispatchForAlertId($alert->id);
 });
 
 it('prunes invalid subscriptions returned by push delivery reports', function () {
