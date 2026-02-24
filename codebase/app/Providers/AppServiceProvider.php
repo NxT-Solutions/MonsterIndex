@@ -59,6 +59,14 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(30)->by($token.'|'.$ip);
         });
+
+        RateLimiter::for('follow-actions', function (Request $request): Limit {
+            return Limit::perMinute(30)->by($this->throttleKey($request));
+        });
+
+        RateLimiter::for('alert-actions', function (Request $request): Limit {
+            return Limit::perMinute(60)->by($this->throttleKey($request));
+        });
     }
 
     private function throttleKey(Request $request): string

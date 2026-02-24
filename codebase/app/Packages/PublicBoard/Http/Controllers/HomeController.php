@@ -5,13 +5,15 @@ namespace Packages\PublicBoard\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\BestPrice;
 use App\Models\Monitor;
+use App\Models\MonsterFollow;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class HomeController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $bestPrices = BestPrice::query()
             ->whereHas('snapshot.monitor', function ($query): void {
@@ -27,6 +29,38 @@ class HomeController extends Controller
             ->orderBy('effective_total_cents')
             ->get()
             ->map(fn (BestPrice $bestPrice): array => $this->mapBestPrice($bestPrice))
+            ->values();
+
+        $followedMonsterIds = collect();
+        $authUser = $request->user();
+        if ($authUser && $authUser->can('monster.follow')) {
+            $monsterIds = $bestPrices
+                ->pluck('monster.id')
+                ->filter()
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values();
+
+            if ($monsterIds->isNotEmpty()) {
+                $followedMonsterIds = MonsterFollow::query()
+                    ->where('user_id', $authUser->id)
+                    ->where('currency', Monitor::DEFAULT_CURRENCY)
+                    ->whereIn('monster_id', $monsterIds->all())
+                    ->pluck('monster_id')
+                    ->map(fn ($id): int => (int) $id)
+                    ->flip();
+            }
+        }
+
+        $bestPrices = $bestPrices
+            ->map(function (array $row) use ($followedMonsterIds): array {
+                $monsterId = (int) ($row['monster']['id'] ?? 0);
+
+                return [
+                    ...$row,
+                    'is_following' => $monsterId > 0 && $followedMonsterIds->has($monsterId),
+                ];
+            })
             ->values();
 
         $trendingTracks = $bestPrices
@@ -104,6 +138,7 @@ class HomeController extends Controller
         return [
             'id' => $bestPrice->id,
             'monster' => [
+                'id' => $bestPrice->monster->id,
                 'name' => $bestPrice->monster->name,
                 'slug' => $bestPrice->monster->slug,
                 'size_label' => $bestPrice->monster->size_label,

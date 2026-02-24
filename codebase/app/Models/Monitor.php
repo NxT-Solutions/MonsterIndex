@@ -124,6 +124,11 @@ class Monitor extends Model
         return $this->hasMany(Alert::class);
     }
 
+    public function contributorAlerts(): HasMany
+    {
+        return $this->hasMany(ContributorAlert::class);
+    }
+
     public function scopeApproved(Builder $query): Builder
     {
         return $query->where('submission_status', self::STATUS_APPROVED);

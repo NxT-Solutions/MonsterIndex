@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Packages\Monitoring\Services\BestPriceProjector;
 use Packages\Monitoring\Services\DomainRateLimiter;
+use Packages\Contributions\Services\ContributorAlertService;
 use Packages\PriceExtraction\Services\PriceExtractionService;
 use Throwable;
 
@@ -42,6 +43,7 @@ class CheckMonitorPriceJob implements ShouldQueue
         PriceExtractionService $priceExtractionService,
         DomainRateLimiter $domainRateLimiter,
         BestPriceProjector $bestPriceProjector,
+        ContributorAlertService $contributorAlertService,
     ): void {
         $monitor = Monitor::query()
             ->with(['site', 'monster'])
@@ -86,6 +88,7 @@ class CheckMonitorPriceJob implements ShouldQueue
             ]);
 
             $bestPriceProjector->projectFromSnapshot($snapshot);
+            $contributorAlertService->handleSnapshot($snapshot, $monitor);
 
             $run->update([
                 'status' => $result->status === 'failed' ? 'failed' : 'success',

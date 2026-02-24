@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PriceSnapshot extends Model
 {
@@ -46,5 +47,10 @@ class PriceSnapshot extends Model
     public function monitor(): BelongsTo
     {
         return $this->belongsTo(Monitor::class);
+    }
+
+    public function contributorAlerts(): HasMany
+    {
+        return $this->hasMany(ContributorAlert::class, 'price_snapshot_id');
     }
 }

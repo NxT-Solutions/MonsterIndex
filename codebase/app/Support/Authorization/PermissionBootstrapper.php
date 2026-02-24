@@ -34,6 +34,9 @@ class PermissionBootstrapper
             'monster-suggestion.submit',
             'monster-suggestion.view.own',
             'monster-suggestion.review',
+            'monster.follow',
+            'contributor-alert.view.own',
+            'contributor-alert.mark-read.own',
         ];
     }
 
@@ -49,6 +52,9 @@ class PermissionBootstrapper
             'monitor.delete.own',
             'monster-suggestion.submit',
             'monster-suggestion.view.own',
+            'monster.follow',
+            'contributor-alert.view.own',
+            'contributor-alert.mark-read.own',
         ];
     }
 

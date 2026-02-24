@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ContributorAlert;
 use App\Models\MonsterSuggestion;
 use App\Models\Monitor;
 use App\Models\User;
@@ -36,6 +37,7 @@ class HandleInertiaRequests extends Middleware
         $authUser = $request->user();
         $userPayload = null;
         $adminReview = null;
+        $contributorAlerts = null;
         if ($authUser instanceof User) {
             PermissionBootstrapper::syncUserFromLegacyRole($authUser);
 
@@ -65,6 +67,9 @@ class HandleInertiaRequests extends Middleware
                     'monster_suggestion_review' => $authUser->can('monster-suggestion.review'),
                     'stores_manage' => $authUser->can('stores.manage'),
                     'monsters_manage' => $authUser->can('monsters.manage'),
+                    'monster_follow' => $authUser->can('monster.follow'),
+                    'contributor_alert_view' => $authUser->can('contributor-alert.view.own'),
+                    'contributor_alert_mark_read' => $authUser->can('contributor-alert.mark-read.own'),
                 ],
             ];
 
@@ -80,6 +85,18 @@ class HandleInertiaRequests extends Middleware
                             ->where('status', MonsterSuggestion::STATUS_PENDING)
                             ->count()
                         : 0,
+                    ];
+            }
+
+            if ($authUser->can('contributor-alert.view.own')) {
+                $contributorAlerts = [
+                    'unread' => ContributorAlert::query()
+                        ->where('user_id', $authUser->id)
+                        ->whereNull('read_at')
+                        ->count(),
+                    'total' => ContributorAlert::query()
+                        ->where('user_id', $authUser->id)
+                        ->count(),
                 ];
             }
         }
@@ -90,6 +107,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $userPayload,
             ],
             'adminReview' => $adminReview,
+            'contributorAlerts' => $contributorAlerts,
         ];
     }
 }

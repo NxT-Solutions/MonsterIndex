@@ -73,4 +73,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(MonsterSuggestion::class);
     }
+
+    public function monsterFollows(): HasMany
+    {
+        return $this->hasMany(MonsterFollow::class);
+    }
+
+    public function contributorAlerts(): HasMany
+    {
+        return $this->hasMany(ContributorAlert::class);
+    }
 }
