@@ -1,12 +1,12 @@
 <?php
 
-use Packages\Base\Data\ExtractionResult;
 use App\Models\BookmarkletSession;
 use App\Models\Monitor;
 use App\Models\Monster;
 use App\Models\PriceSnapshot;
 use App\Models\Site;
 use App\Models\User;
+use Packages\Base\Data\ExtractionResult;
 use Packages\PriceExtraction\Services\PriceExtractionService;
 
 it('rejects expired bookmarklet capture token', function () {
