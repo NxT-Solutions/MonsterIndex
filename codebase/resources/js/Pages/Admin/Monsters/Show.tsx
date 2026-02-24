@@ -860,5 +860,5 @@ function parseRunsEvent(rawData: string): RunsEventPayload | null {
 }
 
 function isActiveRunStatus(status: string | undefined | null): boolean {
-    return status === 'queued' || status === 'running';
+    return status === 'running';
 }

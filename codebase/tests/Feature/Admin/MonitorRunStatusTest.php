@@ -99,6 +99,33 @@ it('streams running monitor ids for admin monitor index page', function () {
         ->toContain('"running_monitor_ids":['.$monitor->id.']');
 });
 
+it('does not treat queued runs as active scraping in stream payloads', function () {
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $monitor = Monitor::factory()->create();
+
+    MonitorRun::query()->create([
+        'monitor_id' => $monitor->id,
+        'started_at' => now(),
+        'status' => 'queued',
+        'attempt' => 1,
+        'finished_at' => null,
+    ]);
+
+    $response = $this->actingAs($admin)->get(
+        route('api.admin.monitors.events', [
+            'once' => 1,
+        ]),
+    );
+
+    $response->assertOk();
+    $content = $response->streamedContent();
+    expect($content)->toContain('event: monitor-runs')
+        ->toContain('"running_monitor_ids":[]');
+});
+
 it('marks a queued run as skipped when monitor is no longer runnable', function () {
     $monitor = Monitor::factory()->create([
         'active' => false,

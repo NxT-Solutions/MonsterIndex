@@ -27,6 +27,8 @@ class MonitorController extends Controller
 
     public function index(): Response
     {
+        $this->closeStaleRuns();
+
         $monitors = Monitor::query()
             ->with([
                 'monster:id,name,slug',
@@ -324,9 +326,11 @@ class MonitorController extends Controller
             return [];
         }
 
+        $this->closeStaleRuns($monitorIds);
+
         return MonitorRun::query()
             ->whereIn('monitor_id', $monitorIds)
-            ->whereIn('status', ['queued', 'running'])
+            ->where('status', 'running')
             ->whereNull('finished_at')
             ->whereNotExists(function ($query): void {
                 $query->selectRaw('1')
@@ -340,5 +344,39 @@ class MonitorController extends Controller
             ->sort()
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  list<int>|null  $monitorIds
+     */
+    private function closeStaleRuns(?array $monitorIds = null): void
+    {
+        $now = now();
+
+        MonitorRun::query()
+            ->when($monitorIds !== null && $monitorIds !== [], function ($query) use ($monitorIds): void {
+                $query->whereIn('monitor_id', $monitorIds);
+            })
+            ->where('status', 'queued')
+            ->whereNull('finished_at')
+            ->where('started_at', '<=', $now->copy()->subMinutes(3))
+            ->update([
+                'status' => 'skipped',
+                'finished_at' => $now,
+                'error_message' => 'Auto-closed: queue job never started.',
+            ]);
+
+        MonitorRun::query()
+            ->when($monitorIds !== null && $monitorIds !== [], function ($query) use ($monitorIds): void {
+                $query->whereIn('monitor_id', $monitorIds);
+            })
+            ->where('status', 'running')
+            ->whereNull('finished_at')
+            ->where('started_at', '<=', $now->copy()->subMinutes(10))
+            ->update([
+                'status' => 'error',
+                'finished_at' => $now,
+                'error_message' => 'Auto-closed: run exceeded expected timeout.',
+            ]);
     }
 }

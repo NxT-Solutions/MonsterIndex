@@ -923,7 +923,7 @@ function hasPriceSelectorConfig(selectorConfig: Record<string, unknown> | null):
 }
 
 function isActiveRunStatus(status?: string | null): boolean {
-    return status === 'queued' || status === 'running';
+    return status === 'running';
 }
 
 function initialRunningMonitorIds(records: MonitorRow[]): number[] {
