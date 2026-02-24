@@ -81,7 +81,6 @@ export default function ContributionMonitorsIndex({
         site_name: '',
         product_url: '',
         currency: 'EUR',
-        check_interval_minutes: 60,
     });
 
     const isOtherStore = form.data.site_id === OTHER_STORE_ID;
@@ -149,18 +148,6 @@ export default function ContributionMonitorsIndex({
             return;
         }
 
-        const intervalRaw = window.prompt(
-            x('Interval minutes', 'Interval minuten'),
-            String(monitor.check_interval_minutes),
-        );
-        if (intervalRaw === null) {
-            return;
-        }
-        const interval = Number(intervalRaw);
-        if (!Number.isFinite(interval)) {
-            return;
-        }
-
         router.put(
             route('contribute.monitors.update', monitor.id),
             {
@@ -170,7 +157,6 @@ export default function ContributionMonitorsIndex({
                 site_name: null,
                 product_url: productUrl,
                 currency: monitor.currency,
-                check_interval_minutes: interval,
             },
             { preserveScroll: true },
         );
@@ -291,7 +277,7 @@ export default function ContributionMonitorsIndex({
                                     </div>
                                 )}
 
-                                <div className={isOtherStore ? 'md:col-span-6' : 'md:col-span-8'}>
+                                <div className={isOtherStore ? 'md:col-span-8' : 'md:col-span-10'}>
                                     <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
                                         {x('Product URL', 'Product-URL')}
                                     </label>
@@ -300,20 +286,6 @@ export default function ContributionMonitorsIndex({
                                         value={form.data.product_url}
                                         placeholder="https://example.com/product/monster"
                                         onChange={(event) => form.setData('product_url', event.target.value)}
-                                    />
-                                </div>
-
-                                <div className="md:col-span-2">
-                                    <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
-                                        {x('Interval', 'Interval')}
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min={15}
-                                        max={1440}
-                                        className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
-                                        value={form.data.check_interval_minutes}
-                                        onChange={(event) => form.setData('check_interval_minutes', Number(event.target.value))}
                                     />
                                 </div>
 
@@ -329,6 +301,13 @@ export default function ContributionMonitorsIndex({
                                         {x('Create Draft', 'Maak Draft')}
                                     </button>
                                 </div>
+
+                                <p className="text-xs text-white/60 md:col-span-12">
+                                    {x(
+                                        'Fetch interval is fixed at 60 minutes for contributor proposals.',
+                                        'Het ophaalinterval staat vast op 60 minuten voor bijdragersvoorstellen.',
+                                    )}
+                                </p>
                             </form>
                         </CardContent>
                     </Card>

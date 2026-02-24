@@ -24,7 +24,7 @@ it('allows contributors to create draft monitor proposals and blocks canonical d
             'site_id' => $site->id,
             'product_url' => 'https://www.example.com/product/monster-ultra?utm_source=feed',
             'currency' => 'EUR',
-            'check_interval_minutes' => 60,
+            'check_interval_minutes' => 15,
         ])
         ->assertRedirect();
 
@@ -32,7 +32,8 @@ it('allows contributors to create draft monitor proposals and blocks canonical d
     expect($monitor)->not->toBeNull()
         ->and($monitor?->submission_status)->toBe(Monitor::STATUS_DRAFT)
         ->and($monitor?->active)->toBeFalse()
-        ->and($monitor?->canonical_product_url)->toBe('https://example.com/product/monster-ultra');
+        ->and($monitor?->canonical_product_url)->toBe('https://example.com/product/monster-ultra')
+        ->and($monitor?->check_interval_minutes)->toBe(60);
 
     $this->actingAs($contributor)
         ->post(route('contribute.monitors.store'), [
@@ -40,7 +41,6 @@ it('allows contributors to create draft monitor proposals and blocks canonical d
             'site_id' => $site->id,
             'product_url' => 'https://example.com/product/monster-ultra?utm_medium=email',
             'currency' => 'EUR',
-            'check_interval_minutes' => 60,
         ])
         ->assertSessionHasErrors('product_url');
 });
@@ -63,7 +63,6 @@ it('prevents contributors from editing monitors they do not own', function () {
             'site_id' => $monitor->site_id,
             'product_url' => $monitor->product_url,
             'currency' => $monitor->currency,
-            'check_interval_minutes' => 60,
         ])
         ->assertForbidden();
 });
@@ -216,7 +215,6 @@ it('throttles monitor proposal creation after hourly quota', function () {
                 'site_id' => $site->id,
                 'product_url' => "https://example.com/product/monster-{$attempt}",
                 'currency' => 'EUR',
-                'check_interval_minutes' => 60,
             ])
             ->assertRedirect();
     }
@@ -227,7 +225,6 @@ it('throttles monitor proposal creation after hourly quota', function () {
             'site_id' => $site->id,
             'product_url' => 'https://example.com/product/monster-overflow',
             'currency' => 'EUR',
-            'check_interval_minutes' => 60,
         ])
         ->assertStatus(429);
 });

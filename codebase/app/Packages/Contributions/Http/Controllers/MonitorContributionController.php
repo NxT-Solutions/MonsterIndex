@@ -18,6 +18,8 @@ use Packages\PriceExtraction\Services\PriceExtractionService;
 
 class MonitorContributionController extends Controller
 {
+    private const CONTRIBUTOR_INTERVAL_MINUTES = 60;
+
     public function __construct(
         private readonly PriceExtractionService $priceExtractionService,
         private readonly BestPriceProjector $bestPriceProjector,
@@ -60,7 +62,6 @@ class MonitorContributionController extends Controller
             'site_name' => ['nullable', 'string', 'max:255'],
             'product_url' => ['required', 'url', 'max:2048'],
             'currency' => ['required', 'string', 'size:3'],
-            'check_interval_minutes' => ['required', 'integer', 'min:15', 'max:1440'],
         ]);
 
         $siteId = $this->resolveStoreId($validated);
@@ -87,7 +88,7 @@ class MonitorContributionController extends Controller
             'canonical_product_url' => $canonicalProductUrl,
             'selector_config' => null,
             'currency' => $currency,
-            'check_interval_minutes' => (int) $validated['check_interval_minutes'],
+            'check_interval_minutes' => self::CONTRIBUTOR_INTERVAL_MINUTES,
             'next_check_at' => null,
             'active' => false,
             'submission_status' => Monitor::STATUS_DRAFT,
@@ -113,7 +114,6 @@ class MonitorContributionController extends Controller
             'site_name' => ['nullable', 'string', 'max:255'],
             'product_url' => ['required', 'url', 'max:2048'],
             'currency' => ['required', 'string', 'size:3'],
-            'check_interval_minutes' => ['required', 'integer', 'min:15', 'max:1440'],
         ]);
 
         $siteId = $this->resolveStoreId($validated);
@@ -139,7 +139,7 @@ class MonitorContributionController extends Controller
             'product_url' => $validated['product_url'],
             'canonical_product_url' => $canonicalProductUrl,
             'currency' => $currency,
-            'check_interval_minutes' => (int) $validated['check_interval_minutes'],
+            'check_interval_minutes' => self::CONTRIBUTOR_INTERVAL_MINUTES,
         ]);
 
         $coreChanged = $monitor->isDirty([

@@ -57,7 +57,7 @@ class MonitorController extends Controller
             'product_url' => $validated['product_url'],
             'canonical_product_url' => $canonicalProductUrl,
             'currency' => strtoupper($validated['currency']),
-            'check_interval_minutes' => (int) $validated['check_interval_minutes'],
+            'check_interval_minutes' => (int) ($validated['check_interval_minutes'] ?? 60),
             'next_check_at' => now(),
             'active' => $validated['active'] ?? true,
             'submission_status' => Monitor::STATUS_APPROVED,
@@ -167,7 +167,7 @@ class MonitorController extends Controller
             'site_name' => ['nullable', 'string', 'max:255'],
             'product_url' => ['required', 'url', 'max:2048'],
             'currency' => ['required', 'string', 'size:3'],
-            'check_interval_minutes' => ['required', 'integer', 'min:15', 'max:1440'],
+            'check_interval_minutes' => ['nullable', 'integer', 'min:15', 'max:1440'],
             'active' => ['sometimes', 'boolean'],
         ]);
 
