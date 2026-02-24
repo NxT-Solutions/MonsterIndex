@@ -2,7 +2,6 @@ import BarMeter from '@/Components/admin/BarMeter';
 import KpiCard from '@/Components/admin/KpiCard';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { currencyOptionsForLocale } from '@/lib/currencies';
 import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
@@ -66,17 +65,12 @@ export default function MonitorsIndex({
 }) {
     const { locale, x } = useLocale();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
-    const currencyOptions = useMemo(
-        () => currencyOptionsForLocale(locale),
-        [locale],
-    );
 
     const form = useForm({
         monster_id: monsters[0]?.id ?? 0,
         site_id: sites[0]?.id ?? OTHER_STORE_ID,
         site_name: '',
         product_url: '',
-        currency: 'EUR',
         check_interval_minutes: 60,
         active: true,
     });
@@ -201,12 +195,6 @@ export default function MonitorsIndex({
                 monitor.product_url,
             ) ??
             monitor.product_url;
-        const currency =
-            window.prompt(
-                x('Currency (3-letter)', 'Valuta (3 letters)'),
-                monitor.currency,
-            ) ??
-            monitor.currency;
         const interval = Number(
             window.prompt(
                 x('Check interval minutes', 'Controle-interval minuten'),
@@ -214,7 +202,7 @@ export default function MonitorsIndex({
             ) ?? monitor.check_interval_minutes,
         );
 
-        if (!productUrl || !currency || !Number.isFinite(interval)) {
+        if (!productUrl || !Number.isFinite(interval)) {
             return;
         }
 
@@ -222,7 +210,6 @@ export default function MonitorsIndex({
             monster_id: monitor.monster_id,
             site_id: monitor.site_id,
             product_url: productUrl,
-            currency,
             check_interval_minutes: interval,
             active: monitor.active,
         });
@@ -233,7 +220,6 @@ export default function MonitorsIndex({
             monster_id: monitor.monster_id,
             site_id: monitor.site_id,
             product_url: monitor.product_url,
-            currency: monitor.currency,
             check_interval_minutes: monitor.check_interval_minutes,
             active: !monitor.active,
         });
@@ -298,7 +284,7 @@ export default function MonitorsIndex({
                                     className="grid gap-3 md:grid-cols-12"
                                     onSubmit={submit}
                                 >
-                                    <div className="min-w-0 space-y-1.5 md:col-span-4">
+                                    <div className="min-w-0 space-y-1.5 md:col-span-6">
                                         <label
                                             htmlFor="create-monitor-monster"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
@@ -328,7 +314,7 @@ export default function MonitorsIndex({
                                         </select>
                                     </div>
 
-                                    <div className="min-w-0 space-y-1.5 md:col-span-4">
+                                    <div className="min-w-0 space-y-1.5 md:col-span-6">
                                         <label
                                             htmlFor="create-monitor-store"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
@@ -357,36 +343,6 @@ export default function MonitorsIndex({
                                                     'Andere (maak aan via URL)',
                                                 )}
                                             </option>
-                                        </select>
-                                    </div>
-
-                                    <div className="min-w-0 space-y-1.5 md:col-span-4">
-                                        <label
-                                            htmlFor="create-monitor-currency"
-                                            className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
-                                        >
-                                            {x('Currency', 'Valuta')}
-                                        </label>
-                                        <select
-                                            id="create-monitor-currency"
-                                            className="w-full min-w-0 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
-                                            value={form.data.currency}
-                                            onChange={(event) =>
-                                                form.setData(
-                                                    'currency',
-                                                    event.target.value,
-                                                )
-                                            }
-                                        >
-                                            {currencyOptions.map((currency) => (
-                                                <option
-                                                    key={currency.code}
-                                                    value={currency.code}
-                                                    className="text-black"
-                                                >
-                                                    {currency.label}
-                                                </option>
-                                            ))}
                                         </select>
                                     </div>
 
@@ -531,7 +487,7 @@ export default function MonitorsIndex({
                                             <p>
                                                 {x('Interval:', 'Interval:')}{' '}
                                                 {monitor.check_interval_minutes}m •{' '}
-                                                {x('Currency:', 'Valuta:')} {monitor.currency} •{' '}
+                                                {x('Currency:', 'Valuta:')} EUR •{' '}
                                                 {x('Active:', 'Actief:')}{' '}
                                                 {monitor.active
                                                     ? x('Yes', 'Ja')

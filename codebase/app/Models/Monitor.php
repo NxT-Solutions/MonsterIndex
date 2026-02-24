@@ -14,6 +14,8 @@ class Monitor extends Model
 {
     use HasFactory;
 
+    public const DEFAULT_CURRENCY = 'EUR';
+
     public const STATUS_DRAFT = 'draft';
 
     public const STATUS_PENDING_REVIEW = 'pending_review';

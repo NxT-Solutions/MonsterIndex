@@ -56,7 +56,7 @@ class MonitorController extends Controller
             'approved_by_user_id' => $request->user()?->id,
             'product_url' => $validated['product_url'],
             'canonical_product_url' => $canonicalProductUrl,
-            'currency' => strtoupper($validated['currency']),
+            'currency' => Monitor::DEFAULT_CURRENCY,
             'check_interval_minutes' => (int) ($validated['check_interval_minutes'] ?? 60),
             'next_check_at' => now(),
             'active' => $validated['active'] ?? true,
@@ -94,7 +94,7 @@ class MonitorController extends Controller
             'site_id' => $validated['site_id'],
             'product_url' => $validated['product_url'],
             'canonical_product_url' => $canonicalProductUrl,
-            'currency' => strtoupper($validated['currency']),
+            'currency' => Monitor::DEFAULT_CURRENCY,
             'check_interval_minutes' => (int) $validated['check_interval_minutes'],
             'active' => $validated['active'],
             'submission_status' => Monitor::STATUS_APPROVED,
@@ -166,7 +166,6 @@ class MonitorController extends Controller
             'create_site' => ['sometimes', 'boolean'],
             'site_name' => ['nullable', 'string', 'max:255'],
             'product_url' => ['required', 'url', 'max:2048'],
-            'currency' => ['required', 'string', 'size:3'],
             'check_interval_minutes' => ['nullable', 'integer', 'min:15', 'max:1440'],
             'active' => ['sometimes', 'boolean'],
         ]);
@@ -190,7 +189,6 @@ class MonitorController extends Controller
             'monster_id' => ['required', 'integer', Rule::exists('monsters', 'id')],
             'site_id' => ['required', 'integer', Rule::exists('sites', 'id')],
             'product_url' => ['required', 'url', 'max:2048'],
-            'currency' => ['required', 'string', 'size:3'],
             'check_interval_minutes' => ['required', 'integer', 'min:15', 'max:1440'],
             'active' => ['required', 'boolean'],
         ]);

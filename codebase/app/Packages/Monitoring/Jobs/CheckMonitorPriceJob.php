@@ -78,7 +78,7 @@ class CheckMonitorPriceJob implements ShouldQueue
                 'effective_total_cents' => $result->effectiveTotalCents,
                 'can_count' => $result->canCount,
                 'price_per_can_cents' => $result->pricePerCanCents,
-                'currency' => $result->currency,
+                'currency' => (string) ($monitor->currency ?: Monitor::DEFAULT_CURRENCY),
                 'availability' => $result->availability,
                 'raw_text' => $result->rawText,
                 'status' => $result->status,

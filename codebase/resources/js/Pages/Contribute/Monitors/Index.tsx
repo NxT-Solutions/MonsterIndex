@@ -1,12 +1,11 @@
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { currencyOptionsForLocale } from '@/lib/currencies';
 import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useState } from 'react';
 
 const OTHER_STORE_ID = -1;
 
@@ -73,14 +72,12 @@ export default function ContributionMonitorsIndex({
 }) {
     const { locale, x } = useLocale();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
-    const currencyOptions = useMemo(() => currencyOptionsForLocale(locale), [locale]);
 
     const form = useForm({
         monster_id: monsters[0]?.id ?? 0,
         site_id: sites[0]?.id ?? OTHER_STORE_ID,
         site_name: '',
         product_url: '',
-        currency: 'EUR',
     });
 
     const isOtherStore = form.data.site_id === OTHER_STORE_ID;
@@ -156,7 +153,6 @@ export default function ContributionMonitorsIndex({
                 create_site: false,
                 site_name: null,
                 product_url: productUrl,
-                currency: monitor.currency,
             },
             { preserveScroll: true },
         );
@@ -209,7 +205,7 @@ export default function ContributionMonitorsIndex({
                         </CardHeader>
                         <CardContent>
                             <form className="grid gap-3 md:grid-cols-12" onSubmit={submitCreate}>
-                                <div className="md:col-span-4">
+                                <div className="md:col-span-6">
                                     <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
                                         {x('Monster', 'Monster')}
                                     </label>
@@ -226,7 +222,7 @@ export default function ContributionMonitorsIndex({
                                     </select>
                                 </div>
 
-                                <div className="md:col-span-4">
+                                <div className="md:col-span-6">
                                     <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
                                         {x('Store', 'Winkel')}
                                     </label>
@@ -246,25 +242,8 @@ export default function ContributionMonitorsIndex({
                                     </select>
                                 </div>
 
-                                <div className="md:col-span-4">
-                                    <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
-                                        {x('Currency', 'Valuta')}
-                                    </label>
-                                    <select
-                                        className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
-                                        value={form.data.currency}
-                                        onChange={(event) => form.setData('currency', event.target.value)}
-                                    >
-                                        {currencyOptions.map((currencyOption) => (
-                                            <option key={currencyOption.code} value={currencyOption.code} className="text-black">
-                                                {currencyOption.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
                                 {isOtherStore && (
-                                    <div className="md:col-span-6">
+                                    <div className="md:col-span-12">
                                         <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
                                             {x('Store Name (Optional)', 'Winkelnaam (optioneel)')}
                                         </label>
@@ -277,7 +256,7 @@ export default function ContributionMonitorsIndex({
                                     </div>
                                 )}
 
-                                <div className={isOtherStore ? 'md:col-span-8' : 'md:col-span-10'}>
+                                <div className="md:col-span-9">
                                     <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
                                         {x('Product URL', 'Product-URL')}
                                     </label>
@@ -289,7 +268,7 @@ export default function ContributionMonitorsIndex({
                                     />
                                 </div>
 
-                                <div className="flex items-end md:col-span-2">
+                                <div className="flex items-end md:col-span-3">
                                     <button
                                         type="submit"
                                         className={cn(

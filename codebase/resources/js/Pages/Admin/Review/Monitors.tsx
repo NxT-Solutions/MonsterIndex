@@ -140,8 +140,8 @@ export default function MonitorReviewIndex({
                                                 {monitor.product_url}
                                             </p>
                                             <p>
-                                                <strong className="text-white">{x('Currency', 'Valuta')}:</strong>{' '}
-                                                {monitor.currency}
+                                                <strong className="text-white">{x('Pricing', 'Prijsbasis')}:</strong>{' '}
+                                                {x('EUR only', 'Enkel EUR')}
                                             </p>
                                             <p>
                                                 <strong className="text-white">{x('Updated', 'Bijgewerkt')}:</strong>{' '}

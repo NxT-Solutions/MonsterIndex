@@ -102,7 +102,6 @@ class MonsterController extends Controller
         $validated = $request->validate([
             'site_name' => ['nullable', 'string', 'max:255'],
             'product_url' => ['required', 'url', 'max:2048'],
-            'currency' => ['nullable', 'string', 'size:3'],
             'check_interval_minutes' => ['nullable', 'integer', 'min:15', 'max:1440'],
             'active' => ['sometimes', 'boolean'],
         ]);
@@ -144,7 +143,7 @@ class MonsterController extends Controller
             'product_url' => $validated['product_url'],
             'canonical_product_url' => UrlCanonicalizer::canonicalize($validated['product_url']),
             'selector_config' => null,
-            'currency' => strtoupper((string) ($validated['currency'] ?? 'EUR')),
+            'currency' => Monitor::DEFAULT_CURRENCY,
             'check_interval_minutes' => (int) ($validated['check_interval_minutes'] ?? 60),
             'next_check_at' => now(),
             'active' => $validated['active'] ?? true,

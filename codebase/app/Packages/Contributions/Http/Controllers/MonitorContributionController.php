@@ -61,7 +61,6 @@ class MonitorContributionController extends Controller
             'create_site' => ['sometimes', 'boolean'],
             'site_name' => ['nullable', 'string', 'max:255'],
             'product_url' => ['required', 'url', 'max:2048'],
-            'currency' => ['required', 'string', 'size:3'],
         ]);
 
         $siteId = $this->resolveStoreId($validated);
@@ -72,10 +71,8 @@ class MonitorContributionController extends Controller
             ]);
         }
 
-        $currency = strtoupper($validated['currency']);
         $this->ensureNoDuplicate(
             monsterId: (int) $validated['monster_id'],
-            currency: $currency,
             canonicalProductUrl: $canonicalProductUrl,
             userId: (int) $user->id,
         );
@@ -87,7 +84,7 @@ class MonitorContributionController extends Controller
             'product_url' => $validated['product_url'],
             'canonical_product_url' => $canonicalProductUrl,
             'selector_config' => null,
-            'currency' => $currency,
+            'currency' => Monitor::DEFAULT_CURRENCY,
             'check_interval_minutes' => self::CONTRIBUTOR_INTERVAL_MINUTES,
             'next_check_at' => null,
             'active' => false,
@@ -113,7 +110,6 @@ class MonitorContributionController extends Controller
             'create_site' => ['sometimes', 'boolean'],
             'site_name' => ['nullable', 'string', 'max:255'],
             'product_url' => ['required', 'url', 'max:2048'],
-            'currency' => ['required', 'string', 'size:3'],
         ]);
 
         $siteId = $this->resolveStoreId($validated);
@@ -124,10 +120,8 @@ class MonitorContributionController extends Controller
             ]);
         }
 
-        $currency = strtoupper($validated['currency']);
         $this->ensureNoDuplicate(
             monsterId: (int) $validated['monster_id'],
-            currency: $currency,
             canonicalProductUrl: $canonicalProductUrl,
             userId: (int) $monitor->created_by_user_id,
             ignoreMonitorId: (int) $monitor->id,
@@ -138,7 +132,7 @@ class MonitorContributionController extends Controller
             'site_id' => $siteId,
             'product_url' => $validated['product_url'],
             'canonical_product_url' => $canonicalProductUrl,
-            'currency' => $currency,
+            'currency' => Monitor::DEFAULT_CURRENCY,
             'check_interval_minutes' => self::CONTRIBUTOR_INTERVAL_MINUTES,
         ]);
 
@@ -211,7 +205,7 @@ class MonitorContributionController extends Controller
                 'effective_total_cents' => $result->effectiveTotalCents,
                 'can_count' => $result->canCount,
                 'price_per_can_cents' => $result->pricePerCanCents,
-                'currency' => $result->currency,
+                'currency' => (string) ($monitor->currency ?: Monitor::DEFAULT_CURRENCY),
             ],
         ])->save();
 
@@ -329,14 +323,13 @@ class MonitorContributionController extends Controller
 
     private function ensureNoDuplicate(
         int $monsterId,
-        string $currency,
         string $canonicalProductUrl,
         int $userId,
         ?int $ignoreMonitorId = null,
     ): void {
         $duplicateQuery = Monitor::query()
             ->where('monster_id', $monsterId)
-            ->where('currency', strtoupper($currency))
+            ->where('currency', Monitor::DEFAULT_CURRENCY)
             ->where('canonical_product_url', $canonicalProductUrl)
             ->whereIn('submission_status', [
                 Monitor::STATUS_DRAFT,
@@ -350,14 +343,14 @@ class MonitorContributionController extends Controller
 
         if ($duplicateQuery->exists()) {
             throw ValidationException::withMessages([
-                'product_url' => 'A monitor proposal for this monster, currency, and product URL already exists.',
+                'product_url' => 'A monitor proposal for this monster and product URL already exists.',
             ]);
         }
 
         $cooldownExists = Monitor::query()
             ->where('created_by_user_id', $userId)
             ->where('monster_id', $monsterId)
-            ->where('currency', strtoupper($currency))
+            ->where('currency', Monitor::DEFAULT_CURRENCY)
             ->where('canonical_product_url', $canonicalProductUrl)
             ->where('created_at', '>=', now()->subMinutes(10))
             ->when($ignoreMonitorId !== null, fn ($query) => $query->where('id', '!=', $ignoreMonitorId))

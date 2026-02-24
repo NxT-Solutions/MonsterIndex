@@ -99,6 +99,7 @@ class BookmarkletCaptureController extends Controller
 
         $result = $this->priceExtractionService->extract($monitor, allowHeadlessFallback: false);
         $isValidationSuccess = $result->status !== 'failed';
+        $monitorCurrency = (string) ($monitor->currency ?: Monitor::DEFAULT_CURRENCY);
 
         $monitor->forceFill([
             'validation_status' => $isValidationSuccess
@@ -113,7 +114,7 @@ class BookmarkletCaptureController extends Controller
                 'effective_total_cents' => $result->effectiveTotalCents,
                 'can_count' => $result->canCount,
                 'price_per_can_cents' => $result->pricePerCanCents,
-                'currency' => $result->currency,
+                'currency' => $monitorCurrency,
             ],
         ])->save();
 
@@ -139,7 +140,7 @@ class BookmarkletCaptureController extends Controller
                 'effective_total_cents' => $result->effectiveTotalCents,
                 'can_count' => $result->canCount,
                 'price_per_can_cents' => $result->pricePerCanCents,
-                'currency' => $result->currency,
+                'currency' => $monitorCurrency,
                 'availability' => $result->availability,
                 'raw_text' => $result->rawText,
                 'status' => $result->status,
@@ -164,7 +165,7 @@ class BookmarkletCaptureController extends Controller
                         : 'Selectors opgeslagen en validatie bewaard. Dien deze monitor nu in voor adminreview.',
                 ),
                 'status' => $result->status,
-                'currency' => $result->currency,
+                'currency' => $monitorCurrency,
                 'price_cents' => $result->priceCents,
                 'shipping_cents' => $result->shippingCents,
                 'effective_total_cents' => $result->effectiveTotalCents,
