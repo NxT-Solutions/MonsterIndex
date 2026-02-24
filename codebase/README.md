@@ -14,6 +14,7 @@ This folder contains the Laravel + Inertia React application for MonsterIndex.
 - Selector-driven extraction: HTTP parser first, then Playwright headless fallback
 - DDD-style package modules under `app/Packages`
 - SQLite + Redis runtime profile by default
+- Frontend package/runtime tooling uses Bun (`bun install`, `bun run dev`, `bun run build`)
 
 ## Package-Oriented App Structure
 

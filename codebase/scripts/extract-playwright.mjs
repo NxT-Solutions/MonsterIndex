@@ -14,7 +14,7 @@ let playwright;
 try {
   playwright = await import('playwright-core');
 } catch (error) {
-  console.error('playwright-core is not installed. Run: npm install --save-dev playwright-core');
+  console.error('playwright-core is not installed. Run: bun add -d playwright-core');
   process.exit(2);
 }
 
