@@ -29,26 +29,31 @@ class ContributorAlertService
         }
 
         $previousSnapshot = PriceSnapshot::query()
-            ->where('monitor_id', $monitor->id)
-            ->where('id', '!=', $snapshot->id)
-            ->where('currency', $currency)
-            ->whereNotNull('effective_total_cents')
-            ->where('status', '!=', 'failed')
+            ->select('price_snapshots.*')
+            ->join('monitors', 'monitors.id', '=', 'price_snapshots.monitor_id')
+            ->where('monitors.monster_id', $monitor->monster_id)
+            ->where('monitors.submission_status', Monitor::STATUS_APPROVED)
+            ->where('monitors.active', true)
+            ->where('price_snapshots.id', '!=', $snapshot->id)
+            ->where('price_snapshots.currency', $currency)
+            ->whereNotNull('price_snapshots.effective_total_cents')
+            ->where('price_snapshots.status', '!=', 'failed')
             ->where(function ($query) use ($snapshot): void {
                 if ($snapshot->checked_at === null) {
-                    $query->where('id', '<', $snapshot->id);
+                    $query->where('price_snapshots.id', '<', $snapshot->id);
 
                     return;
                 }
 
-                $query->where('checked_at', '<', $snapshot->checked_at)
+                $query->where('price_snapshots.checked_at', '<', $snapshot->checked_at)
                     ->orWhere(function ($inner) use ($snapshot): void {
-                        $inner->where('checked_at', '=', $snapshot->checked_at)
-                            ->where('id', '<', $snapshot->id);
+                        $inner->where('price_snapshots.checked_at', '=', $snapshot->checked_at)
+                            ->where('price_snapshots.id', '<', $snapshot->id);
                     });
             })
-            ->orderByDesc('checked_at')
-            ->orderByDesc('id')
+            ->orderBy('price_snapshots.effective_total_cents')
+            ->orderByDesc('price_snapshots.checked_at')
+            ->orderByDesc('price_snapshots.id')
             ->first();
 
         if (! $previousSnapshot || $previousSnapshot->effective_total_cents === null) {
@@ -119,4 +124,3 @@ class ContributorAlertService
         return sprintf('%s %0.2f', $currency, $cents / 100);
     }
 }
-
