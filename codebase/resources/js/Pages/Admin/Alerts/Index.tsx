@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
-import { Head, router } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { useEffect, useMemo } from 'react';
 
 type AlertRow = {
     id: number;
@@ -27,15 +27,33 @@ type AlertRow = {
     };
 };
 
+type TestMonitorRow = {
+    id: number;
+    label: string;
+};
+
 export default function AlertsIndex({
     alerts,
+    testMonitors,
 }: {
     alerts: {
         data: AlertRow[];
     };
+    testMonitors: TestMonitorRow[];
 }) {
     const { locale, x } = useLocale();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const testForm = useForm({
+        monitor_id: '',
+        title: '',
+        body: '',
+    });
+
+    useEffect(() => {
+        if (testMonitors.length > 0 && testForm.data.monitor_id === '') {
+            testForm.setData('monitor_id', String(testMonitors[0].id));
+        }
+    }, [testForm, testMonitors]);
 
     const stats = useMemo(() => {
         const unread = alerts.data.filter((alert) => !alert.read_at).length;
@@ -106,6 +124,150 @@ export default function AlertsIndex({
                     </section>
 
                     <section className="grid gap-4 xl:grid-cols-[1fr_2fr]">
+                        <Card className="border-white/10 bg-[color:var(--landing-surface)]">
+                            <CardHeader>
+                                <CardTitle className="font-display text-lg text-white">
+                                    {x('Trigger Test Alert', 'Trigger Testmelding')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <p className="text-sm text-white/70">
+                                    {x(
+                                        'Create a manual admin alert from this page. It will also trigger the push pipeline.',
+                                        'Maak hier een handmatige adminmelding. Dit triggert ook de push-pipeline.',
+                                    )}
+                                </p>
+                                <form
+                                    className="space-y-3"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        testForm.post(
+                                            route('admin.alerts.trigger-test'),
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () =>
+                                                    testForm.reset(
+                                                        'title',
+                                                        'body',
+                                                    ),
+                                            },
+                                        );
+                                    }}
+                                >
+                                    <div>
+                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x('Monitor', 'Monitor')}
+                                        </label>
+                                        <select
+                                            className="h-10 w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 text-sm text-white focus:border-[color:var(--landing-accent)] focus:outline-none"
+                                            value={testForm.data.monitor_id}
+                                            onChange={(event) =>
+                                                testForm.setData(
+                                                    'monitor_id',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            disabled={
+                                                testMonitors.length === 0 ||
+                                                testForm.processing
+                                            }
+                                        >
+                                            {testMonitors.length === 0 ? (
+                                                <option value="">
+                                                    {x(
+                                                        'No approved monitors available',
+                                                        'Geen goedgekeurde monitoren beschikbaar',
+                                                    )}
+                                                </option>
+                                            ) : (
+                                                testMonitors.map((monitor) => (
+                                                    <option
+                                                        key={monitor.id}
+                                                        value={monitor.id}
+                                                    >
+                                                        {monitor.label}
+                                                    </option>
+                                                ))
+                                            )}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x(
+                                                'Title (Optional)',
+                                                'Titel (optioneel)',
+                                            )}
+                                        </label>
+                                        <input
+                                            className="h-10 w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none"
+                                            value={testForm.data.title}
+                                            onChange={(event) =>
+                                                testForm.setData(
+                                                    'title',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder={x(
+                                                'Manual test alert',
+                                                'Handmatige testmelding',
+                                            )}
+                                            disabled={testForm.processing}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x(
+                                                'Body (Optional)',
+                                                'Bericht (optioneel)',
+                                            )}
+                                        </label>
+                                        <textarea
+                                            className="min-h-24 w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none"
+                                            value={testForm.data.body}
+                                            onChange={(event) =>
+                                                testForm.setData(
+                                                    'body',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder={x(
+                                                'Use this to verify push delivery and dashboard alert flow.',
+                                                'Gebruik dit om push delivery en de dashboardmelding te testen.',
+                                            )}
+                                            disabled={testForm.processing}
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'default',
+                                                size: 'sm',
+                                            }),
+                                            'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                        )}
+                                        disabled={
+                                            testForm.processing ||
+                                            testMonitors.length === 0
+                                        }
+                                    >
+                                        {testForm.processing
+                                            ? x(
+                                                  'Triggering...',
+                                                  'Wordt getriggerd...',
+                                              )
+                                            : x(
+                                                  'Create Test Alert',
+                                                  'Maak Testmelding',
+                                              )}
+                                    </button>
+                                </form>
+                            </CardContent>
+                        </Card>
+
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">

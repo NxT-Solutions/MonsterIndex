@@ -145,6 +145,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/alerts', [AdminAlertController::class, 'index'])->name('admin.alerts.index');
         Route::post('/admin/alerts/{alert}/read', [AdminAlertController::class, 'markRead'])->name('admin.alerts.mark-read');
         Route::middleware('permission:push.test')->group(function () {
+            Route::post('/admin/alerts/test', [AdminAlertController::class, 'triggerTest'])
+                ->middleware('throttle:push-test')
+                ->name('admin.alerts.trigger-test');
+        });
+        Route::middleware('permission:push.test')->group(function () {
             Route::post('/api/admin/push/test', [AdminPushTestController::class, 'send'])
                 ->middleware('throttle:push-test')
                 ->name('api.admin.push.test');

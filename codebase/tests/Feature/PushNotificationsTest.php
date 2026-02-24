@@ -119,6 +119,49 @@ it('denies push test endpoint to contributors and allows admins', function () {
         ])->assertRedirect(route('admin.dashboard'));
 });
 
+it('allows admins to trigger a test alert from admin alerts and denies contributors', function () {
+    Queue::fake();
+
+    $contributor = User::factory()->create(['role' => User::ROLE_USER]);
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+    PermissionBootstrapper::syncUserRole($contributor, false);
+    PermissionBootstrapper::syncUserRole($admin, true);
+
+    $monster = Monster::factory()->create();
+    $monitor = Monitor::factory()->create([
+        'monster_id' => $monster->id,
+        'site_id' => Site::factory()->create()->id,
+        'submission_status' => Monitor::STATUS_APPROVED,
+        'active' => true,
+        'currency' => 'EUR',
+    ]);
+
+    $this->actingAs($contributor)
+        ->post(route('admin.alerts.trigger-test'), [
+            'monitor_id' => $monitor->id,
+            'title' => 'Forbidden test',
+            'body' => 'forbidden body',
+        ])->assertForbidden();
+
+    $this->actingAs($admin)
+        ->from(route('admin.alerts.index'))
+        ->post(route('admin.alerts.trigger-test'), [
+            'monitor_id' => $monitor->id,
+            'title' => 'Manual test alert',
+            'body' => 'Manual test body',
+        ])->assertRedirect(route('admin.alerts.index'));
+
+    $this->assertDatabaseHas('alerts', [
+        'monster_id' => $monster->id,
+        'monitor_id' => $monitor->id,
+        'type' => 'manual_test',
+        'title' => 'Manual test alert',
+        'body' => 'Manual test body',
+    ]);
+
+    Queue::assertPushed(DispatchAlertPushJob::class);
+});
+
 it('queues push dispatch when an in-app alert is created', function () {
     Queue::fake();
 
@@ -251,4 +294,3 @@ function validSubscriptionPayload(string $endpoint): array
         'expirationTime' => null,
     ];
 }
-
