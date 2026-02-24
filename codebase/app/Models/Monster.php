@@ -45,6 +45,11 @@ class Monster extends Model
         return $this->hasMany(Alert::class);
     }
 
+    public function suggestions(): HasMany
+    {
+        return $this->hasMany(MonsterSuggestion::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

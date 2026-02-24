@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Monster;
 use App\Models\Site;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,7 +22,10 @@ class MonitorFactory extends Factory
         return [
             'monster_id' => Monster::factory(),
             'site_id' => Site::factory(),
+            'created_by_user_id' => User::factory(),
+            'approved_by_user_id' => User::factory(),
             'product_url' => fake()->url(),
+            'canonical_product_url' => fake()->url(),
             'selector_config' => [
                 'price' => [
                     'css' => '.price',
@@ -38,6 +42,15 @@ class MonitorFactory extends Factory
             'check_interval_minutes' => 60,
             'next_check_at' => now(),
             'active' => true,
+            'submission_status' => 'approved',
+            'approved_at' => now(),
+            'rejected_at' => null,
+            'review_note' => null,
+            'validation_status' => 'success',
+            'validation_checked_at' => now(),
+            'validation_result' => [
+                'status' => 'ok',
+            ],
         ];
     }
 }

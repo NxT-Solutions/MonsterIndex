@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -61,5 +62,15 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->hasRole('admin') || $this->role === self::ROLE_ADMIN;
+    }
+
+    public function monitors(): HasMany
+    {
+        return $this->hasMany(Monitor::class, 'created_by_user_id');
+    }
+
+    public function monsterSuggestions(): HasMany
+    {
+        return $this->hasMany(MonsterSuggestion::class);
     }
 }
