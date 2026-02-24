@@ -36,12 +36,20 @@ class ContributorAlertService
             $currency,
             $snapshot,
         );
+        $previousSnapshotForMonitor = $this->previousSuccessfulSnapshotForMonitorBeforeSnapshot(
+            (int) $monitor->id,
+            $currency,
+            $snapshot,
+        );
         $previousBestPerCanCents = $this->previousBestPerCanBeforeSnapshot(
             (int) $monitor->monster_id,
             $currency,
             $snapshot,
         );
         $currentPerCanCents = $this->resolvePerCanCentsFromSnapshot($snapshot);
+        $previousMonitorPerCanCents = $previousSnapshotForMonitor
+            ? $this->resolvePerCanCentsFromSnapshot($previousSnapshotForMonitor)
+            : null;
         $isFirstSuccessfulSnapshotForMonitor = ! $this->monitorHasSuccessfulSnapshotBefore(
             (int) $monitor->id,
             $currency,
@@ -58,7 +66,17 @@ class ContributorAlertService
             && $previousBestPerCanCents !== null
             && $currentPerCanCents < $previousBestPerCanCents;
 
-        if (! $hasTotalDrop && ! $hasPerCanDropFromNewMonitor) {
+        $hasSequentialTotalDrop = $previousSnapshotForMonitor !== null
+            && $previousSnapshotForMonitor->effective_total_cents !== null
+            && $snapshot->effective_total_cents < $previousSnapshotForMonitor->effective_total_cents;
+
+        $hasSequentialPerCanDrop = $previousMonitorPerCanCents !== null
+            && $currentPerCanCents !== null
+            && $currentPerCanCents < $previousMonitorPerCanCents;
+
+        $hasDropFromPreviousSnapshot = $hasSequentialTotalDrop || $hasSequentialPerCanDrop;
+
+        if (! $hasDropFromPreviousSnapshot && ! $hasTotalDrop && ! $hasPerCanDropFromNewMonitor) {
             return;
         }
 
@@ -78,7 +96,35 @@ class ContributorAlertService
         $monsterName = (string) ($monitor->monster?->name ?: 'Monster');
         $siteName = (string) ($monitor->site?->name ?: 'Unknown store');
 
-        if ($hasTotalDrop) {
+        if ($hasDropFromPreviousSnapshot) {
+            if ($hasSequentialPerCanDrop && $previousMonitorPerCanCents !== null) {
+                $title = sprintf(
+                    'Price drop: %s now %s per can',
+                    $monsterName,
+                    $this->formatCents((int) $currentPerCanCents, $currency),
+                );
+                $body = sprintf(
+                    '%s dropped from %s per can to %s per can on %s.',
+                    $monsterName,
+                    $this->formatCents((int) $previousMonitorPerCanCents, $currency),
+                    $this->formatCents((int) $currentPerCanCents, $currency),
+                    $siteName,
+                );
+            } else {
+                $title = sprintf(
+                    'Price drop: %s now %s',
+                    $monsterName,
+                    $this->formatCents((int) $snapshot->effective_total_cents, $currency),
+                );
+                $body = sprintf(
+                    '%s dropped from %s to %s on %s.',
+                    $monsterName,
+                    $this->formatCents((int) $previousSnapshotForMonitor->effective_total_cents, $currency),
+                    $this->formatCents((int) $snapshot->effective_total_cents, $currency),
+                    $siteName,
+                );
+            }
+        } elseif ($hasTotalDrop) {
             $title = sprintf(
                 'Price drop: %s now %s',
                 $monsterName,
@@ -134,8 +180,26 @@ class ContributorAlertService
                 ->whereIn('id', $createdForFollowIds)
                 ->update([
                     'last_alerted_at' => now(),
-                ]);
+            ]);
         }
+    }
+
+    private function previousSuccessfulSnapshotForMonitorBeforeSnapshot(
+        int $monitorId,
+        string $currency,
+        PriceSnapshot $snapshot,
+    ): ?PriceSnapshot {
+        return PriceSnapshot::query()
+            ->where('monitor_id', $monitorId)
+            ->where('currency', $currency)
+            ->where('status', '!=', 'failed')
+            ->whereNotNull('effective_total_cents')
+            ->where(function (Builder $query) use ($snapshot): void {
+                $this->applyBeforeSnapshotConstraint($query, $snapshot, 'id', 'checked_at');
+            })
+            ->orderByDesc('checked_at')
+            ->orderByDesc('id')
+            ->first();
     }
 
     private function previousBestSnapshotByTotalBeforeSnapshot(

@@ -318,6 +318,82 @@ it('creates contributor alerts when a new monitor improves per-can price', funct
     ]);
 });
 
+it('creates contributor alerts when monitor price drops versus its own previous snapshot', function () {
+    $contributor = User::factory()->create(['role' => User::ROLE_USER]);
+    PermissionBootstrapper::syncUserRole($contributor, false);
+
+    $monster = Monster::factory()->create();
+    $siteA = Site::factory()->create();
+    $siteB = Site::factory()->create();
+
+    $bestMonitor = Monitor::factory()->create([
+        'monster_id' => $monster->id,
+        'site_id' => $siteA->id,
+        'submission_status' => Monitor::STATUS_APPROVED,
+        'active' => true,
+        'currency' => 'EUR',
+    ]);
+
+    $droppingMonitor = Monitor::factory()->create([
+        'monster_id' => $monster->id,
+        'site_id' => $siteB->id,
+        'submission_status' => Monitor::STATUS_APPROVED,
+        'active' => true,
+        'currency' => 'EUR',
+    ]);
+
+    MonsterFollow::query()->create([
+        'user_id' => $contributor->id,
+        'monster_id' => $monster->id,
+        'currency' => 'EUR',
+    ]);
+
+    PriceSnapshot::factory()->create([
+        'monitor_id' => $bestMonitor->id,
+        'checked_at' => now()->subMinutes(35),
+        'effective_total_cents' => 1000,
+        'price_cents' => 1000,
+        'shipping_cents' => 0,
+        'currency' => 'EUR',
+        'status' => 'ok',
+    ]);
+
+    PriceSnapshot::factory()->create([
+        'monitor_id' => $droppingMonitor->id,
+        'checked_at' => now()->subMinutes(20),
+        'effective_total_cents' => 1500,
+        'price_cents' => 1500,
+        'shipping_cents' => 0,
+        'currency' => 'EUR',
+        'status' => 'ok',
+    ]);
+
+    $current = PriceSnapshot::factory()->create([
+        'monitor_id' => $droppingMonitor->id,
+        'checked_at' => now(),
+        'effective_total_cents' => 1400,
+        'price_cents' => 1400,
+        'shipping_cents' => 0,
+        'currency' => 'EUR',
+        'status' => 'ok',
+    ]);
+
+    app(ContributorAlertService::class)->handleSnapshot(
+        $current,
+        $droppingMonitor->fresh(['monster', 'site']),
+    );
+
+    $this->assertDatabaseHas('contributor_alerts', [
+        'user_id' => $contributor->id,
+        'monster_id' => $monster->id,
+        'monitor_id' => $droppingMonitor->id,
+        'price_snapshot_id' => $current->id,
+        'type' => 'price_drop',
+        'currency' => 'EUR',
+        'effective_total_cents' => 1400,
+    ]);
+});
+
 it('limits contributor alert inbox to owner and enforces mark-read ownership', function () {
     $owner = User::factory()->create(['role' => User::ROLE_USER]);
     $other = User::factory()->create(['role' => User::ROLE_USER]);
