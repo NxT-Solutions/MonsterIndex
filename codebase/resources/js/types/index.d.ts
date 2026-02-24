@@ -24,4 +24,8 @@ export type PageProps<
     auth: {
         user: User | null;
     };
+    adminReview?: {
+        pending_monitors: number;
+        pending_suggestions: number;
+    } | null;
 };

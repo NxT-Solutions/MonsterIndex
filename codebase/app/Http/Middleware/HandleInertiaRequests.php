@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\MonsterSuggestion;
+use App\Models\Monitor;
 use App\Models\User;
 use App\Support\Authorization\PermissionBootstrapper;
 use Illuminate\Http\Request;
@@ -33,6 +35,7 @@ class HandleInertiaRequests extends Middleware
     {
         $authUser = $request->user();
         $userPayload = null;
+        $adminReview = null;
         if ($authUser instanceof User) {
             PermissionBootstrapper::syncUserFromLegacyRole($authUser);
 
@@ -64,6 +67,21 @@ class HandleInertiaRequests extends Middleware
                     'monsters_manage' => $authUser->can('monsters.manage'),
                 ],
             ];
+
+            if ($authUser->can('monitor.approve') || $authUser->can('monster-suggestion.review')) {
+                $adminReview = [
+                    'pending_monitors' => $authUser->can('monitor.approve')
+                        ? Monitor::query()
+                            ->where('submission_status', Monitor::STATUS_PENDING_REVIEW)
+                            ->count()
+                        : 0,
+                    'pending_suggestions' => $authUser->can('monster-suggestion.review')
+                        ? MonsterSuggestion::query()
+                            ->where('status', MonsterSuggestion::STATUS_PENDING)
+                            ->count()
+                        : 0,
+                ];
+            }
         }
 
         return [
@@ -71,6 +89,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $userPayload,
             ],
+            'adminReview' => $adminReview,
         ];
     }
 }
