@@ -20,6 +20,9 @@ type FollowRow = {
     best_offer: {
         effective_total_cents: number;
         currency: string;
+        can_count: number;
+        price_per_can_cents: number;
+        assumed_single_can: boolean;
         checked_at: string | null;
         site: string | null;
         domain: string | null;
@@ -113,11 +116,23 @@ export default function FollowedMonstersIndex({
 
                                         <div className="mt-2 text-sm text-white/75">
                                             {follow.best_offer ? (
-                                                <p>
-                                                    {x('Best offer', 'Beste deal')}: {follow.best_offer.currency}{' '}
-                                                    {(follow.best_offer.effective_total_cents / 100).toFixed(2)}{' '}
-                                                    ({follow.best_offer.site ?? x('Unknown', 'Onbekend')})
-                                                </p>
+                                                <>
+                                                    <p>
+                                                        {x('Price per can', 'Prijs per blik')}:{' '}
+                                                        {follow.best_offer.currency}{' '}
+                                                        {(follow.best_offer.price_per_can_cents / 100).toFixed(2)}{' '}
+                                                        ({follow.best_offer.can_count}-{x('pack', 'pack')})
+                                                        {follow.best_offer.assumed_single_can
+                                                            ? `, ${x('assumed', 'aangenomen')}`
+                                                            : ''}
+                                                    </p>
+                                                    <p className="mt-1 text-xs text-white/65">
+                                                        {x('Total buy', 'Totale aankoop')}:{' '}
+                                                        {follow.best_offer.currency}{' '}
+                                                        {(follow.best_offer.effective_total_cents / 100).toFixed(2)}{' '}
+                                                        ({follow.best_offer.site ?? x('Unknown', 'Onbekend')})
+                                                    </p>
+                                                </>
                                             ) : (
                                                 <p>{x('No best offer yet.', 'Nog geen beste deal.')}</p>
                                             )}
@@ -177,4 +192,3 @@ export default function FollowedMonstersIndex({
         </AuthenticatedLayout>
     );
 }
-

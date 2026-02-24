@@ -374,3 +374,59 @@ it('hydrates follow state on home and monster detail pages', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('followed_currencies.0', 'EUR'));
 });
+
+it('always exposes price-per-can in followed monster best-offer payload', function () {
+    $contributor = User::factory()->create(['role' => User::ROLE_USER]);
+    PermissionBootstrapper::syncUserRole($contributor, false);
+
+    $monster = Monster::factory()->create([
+        'name' => 'Per Can Fallback Monster',
+        'slug' => 'per-can-fallback-monster',
+    ]);
+    $site = Site::factory()->create([
+        'name' => 'Fallback Store',
+    ]);
+
+    $monitor = Monitor::factory()->create([
+        'monster_id' => $monster->id,
+        'site_id' => $site->id,
+        'submission_status' => Monitor::STATUS_APPROVED,
+        'active' => true,
+        'currency' => 'EUR',
+        'selector_config' => [],
+    ]);
+
+    $snapshot = PriceSnapshot::factory()->create([
+        'monitor_id' => $monitor->id,
+        'currency' => 'EUR',
+        'effective_total_cents' => 249,
+        'price_cents' => 249,
+        'shipping_cents' => 0,
+        'can_count' => null,
+        'price_per_can_cents' => null,
+    ]);
+
+    BestPrice::query()->create([
+        'monster_id' => $monster->id,
+        'snapshot_id' => $snapshot->id,
+        'effective_total_cents' => 249,
+        'currency' => 'EUR',
+        'computed_at' => now(),
+    ]);
+
+    MonsterFollow::query()->create([
+        'user_id' => $contributor->id,
+        'monster_id' => $monster->id,
+        'currency' => 'EUR',
+    ]);
+
+    $this->actingAs($contributor)
+        ->get(route('contribute.follows.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Contribute/Follows/Index')
+            ->where('follows.0.monster.slug', 'per-can-fallback-monster')
+            ->where('follows.0.best_offer.can_count', 1)
+            ->where('follows.0.best_offer.price_per_can_cents', 249)
+            ->where('follows.0.best_offer.assumed_single_can', true));
+});
