@@ -127,6 +127,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/admin/monitors', [AdminMonitorController::class, 'store'])->name('admin.monitors.store');
             Route::put('/admin/monitors/{monitor}', [AdminMonitorController::class, 'update'])->name('admin.monitors.update');
             Route::delete('/admin/monitors/{monitor}', [AdminMonitorController::class, 'destroy'])->name('admin.monitors.destroy');
+            Route::get('/api/admin/monitors/events', [AdminMonitorController::class, 'events'])->name('api.admin.monitors.events');
             Route::post('/api/admin/monitors/{monitor}/run-now', [AdminMonitorController::class, 'runNow'])->name('api.admin.monitors.run-now');
         });
 

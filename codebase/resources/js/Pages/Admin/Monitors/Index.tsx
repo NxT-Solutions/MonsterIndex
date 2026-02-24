@@ -8,7 +8,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
-import { type FormEvent, useMemo, useState } from 'react';
+import { useEffect, type FormEvent, useMemo, useState } from 'react';
 
 const OTHER_STORE_ID = -1;
 
@@ -38,6 +38,13 @@ type MonitorRow = {
         currency: string;
         status: string;
     } | null;
+    latest_run?: {
+        id: number;
+        status: string;
+        started_at: string | null;
+        finished_at: string | null;
+        error_message: string | null;
+    } | null;
 };
 
 type Option = {
@@ -53,6 +60,11 @@ type BookmarkletSession = {
     token: string;
     expires_at: string;
     selector_browser_url: string;
+};
+
+type RunsEventPayload = {
+    running_monitor_ids: number[];
+    timestamp: string;
 };
 
 export default function MonitorsIndex({
@@ -79,6 +91,9 @@ export default function MonitorsIndex({
     const [loadingRun, setLoadingRun] = useState<number | null>(null);
     const [loadingSelector, setLoadingSelector] = useState<number | null>(null);
     const [editingMonitor, setEditingMonitor] = useState<MonitorRow | null>(null);
+    const [runningMonitorIds, setRunningMonitorIds] = useState<number[]>(
+        () => initialRunningMonitorIds(monitors),
+    );
     const editForm = useForm({
         monster_id: 0,
         site_id: 0,
@@ -86,6 +101,10 @@ export default function MonitorsIndex({
         check_interval_minutes: 60,
         active: true,
     });
+    const runningMonitorSet = useMemo(
+        () => new Set(runningMonitorIds),
+        [runningMonitorIds],
+    );
 
     const stats = useMemo(() => {
         const active = monitors.filter((monitor) => monitor.active).length;
@@ -122,8 +141,80 @@ export default function MonitorsIndex({
                 label: x('Last run failed', 'Laatste run mislukt'),
                 value: stats.failedLast,
             },
+            {
+                id: 'running',
+                label: x('Running now', 'Nu bezig'),
+                value: runningMonitorIds.length,
+            },
         ];
-    }, [stats, x]);
+    }, [runningMonitorIds.length, stats, x]);
+
+    useEffect(() => {
+        setRunningMonitorIds(initialRunningMonitorIds(monitors));
+    }, [monitors]);
+
+    useEffect(() => {
+        let source: EventSource | null = null;
+        let reconnectTimer: number | null = null;
+
+        const connect = () => {
+            source = new EventSource(route('api.admin.monitors.events'));
+
+            source.addEventListener('monitor-runs', (event) => {
+                if (!(event instanceof MessageEvent)) {
+                    return;
+                }
+
+                const payload = parseRunsEvent(event.data);
+                if (!payload) {
+                    return;
+                }
+
+                const nextRunning = payload.running_monitor_ids;
+                setRunningMonitorIds((currentRunning) => {
+                    const completed = currentRunning.filter(
+                        (monitorId) => !nextRunning.includes(monitorId),
+                    );
+
+                    if (completed.length > 0) {
+                        router.reload({
+                            only: ['monitors'],
+                        });
+                    }
+
+                    return nextRunning;
+                });
+            });
+
+            source.onerror = () => {
+                if (source) {
+                    source.close();
+                    source = null;
+                }
+
+                if (reconnectTimer !== null) {
+                    return;
+                }
+
+                reconnectTimer = window.setTimeout(() => {
+                    reconnectTimer = null;
+                    connect();
+                }, 1500);
+            };
+        };
+
+        connect();
+
+        return () => {
+            if (reconnectTimer !== null) {
+                window.clearTimeout(reconnectTimer);
+            }
+
+            if (source) {
+                source.close();
+            }
+        };
+    }, []);
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -503,50 +594,75 @@ export default function MonitorsIndex({
                                 </p>
                             )}
 
-                            {monitors.map((monitor) => (
-                                <article
-                                    key={monitor.id}
-                                    className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4"
-                                >
-                                    <div className="flex flex-wrap items-start justify-between gap-3">
-                                        <div className="space-y-1 text-sm text-white/75">
-                                            <p className="font-semibold text-white">
-                                                {monitor.monster.name} @ {monitor.site.name}
-                                            </p>
-                                            <p className="break-all text-white/65">{monitor.product_url}</p>
-                                            <p>
-                                                {x('Interval:', 'Interval:')}{' '}
-                                                {monitor.check_interval_minutes}m •{' '}
-                                                {x('Currency:', 'Valuta:')} EUR •{' '}
-                                                {x('Active:', 'Actief:')}{' '}
-                                                {monitor.active
-                                                    ? x('Yes', 'Ja')
-                                                    : x('No', 'Nee')}
-                                            </p>
-                                            <p>
-                                                {x('Next check:', 'Volgende check:')}{' '}
-                                                {monitor.next_check_at
-                                                    ? new Date(
-                                                          monitor.next_check_at,
-                                                      ).toLocaleString(dateLocale)
-                                                    : x('N/A', 'N/B')}
-                                            </p>
-                                            {monitor.latest_snapshot && (
-                                                <p>
-                                                    {x('Latest:', 'Laatste:')}{' '}
-                                                    {monitor.latest_snapshot
-                                                        .effective_total_cents !==
-                                                    null
-                                                        ? `${monitor.latest_snapshot.currency} ${(monitor.latest_snapshot.effective_total_cents / 100).toFixed(2)}`
-                                                        : x('N/A', 'N/B')}
-                                                    {' • '}
-                                                    {
-                                                        monitor.latest_snapshot
-                                                            .status
-                                                    }
+                            {monitors.map((monitor) => {
+                                const isRunning =
+                                    loadingRun === monitor.id ||
+                                    runningMonitorSet.has(monitor.id);
+
+                                return (
+                                    <article
+                                        key={monitor.id}
+                                        className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4"
+                                    >
+                                        <div className="flex flex-wrap items-start justify-between gap-3">
+                                            <div className="space-y-1 text-sm text-white/75">
+                                                <p className="font-semibold text-white">
+                                                    {monitor.monster.name} @ {monitor.site.name}
                                                 </p>
-                                            )}
-                                        </div>
+                                                <p className="break-all text-white/65">{monitor.product_url}</p>
+                                                <p>
+                                                    {x('Interval:', 'Interval:')}{' '}
+                                                    {monitor.check_interval_minutes}m •{' '}
+                                                    {x('Currency:', 'Valuta:')} EUR •{' '}
+                                                    {x('Active:', 'Actief:')}{' '}
+                                                    {monitor.active
+                                                        ? x('Yes', 'Ja')
+                                                        : x('No', 'Nee')}
+                                                </p>
+                                                <p>
+                                                    {x('Next check:', 'Volgende check:')}{' '}
+                                                    {monitor.next_check_at
+                                                        ? new Date(
+                                                              monitor.next_check_at,
+                                                          ).toLocaleString(dateLocale)
+                                                        : x('N/A', 'N/B')}
+                                                </p>
+                                                {monitor.latest_snapshot && (
+                                                    <p>
+                                                        {x('Latest:', 'Laatste:')}{' '}
+                                                        {monitor.latest_snapshot
+                                                            .effective_total_cents !==
+                                                        null
+                                                            ? `${monitor.latest_snapshot.currency} ${(monitor.latest_snapshot.effective_total_cents / 100).toFixed(2)}`
+                                                            : x('N/A', 'N/B')}
+                                                        {' • '}
+                                                        {
+                                                            monitor.latest_snapshot
+                                                                .status
+                                                        }
+                                                    </p>
+                                                )}
+                                                <div className="mt-2 space-y-1.5">
+                                                    {isRunning ? (
+                                                        <div className="rounded-md border border-orange-300/20 bg-orange-900/20 p-2.5">
+                                                            <div className="flex items-center gap-2 text-xs font-medium text-orange-200">
+                                                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-orange-300 border-t-transparent" />
+                                                                {x(
+                                                                    'Scraping now...',
+                                                                    'Nu aan het scrapen...',
+                                                                )}
+                                                            </div>
+                                                            <div className="mt-1.5 h-1.5 overflow-hidden rounded bg-orange-900/40">
+                                                                <div className="h-full w-1/2 animate-pulse rounded bg-orange-300" />
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-white/55">
+                                                            {x('Idle', 'Inactief')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
 
                                         <div className="flex flex-wrap gap-2">
                                             <button
@@ -588,10 +704,10 @@ export default function MonitorsIndex({
                                                     }),
                                                     'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                                 )}
-                                                disabled={loadingRun === monitor.id}
+                                                disabled={isRunning}
                                                 onClick={() => runNow(monitor)}
                                             >
-                                                {loadingRun === monitor.id
+                                                {isRunning
                                                     ? x('Running...', 'Draait...')
                                                     : x('Run Now', 'Nu Draaien')}
                                             </button>
@@ -639,7 +755,8 @@ export default function MonitorsIndex({
                                         </div>
                                     </div>
                                 </article>
-                            ))}
+                                );
+                            })}
                         </CardContent>
                     </Card>
                 </div>
@@ -802,4 +919,43 @@ function hasPriceSelectorConfig(selectorConfig: Record<string, unknown> | null):
     return (price?.parts ?? []).some(
         (part) => (part.css ?? '').trim() !== '' || (part.xpath ?? '').trim() !== '',
     );
+}
+
+function isActiveRunStatus(status?: string | null): boolean {
+    return status === 'queued' || status === 'running';
+}
+
+function initialRunningMonitorIds(records: MonitorRow[]): number[] {
+    return records
+        .filter(
+            (record) =>
+                isActiveRunStatus(record.latest_run?.status) &&
+                record.latest_run?.finished_at === null,
+        )
+        .map((record) => record.id)
+        .sort((a, b) => a - b);
+}
+
+function parseRunsEvent(rawData: string): RunsEventPayload | null {
+    try {
+        const payload = JSON.parse(rawData) as Partial<RunsEventPayload>;
+        if (!Array.isArray(payload.running_monitor_ids)) {
+            return null;
+        }
+
+        const runningMonitorIds = payload.running_monitor_ids
+            .map((value) => Number(value))
+            .filter((value) => Number.isInteger(value) && value > 0)
+            .sort((a, b) => a - b);
+
+        return {
+            running_monitor_ids: Array.from(new Set(runningMonitorIds)),
+            timestamp:
+                typeof payload.timestamp === 'string'
+                    ? payload.timestamp
+                    : new Date().toISOString(),
+        };
+    } catch {
+        return null;
+    }
 }

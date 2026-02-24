@@ -17,6 +17,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Packages\Monitoring\Jobs\CheckMonitorPriceJob;
 use Packages\Monitoring\Services\BestPriceProjector;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MonitorController extends Controller
 {
@@ -27,7 +28,12 @@ class MonitorController extends Controller
     public function index(): Response
     {
         $monitors = Monitor::query()
-            ->with(['monster:id,name,slug', 'site:id,name,domain', 'latestSnapshot'])
+            ->with([
+                'monster:id,name,slug',
+                'site:id,name,domain',
+                'latestSnapshot',
+                'latestRun',
+            ])
             ->orderByDesc('id')
             ->get();
 
@@ -162,6 +168,57 @@ class MonitorController extends Controller
         ]);
     }
 
+    public function events(Request $request): StreamedResponse
+    {
+        $monitorIds = Monitor::query()
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
+        $singlePass = $request->boolean('once');
+
+        return response()->stream(function () use ($monitorIds, $singlePass): void {
+            $startedAt = microtime(true);
+            $lastSentAt = 0.0;
+            $lastRunningIds = null;
+
+            while (! connection_aborted() && (microtime(true) - $startedAt) < 25) {
+                $runningMonitorIds = $this->resolveRunningMonitorIds($monitorIds);
+                $shouldSend = $lastRunningIds === null
+                    || $runningMonitorIds !== $lastRunningIds
+                    || (microtime(true) - $lastSentAt) >= 8;
+
+                if ($shouldSend) {
+                    $payload = [
+                        'running_monitor_ids' => $runningMonitorIds,
+                        'timestamp' => now()->toIso8601String(),
+                    ];
+
+                    echo "event: monitor-runs\n";
+                    echo 'data: '.json_encode($payload, JSON_THROW_ON_ERROR)."\n\n";
+
+                    @ob_flush();
+                    @flush();
+
+                    $lastRunningIds = $runningMonitorIds;
+                    $lastSentAt = microtime(true);
+
+                    if ($singlePass) {
+                        break;
+                    }
+                }
+
+                usleep(1000000);
+            }
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache, no-transform',
+            'Connection' => 'keep-alive',
+            'X-Accel-Buffering' => 'no',
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -255,5 +312,27 @@ class MonitorController extends Controller
         ]);
 
         CheckMonitorPriceJob::dispatch($monitor->id, $triggeredBy, $run->id);
+    }
+
+    /**
+     * @param  list<int>  $monitorIds
+     * @return list<int>
+     */
+    private function resolveRunningMonitorIds(array $monitorIds): array
+    {
+        if ($monitorIds === []) {
+            return [];
+        }
+
+        return MonitorRun::query()
+            ->whereIn('monitor_id', $monitorIds)
+            ->whereIn('status', ['queued', 'running'])
+            ->whereNull('finished_at')
+            ->pluck('monitor_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
     }
 }

@@ -69,3 +69,32 @@ it('streams running monitor ids for admin monster records', function () {
     expect($content)->toContain('event: monitor-runs')
         ->toContain('"running_monitor_ids":['.$monitor->id.']');
 });
+
+it('streams running monitor ids for admin monitor index page', function () {
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $monitor = Monitor::factory()->create();
+
+    MonitorRun::query()->create([
+        'monitor_id' => $monitor->id,
+        'started_at' => now(),
+        'status' => 'running',
+        'attempt' => 1,
+    ]);
+
+    $response = $this->actingAs($admin)->get(
+        route('api.admin.monitors.events', [
+            'once' => 1,
+        ]),
+    );
+
+    $response->assertOk();
+    expect((string) $response->headers->get('Content-Type'))
+        ->toContain('text/event-stream');
+
+    $content = $response->streamedContent();
+    expect($content)->toContain('event: monitor-runs')
+        ->toContain('"running_monitor_ids":['.$monitor->id.']');
+});
