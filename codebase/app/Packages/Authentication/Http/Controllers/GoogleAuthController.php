@@ -4,6 +4,7 @@ namespace Packages\Authentication\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Authorization\PermissionBootstrapper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -50,6 +51,11 @@ class GoogleAuthController extends Controller
         } else {
             $user = User::query()->create($attributes);
         }
+
+        PermissionBootstrapper::syncUserRole(
+            $user,
+            $this->resolveRole($email) === User::ROLE_ADMIN,
+        );
 
         Auth::login($user, true);
         request()->session()->regenerate();

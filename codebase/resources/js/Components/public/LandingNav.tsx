@@ -145,7 +145,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                 >
                                     {x('Dashboard', 'Dashboard')}
                                 </Link>
-                                {auth.user.role === 'admin' && (
+                                {auth.user.can.admin_access && (
                                     <Link
                                         href={route('admin.dashboard')}
                                         className={cn(
@@ -214,7 +214,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                     >
                                         {x('Dashboard', 'Dashboard')}
                                     </Link>
-                                    {auth.user.role === 'admin' && (
+                                    {auth.user.can.admin_access && (
                                         <Link
                                             href={route('admin.dashboard')}
                                             onClick={() => setMobileOpen(false)}

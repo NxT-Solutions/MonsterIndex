@@ -37,9 +37,9 @@ export default function Dashboard({ auth }: PageProps) {
                         <KpiCard
                             label={x('Role', 'Rol')}
                             value={
-                                auth.user?.role === 'admin'
+                                auth.user?.can.admin_access
                                     ? x('Admin', 'Admin')
-                                    : x('User', 'Gebruiker')
+                                    : x('Contributor', 'Bijdrager')
                             }
                             hint={x(
                                 'Access level in this workspace',
@@ -78,7 +78,7 @@ export default function Dashboard({ auth }: PageProps) {
                             </CardContent>
                         </Card>
 
-                        {auth.user?.role === 'admin' && (
+                        {auth.user?.can.admin_access && (
                             <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                                 <CardHeader>
                                     <CardTitle className="font-display text-lg text-white">

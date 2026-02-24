@@ -24,7 +24,7 @@ export default function AuthenticatedLayout({
         return null;
     }
 
-    const isAdmin = user.role === 'admin';
+    const isAdmin = user.can.admin_access;
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const navItems = useMemo<NavItem[]>(() => {

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Monster;
 use App\Models\Site;
 use App\Models\User;
+use App\Support\Authorization\PermissionBootstrapper;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -17,14 +18,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
+        $admin = User::factory()->create([
             'name' => 'Admin User',
             'email' => 'you@example.com',
             'google_id' => 'seed-admin-google-id',
             'role' => 'admin',
         ]);
 
-        User::factory()->count(2)->create();
+        $contributors = User::factory()->count(2)->create();
+
+        PermissionBootstrapper::syncUserRole($admin, true);
+        foreach ($contributors as $contributor) {
+            PermissionBootstrapper::syncUserRole($contributor, false);
+        }
 
         Monster::query()->insert([
             [
