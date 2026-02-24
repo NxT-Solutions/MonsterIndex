@@ -36,6 +36,22 @@ export default function AuthenticatedLayout({
             },
         ];
 
+        if (user.can.monitor_submit) {
+            items.push({
+                label: x('My Monitors', 'Mijn Monitoren'),
+                href: route('contribute.monitors.index'),
+                active: route().current('contribute.monitors.*'),
+            });
+        }
+
+        if (user.can.monster_suggestion_submit) {
+            items.push({
+                label: x('Suggestions', 'Suggesties'),
+                href: route('contribute.suggestions.index'),
+                active: route().current('contribute.suggestions.*'),
+            });
+        }
+
         if (isAdmin) {
             items.push(
                 {
@@ -64,10 +80,26 @@ export default function AuthenticatedLayout({
                     active: route().current('admin.alerts.*'),
                 },
             );
+
+            if (user.can.monitor_review) {
+                items.push({
+                    label: x('Review Monitors', 'Review Monitoren'),
+                    href: route('admin.review.monitors.index'),
+                    active: route().current('admin.review.monitors.*'),
+                });
+            }
+
+            if (user.can.monster_suggestion_review) {
+                items.push({
+                    label: x('Review Suggestions', 'Review Suggesties'),
+                    href: route('admin.review.suggestions.index'),
+                    active: route().current('admin.review.suggestions.*'),
+                });
+            }
         }
 
         return items;
-    }, [isAdmin, x]);
+    }, [isAdmin, user.can.monitor_submit, user.can.monster_suggestion_submit, user.can.monitor_review, user.can.monster_suggestion_review, x]);
 
     return (
         <div className="admin-root min-h-screen bg-[color:var(--landing-bg)] text-white">

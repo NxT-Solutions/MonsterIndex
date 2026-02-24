@@ -7,6 +7,7 @@ use App\Models\Alert;
 use App\Models\Monitor;
 use App\Models\MonitorRun;
 use App\Models\Monster;
+use App\Models\MonsterSuggestion;
 use App\Models\PriceSnapshot;
 use App\Models\Site;
 use Illuminate\Support\Carbon;
@@ -112,6 +113,9 @@ class DashboardController extends Controller
                 'sites_total' => Site::query()->count(),
                 'monitors_total' => $totalMonitors,
                 'monitors_active' => Monitor::query()->where('active', true)->count(),
+                'monitors_pending_review' => Monitor::query()
+                    ->where('submission_status', Monitor::STATUS_PENDING_REVIEW)
+                    ->count(),
                 'monitors_with_selector' => $monitorsWithSelector,
                 'selector_coverage_percent' => $totalMonitors > 0
                     ? (int) round(($monitorsWithSelector / $totalMonitors) * 100)
@@ -122,6 +126,9 @@ class DashboardController extends Controller
                     ? (int) round((($snapshots24h - $failedSnapshots24h) / $snapshots24h) * 100)
                     : 0,
                 'alerts_unread' => Alert::query()->whereNull('read_at')->count(),
+                'monster_suggestions_pending' => MonsterSuggestion::query()
+                    ->where('status', MonsterSuggestion::STATUS_PENDING)
+                    ->count(),
                 'running_runs' => MonitorRun::query()
                     ->whereIn('status', ['queued', 'running'])
                     ->whereNull('finished_at')

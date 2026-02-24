@@ -18,6 +18,7 @@ class DispatchDueMonitorsJob implements ShouldQueue
     {
         $dueMonitorIds = Monitor::query()
             ->where('active', true)
+            ->where('submission_status', Monitor::STATUS_APPROVED)
             ->whereNotNull('next_check_at')
             ->where('next_check_at', '<=', now())
             ->orderBy('next_check_at')
@@ -28,7 +29,7 @@ class DispatchDueMonitorsJob implements ShouldQueue
             DB::transaction(function () use ($monitorId): void {
                 $monitor = Monitor::query()->lockForUpdate()->find($monitorId);
 
-                if (! $monitor || ! $monitor->active || ! $monitor->next_check_at || $monitor->next_check_at->isFuture()) {
+                if (! $monitor || ! $monitor->canRunScheduledChecks() || ! $monitor->next_check_at || $monitor->next_check_at->isFuture()) {
                     return;
                 }
 

@@ -1,8 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use Packages\Authentication\Http\Controllers\AuthenticatedSessionController;
 use Packages\Authentication\Http\Controllers\GoogleAuthController;
-use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])

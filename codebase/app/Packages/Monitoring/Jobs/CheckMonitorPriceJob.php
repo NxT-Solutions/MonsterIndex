@@ -5,11 +5,11 @@ namespace Packages\Monitoring\Jobs;
 use App\Models\Monitor;
 use App\Models\MonitorRun;
 use App\Models\PriceSnapshot;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
 use Packages\Monitoring\Services\BestPriceProjector;
 use Packages\Monitoring\Services\DomainRateLimiter;
 use Packages\PriceExtraction\Services\PriceExtractionService;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
 use Throwable;
 
 class CheckMonitorPriceJob implements ShouldQueue
@@ -47,7 +47,7 @@ class CheckMonitorPriceJob implements ShouldQueue
             ->with(['site', 'monster'])
             ->find($this->monitorId);
 
-        if (! $monitor || ! $monitor->active) {
+        if (! $monitor || ! $monitor->canRunScheduledChecks()) {
             return;
         }
 

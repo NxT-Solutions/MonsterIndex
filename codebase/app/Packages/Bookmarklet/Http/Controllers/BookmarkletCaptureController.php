@@ -3,14 +3,16 @@
 namespace Packages\Bookmarklet\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Monitor;
 use App\Models\PriceSnapshot;
-use Packages\Bookmarklet\Services\BookmarkletSessionService;
-use Packages\Monitoring\Services\BestPriceProjector;
-use Packages\PriceExtraction\Services\PriceExtractionService;
+use App\Support\UrlCanonicalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
+use Packages\Bookmarklet\Services\BookmarkletSessionService;
+use Packages\Monitoring\Services\BestPriceProjector;
+use Packages\PriceExtraction\Services\PriceExtractionService;
 
 class BookmarkletCaptureController extends Controller
 {
@@ -89,9 +91,31 @@ class BookmarkletCaptureController extends Controller
 
         $monitor->selector_config = $selectorConfig;
         $monitor->product_url = $validated['page_url'];
+        $monitor->canonical_product_url = UrlCanonicalizer::canonicalize($validated['page_url']);
+        $monitor->validation_status = Monitor::VALIDATION_PENDING;
+        $monitor->validation_checked_at = null;
+        $monitor->validation_result = null;
         $monitor->save();
 
         $result = $this->priceExtractionService->extract($monitor, allowHeadlessFallback: false);
+        $isValidationSuccess = $result->status !== 'failed';
+
+        $monitor->forceFill([
+            'validation_status' => $isValidationSuccess
+                ? Monitor::VALIDATION_SUCCESS
+                : Monitor::VALIDATION_FAILED,
+            'validation_checked_at' => now(),
+            'validation_result' => [
+                'status' => $result->status,
+                'error_code' => $result->errorCode,
+                'price_cents' => $result->priceCents,
+                'shipping_cents' => $result->shippingCents,
+                'effective_total_cents' => $result->effectiveTotalCents,
+                'can_count' => $result->canCount,
+                'price_per_can_cents' => $result->pricePerCanCents,
+                'currency' => $result->currency,
+            ],
+        ])->save();
 
         if ($result->status === 'failed') {
             return $this->errorResponse(
@@ -106,29 +130,39 @@ class BookmarkletCaptureController extends Controller
             );
         }
 
-        $snapshot = PriceSnapshot::query()->create([
-            'monitor_id' => $monitor->id,
-            'checked_at' => now(),
-            'price_cents' => $result->priceCents,
-            'shipping_cents' => $result->shippingCents,
-            'effective_total_cents' => $result->effectiveTotalCents,
-            'can_count' => $result->canCount,
-            'price_per_can_cents' => $result->pricePerCanCents,
-            'currency' => $result->currency,
-            'availability' => $result->availability,
-            'raw_text' => $result->rawText,
-            'status' => $result->status,
-            'error_code' => $result->errorCode,
-        ]);
+        if ($monitor->submission_status === Monitor::STATUS_APPROVED) {
+            $snapshot = PriceSnapshot::query()->create([
+                'monitor_id' => $monitor->id,
+                'checked_at' => now(),
+                'price_cents' => $result->priceCents,
+                'shipping_cents' => $result->shippingCents,
+                'effective_total_cents' => $result->effectiveTotalCents,
+                'can_count' => $result->canCount,
+                'price_per_can_cents' => $result->pricePerCanCents,
+                'currency' => $result->currency,
+                'availability' => $result->availability,
+                'raw_text' => $result->rawText,
+                'status' => $result->status,
+                'error_code' => $result->errorCode,
+            ]);
 
-        $this->bestPriceProjector->projectFromSnapshot($snapshot);
+            $this->bestPriceProjector->projectFromSnapshot($snapshot);
+        }
 
         $this->bookmarkletSessionService->markUsed($session);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'ok' => true,
-                'message' => $this->translate($lang, 'Selectors captured and validated.', 'Selectors opgeslagen en gevalideerd.'),
+                'message' => $this->translate(
+                    $lang,
+                    $monitor->submission_status === Monitor::STATUS_APPROVED
+                        ? 'Selectors captured and validated.'
+                        : 'Selectors captured and validation stored. Submit this monitor for admin review.',
+                    $monitor->submission_status === Monitor::STATUS_APPROVED
+                        ? 'Selectors opgeslagen en gevalideerd.'
+                        : 'Selectors opgeslagen en validatie bewaard. Dien deze monitor nu in voor adminreview.',
+                ),
                 'status' => $result->status,
                 'currency' => $result->currency,
                 'price_cents' => $result->priceCents,

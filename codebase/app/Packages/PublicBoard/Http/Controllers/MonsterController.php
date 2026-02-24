@@ -3,6 +3,7 @@
 namespace Packages\PublicBoard\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Monitor;
 use App\Models\Monster;
 use App\Models\PriceSnapshot;
 use Inertia\Inertia;
@@ -13,7 +14,10 @@ class MonsterController extends Controller
     public function show(Monster $monster): Response
     {
         $snapshots = PriceSnapshot::query()
-            ->whereHas('monitor', fn ($query) => $query->where('monster_id', $monster->id))
+            ->whereHas('monitor', fn ($query) => $query
+                ->where('monster_id', $monster->id)
+                ->where('submission_status', Monitor::STATUS_APPROVED)
+                ->where('active', true))
             ->with(['monitor:id,site_id,product_url,selector_config', 'monitor.site:id,name,domain'])
             ->latest('checked_at')
             ->limit(200)

@@ -4,6 +4,7 @@ namespace Packages\Monitoring\Services;
 
 use App\Models\Alert;
 use App\Models\BestPrice;
+use App\Models\Monitor;
 use App\Models\PriceSnapshot;
 
 class BestPriceProjector
@@ -17,29 +18,24 @@ class BestPriceProjector
         $snapshot->loadMissing('monitor.monster', 'monitor.site');
 
         $monitor = $snapshot->monitor;
+        if (! $monitor || $monitor->submission_status !== Monitor::STATUS_APPROVED || ! $monitor->active) {
+            return;
+        }
+
         $monster = $monitor->monster;
 
-        $current = BestPrice::query()
+        $previous = BestPrice::query()
             ->where('monster_id', $monster->id)
             ->where('currency', $snapshot->currency)
             ->first();
 
-        $isImprovement = $current !== null
-            && $snapshot->effective_total_cents < $current->effective_total_cents;
-
-        BestPrice::query()->updateOrCreate(
-            [
-                'monster_id' => $monster->id,
-                'currency' => $snapshot->currency,
-            ],
-            [
-                'snapshot_id' => $snapshot->id,
-                'effective_total_cents' => $snapshot->effective_total_cents,
-                'computed_at' => now(),
-            ],
-        );
-
-        if ($isImprovement) {
+        $current = $this->recomputeForMonsterCurrency($monster->id, $snapshot->currency);
+        if (
+            $previous !== null
+            && $current !== null
+            && $current->snapshot_id === $snapshot->id
+            && $current->effective_total_cents < $previous->effective_total_cents
+        ) {
             Alert::query()->create([
                 'monster_id' => $monster->id,
                 'monitor_id' => $monitor->id,
@@ -53,6 +49,43 @@ class BestPriceProjector
                 ),
             ]);
         }
+    }
+
+    public function recomputeForMonsterCurrency(int $monsterId, string $currency): ?BestPrice
+    {
+        $bestSnapshot = PriceSnapshot::query()
+            ->select('price_snapshots.*')
+            ->join('monitors', 'monitors.id', '=', 'price_snapshots.monitor_id')
+            ->where('monitors.monster_id', $monsterId)
+            ->where('monitors.submission_status', Monitor::STATUS_APPROVED)
+            ->where('monitors.active', true)
+            ->where('price_snapshots.currency', $currency)
+            ->where('price_snapshots.status', '!=', 'failed')
+            ->whereNotNull('price_snapshots.effective_total_cents')
+            ->orderBy('price_snapshots.effective_total_cents')
+            ->orderByDesc('price_snapshots.checked_at')
+            ->first();
+
+        if (! $bestSnapshot) {
+            BestPrice::query()
+                ->where('monster_id', $monsterId)
+                ->where('currency', $currency)
+                ->delete();
+
+            return null;
+        }
+
+        return BestPrice::query()->updateOrCreate(
+            [
+                'monster_id' => $monsterId,
+                'currency' => $currency,
+            ],
+            [
+                'snapshot_id' => $bestSnapshot->id,
+                'effective_total_cents' => (int) $bestSnapshot->effective_total_cents,
+                'computed_at' => now(),
+            ],
+        );
     }
 
     private function formatCents(int $cents, string $currency): string

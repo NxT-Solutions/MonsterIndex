@@ -13,12 +13,14 @@ type DashboardStats = {
     sites_total: number;
     monitors_total: number;
     monitors_active: number;
+    monitors_pending_review: number;
     monitors_with_selector: number;
     selector_coverage_percent: number;
     snapshots_24h: number;
     snapshots_failed_24h: number;
     snapshot_success_percent_24h: number;
     alerts_unread: number;
+    monster_suggestions_pending: number;
     running_runs: number;
 };
 
@@ -125,9 +127,27 @@ export default function AdminDashboard({
                         >
                             {x('Review Alerts', 'Bekijk Meldingen')}
                         </Link>
+                        <Link
+                            href={route('admin.review.monitors.index')}
+                            className={cn(
+                                buttonVariants({ variant: 'secondary', size: 'sm' }),
+                                'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                            )}
+                        >
+                            {x('Review Monitor Queue', 'Review Monitorwachtrij')}
+                        </Link>
+                        <Link
+                            href={route('admin.review.suggestions.index')}
+                            className={cn(
+                                buttonVariants({ variant: 'secondary', size: 'sm' }),
+                                'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                            )}
+                        >
+                            {x('Review Suggestions', 'Review Suggesties')}
+                        </Link>
                     </section>
 
-                    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
                         <KpiCard
                             label={x('Tracked Monsters', 'Gevolgde Monsters')}
                             value={stats.monsters_total}
@@ -151,6 +171,18 @@ export default function AdminDashboard({
                             value={stats.alerts_unread}
                             hint={`${stats.running_runs} ${x('runs in progress', 'runs bezig')}`}
                             accent="orange"
+                        />
+                        <KpiCard
+                            label={x('Pending Monitors', 'Wachtende Monitoren')}
+                            value={stats.monitors_pending_review}
+                            hint={x('Awaiting moderation', 'Wachten op moderatie')}
+                            accent="orange"
+                        />
+                        <KpiCard
+                            label={x('Pending Suggestions', 'Wachtende Suggesties')}
+                            value={stats.monster_suggestions_pending}
+                            hint={x('Community backlog', 'Community backlog')}
+                            accent="cyan"
                         />
                     </section>
 

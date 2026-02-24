@@ -4,6 +4,7 @@ namespace Packages\PublicBoard\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\BestPrice;
+use App\Models\Monitor;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,6 +14,10 @@ class HomeController extends Controller
     public function index(): Response
     {
         $bestPrices = BestPrice::query()
+            ->whereHas('snapshot.monitor', function ($query): void {
+                $query->where('submission_status', Monitor::STATUS_APPROVED)
+                    ->where('active', true);
+            })
             ->with([
                 'monster:id,name,slug,size_label',
                 'snapshot:id,monitor_id,checked_at,price_cents,shipping_cents,effective_total_cents,can_count,price_per_can_cents,currency,status',

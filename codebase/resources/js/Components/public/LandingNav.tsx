@@ -145,6 +145,20 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                 >
                                     {x('Dashboard', 'Dashboard')}
                                 </Link>
+                                {auth.user.can.monitor_submit && (
+                                    <Link
+                                        href={route('contribute.monitors.index')}
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'secondary',
+                                                size: 'sm',
+                                            }),
+                                            'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                        )}
+                                    >
+                                        {x('My Monitors', 'Mijn Monitoren')}
+                                    </Link>
+                                )}
                                 {auth.user.can.admin_access && (
                                     <Link
                                         href={route('admin.dashboard')}
@@ -214,6 +228,21 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                     >
                                         {x('Dashboard', 'Dashboard')}
                                     </Link>
+                                    {auth.user.can.monitor_submit && (
+                                        <Link
+                                            href={route('contribute.monitors.index')}
+                                            onClick={() => setMobileOpen(false)}
+                                            className={cn(
+                                                buttonVariants({
+                                                    variant: 'secondary',
+                                                    size: 'sm',
+                                                }),
+                                                'w-full justify-start border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                            )}
+                                        >
+                                            {x('My Monitors', 'Mijn Monitoren')}
+                                        </Link>
+                                    )}
                                     {auth.user.can.admin_access && (
                                         <Link
                                             href={route('admin.dashboard')}

@@ -3,11 +3,11 @@
 namespace Packages\Admin\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Packages\Monitoring\Jobs\CheckMonitorPriceJob;
 use App\Models\Monitor;
 use App\Models\MonitorRun;
 use App\Models\Monster;
 use App\Models\Site;
+use App\Support\UrlCanonicalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,9 +15,15 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Packages\Monitoring\Jobs\CheckMonitorPriceJob;
+use Packages\Monitoring\Services\BestPriceProjector;
 
 class MonitorController extends Controller
 {
+    public function __construct(
+        private readonly BestPriceProjector $bestPriceProjector,
+    ) {}
+
     public function index(): Response
     {
         $monitors = Monitor::query()
@@ -36,15 +42,29 @@ class MonitorController extends Controller
     {
         $validated = $this->validateStorePayload($request);
         $siteId = $this->resolveStoreId($validated);
+        $canonicalProductUrl = UrlCanonicalizer::canonicalize($validated['product_url']);
+        if (! $canonicalProductUrl) {
+            throw ValidationException::withMessages([
+                'product_url' => 'Could not normalize the product URL.',
+            ]);
+        }
 
         $monitor = Monitor::query()->create([
             'monster_id' => $validated['monster_id'],
             'site_id' => $siteId,
+            'created_by_user_id' => $request->user()?->id,
+            'approved_by_user_id' => $request->user()?->id,
             'product_url' => $validated['product_url'],
+            'canonical_product_url' => $canonicalProductUrl,
             'currency' => strtoupper($validated['currency']),
             'check_interval_minutes' => (int) $validated['check_interval_minutes'],
             'next_check_at' => now(),
             'active' => $validated['active'] ?? true,
+            'submission_status' => Monitor::STATUS_APPROVED,
+            'approved_at' => now(),
+            'validation_status' => Monitor::VALIDATION_SUCCESS,
+            'validation_checked_at' => now(),
+            'validation_result' => ['status' => 'admin_seeded'],
         ]);
 
         if (! $monitor->next_check_at) {
@@ -57,15 +77,27 @@ class MonitorController extends Controller
 
     public function update(Request $request, Monitor $monitor): RedirectResponse
     {
+        $oldMonsterId = (int) $monitor->monster_id;
+        $oldCurrency = (string) $monitor->currency;
+        $wasPubliclyVisible = $monitor->canRunScheduledChecks();
+
         $validated = $this->validateUpdatePayload($request);
+        $canonicalProductUrl = UrlCanonicalizer::canonicalize($validated['product_url']);
+        if (! $canonicalProductUrl) {
+            throw ValidationException::withMessages([
+                'product_url' => 'Could not normalize the product URL.',
+            ]);
+        }
 
         $monitor->fill([
             'monster_id' => $validated['monster_id'],
             'site_id' => $validated['site_id'],
             'product_url' => $validated['product_url'],
+            'canonical_product_url' => $canonicalProductUrl,
             'currency' => strtoupper($validated['currency']),
             'check_interval_minutes' => (int) $validated['check_interval_minutes'],
             'active' => $validated['active'],
+            'submission_status' => Monitor::STATUS_APPROVED,
         ]);
 
         if ($monitor->next_check_at === null) {
@@ -74,18 +106,39 @@ class MonitorController extends Controller
 
         $monitor->save();
 
+        if ($wasPubliclyVisible && (! $monitor->canRunScheduledChecks() || $oldMonsterId !== (int) $monitor->monster_id || $oldCurrency !== (string) $monitor->currency)) {
+            $this->bestPriceProjector->recomputeForMonsterCurrency($oldMonsterId, $oldCurrency);
+        }
+        if ($monitor->canRunScheduledChecks()) {
+            $this->bestPriceProjector->recomputeForMonsterCurrency((int) $monitor->monster_id, (string) $monitor->currency);
+        }
+
         return back()->with('success', 'Monitor updated.');
     }
 
     public function destroy(Monitor $monitor): RedirectResponse
     {
+        $wasPubliclyVisible = $monitor->canRunScheduledChecks();
+        $monsterId = (int) $monitor->monster_id;
+        $currency = (string) $monitor->currency;
         $monitor->delete();
+
+        if ($wasPubliclyVisible) {
+            $this->bestPriceProjector->recomputeForMonsterCurrency($monsterId, $currency);
+        }
 
         return back()->with('success', 'Monitor deleted.');
     }
 
     public function runNow(Monitor $monitor): JsonResponse
     {
+        if (! $monitor->canRunScheduledChecks()) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Only approved and active monitors can be executed.',
+            ], 422);
+        }
+
         $run = MonitorRun::query()->create([
             'monitor_id' => $monitor->id,
             'started_at' => now(),

@@ -3,10 +3,11 @@
 namespace Packages\Admin\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\MonitorRun;
 use App\Models\Monitor;
+use App\Models\MonitorRun;
 use App\Models\Monster;
 use App\Models\Site;
+use App\Support\UrlCanonicalizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -138,12 +139,18 @@ class MonsterController extends Controller
         $monitor = Monitor::query()->create([
             'monster_id' => $monster->id,
             'site_id' => $site->id,
+            'created_by_user_id' => $request->user()?->id,
+            'approved_by_user_id' => $request->user()?->id,
             'product_url' => $validated['product_url'],
+            'canonical_product_url' => UrlCanonicalizer::canonicalize($validated['product_url']),
             'selector_config' => null,
             'currency' => strtoupper((string) ($validated['currency'] ?? 'EUR')),
             'check_interval_minutes' => (int) ($validated['check_interval_minutes'] ?? 60),
             'next_check_at' => now(),
             'active' => $validated['active'] ?? true,
+            'submission_status' => Monitor::STATUS_APPROVED,
+            'approved_at' => now(),
+            'validation_status' => Monitor::VALIDATION_PENDING,
         ]);
 
         if (! $monitor->next_check_at) {

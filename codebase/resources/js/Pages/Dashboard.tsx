@@ -75,6 +75,36 @@ export default function Dashboard({ auth }: PageProps) {
                                 >
                                     {x('Open Public Board', 'Open Publiek Bord')}
                                 </Link>
+
+                                {auth.user?.can.monitor_submit && (
+                                    <Link
+                                        href={route('contribute.monitors.index')}
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'secondary',
+                                                size: 'sm',
+                                            }),
+                                            'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                        )}
+                                    >
+                                        {x('Manage My Monitors', 'Beheer Mijn Monitoren')}
+                                    </Link>
+                                )}
+
+                                {auth.user?.can.monster_suggestion_submit && (
+                                    <Link
+                                        href={route('contribute.suggestions.index')}
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'secondary',
+                                                size: 'sm',
+                                            }),
+                                            'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                        )}
+                                    >
+                                        {x('Suggest Monster', 'Stel Monster Voor')}
+                                    </Link>
+                                )}
                             </CardContent>
                         </Card>
 
