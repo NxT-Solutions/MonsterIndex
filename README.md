@@ -63,4 +63,6 @@ Available:
 - `dartisan` run artisan inside php container
 - `dcomposer` run composer inside php container
 - `dbun` run bun inside node container
+- `dphp` run arbitrary commands in php container
+- `dvapid` generate `WEBPUSH_VAPID_PUBLIC_KEY` and `WEBPUSH_VAPID_PRIVATE_KEY`
 - `devite` tail Vite container logs

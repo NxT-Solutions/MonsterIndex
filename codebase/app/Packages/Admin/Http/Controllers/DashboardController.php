@@ -10,6 +10,7 @@ use App\Models\Monster;
 use App\Models\MonsterSuggestion;
 use App\Models\PriceSnapshot;
 use App\Models\Site;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -140,6 +141,11 @@ class DashboardController extends Controller
                 'top_domains' => $topDomains,
             ],
             'recentRuns' => $recentRuns,
+            'pushTestUsers' => User::query()
+                ->orderBy('name')
+                ->limit(200)
+                ->get(['id', 'name', 'email'])
+                ->values(),
         ]);
     }
 

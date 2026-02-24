@@ -12,7 +12,7 @@ COMPOSE_FILE="$DOCKER_DIR/compose.yaml"
 ENV_FILE="$DOCKER_DIR/.env"
 
 # Avoid zsh alias collisions when these helper names already exist.
-for helper_name in compose_cmd dartisan dcomposer dbun devite dup ddown dlogs dfresh; do
+for helper_name in compose_cmd dartisan dcomposer dbun devite dup ddown dlogs dfresh dphp dvapid; do
   unalias "$helper_name" >/dev/null 2>&1 || true
 done
 
@@ -75,4 +75,12 @@ function dlogs {
   compose_cmd logs -f "$@"
 }
 
-echo "Loaded MonsterIndex docker helpers: dup, ddown, dlogs, dartisan, dfresh, dcomposer, dbun, devite"
+function dphp {
+  compose_cmd exec php "$@"
+}
+
+function dvapid {
+  compose_cmd exec php php -r "require '/var/www/html/vendor/autoload.php'; \$k=\\Minishlink\\WebPush\\VAPID::createVapidKeys(); echo \"WEBPUSH_VAPID_PUBLIC_KEY={\$k['publicKey']}\\nWEBPUSH_VAPID_PRIVATE_KEY={\$k['privateKey']}\\n\";"
+}
+
+echo "Loaded MonsterIndex docker helpers: dup, ddown, dlogs, dartisan, dfresh, dcomposer, dbun, devite, dphp, dvapid"

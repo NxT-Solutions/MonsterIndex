@@ -9,12 +9,14 @@ use Packages\Admin\Http\Controllers\MonitorController as AdminMonitorController;
 use Packages\Admin\Http\Controllers\MonitorReviewController as AdminMonitorReviewController;
 use Packages\Admin\Http\Controllers\MonsterController as AdminMonsterController;
 use Packages\Admin\Http\Controllers\MonsterSuggestionReviewController as AdminMonsterSuggestionReviewController;
+use Packages\Admin\Http\Controllers\PushTestController as AdminPushTestController;
 use Packages\Admin\Http\Controllers\SiteController as AdminSiteController;
 use Packages\Contributions\Http\Controllers\MonitorContributionController;
 use Packages\Contributions\Http\Controllers\ContributorAlertController;
 use Packages\Contributions\Http\Controllers\FollowedMonsterController;
 use Packages\Contributions\Http\Controllers\MonsterFollowController;
 use Packages\Contributions\Http\Controllers\MonsterSuggestionController;
+use Packages\Notifications\Http\Controllers\PushSubscriptionController;
 use Packages\PublicBoard\Http\Controllers\HomeController;
 use Packages\PublicBoard\Http\Controllers\MonsterController as PublicMonsterController;
 use Packages\PublicBoard\Http\Controllers\SitemapController;
@@ -27,6 +29,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+
+    Route::get('/api/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey'])
+        ->name('api.push.vapid-public-key');
+    Route::post('/api/push/subscriptions', [PushSubscriptionController::class, 'store'])
+        ->middleware('throttle:push-subscribe')
+        ->name('api.push.subscriptions.store');
+    Route::delete('/api/push/subscriptions', [PushSubscriptionController::class, 'destroy'])
+        ->middleware('throttle:push-subscribe')
+        ->name('api.push.subscriptions.destroy');
 
     Route::middleware(['permission:monitor.submit'])->group(function () {
         Route::get('/contribute/monitors', [MonitorContributionController::class, 'index'])
@@ -133,6 +144,11 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/admin/alerts', [AdminAlertController::class, 'index'])->name('admin.alerts.index');
         Route::post('/admin/alerts/{alert}/read', [AdminAlertController::class, 'markRead'])->name('admin.alerts.mark-read');
+        Route::middleware('permission:push.test')->group(function () {
+            Route::post('/api/admin/push/test', [AdminPushTestController::class, 'send'])
+                ->middleware('throttle:push-test')
+                ->name('api.admin.push.test');
+        });
     });
 });
 

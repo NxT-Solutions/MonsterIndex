@@ -2,12 +2,17 @@ import '../css/app.css';
 import './bootstrap';
 
 import { LocaleProvider } from '@/lib/locale';
+import { registerServiceWorker } from '@/lib/push';
 import { ThemeProvider } from '@/lib/theme';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+if (typeof window !== 'undefined') {
+    registerServiceWorker().catch(() => undefined);
+}
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

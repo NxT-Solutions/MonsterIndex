@@ -37,6 +37,7 @@ class PermissionBootstrapper
             'monster.follow',
             'contributor-alert.view.own',
             'contributor-alert.mark-read.own',
+            'push.test',
         ];
     }
 

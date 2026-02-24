@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\Monitor;
 use App\Models\MonsterSuggestion;
+use App\Observers\AlertObserver;
+use App\Models\Alert;
 use App\Policies\MonitorPolicy;
 use App\Policies\MonsterSuggestionPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -31,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
         Gate::policy(Monitor::class, MonitorPolicy::class);
         Gate::policy(MonsterSuggestion::class, MonsterSuggestionPolicy::class);
+        Alert::observe(AlertObserver::class);
 
         RateLimiter::for('monitor-create', function (Request $request): array {
             $key = $this->throttleKey($request);
@@ -66,6 +69,14 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('alert-actions', function (Request $request): Limit {
             return Limit::perMinute(60)->by($this->throttleKey($request));
+        });
+
+        RateLimiter::for('push-subscribe', function (Request $request): Limit {
+            return Limit::perMinute(30)->by($this->throttleKey($request));
+        });
+
+        RateLimiter::for('push-test', function (Request $request): Limit {
+            return Limit::perMinute(10)->by($this->throttleKey($request));
         });
     }
 

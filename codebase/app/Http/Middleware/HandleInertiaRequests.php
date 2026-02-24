@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\ContributorAlert;
 use App\Models\MonsterSuggestion;
 use App\Models\Monitor;
+use App\Models\PushSubscription;
 use App\Models\User;
 use App\Support\Authorization\PermissionBootstrapper;
 use Illuminate\Http\Request;
@@ -38,6 +39,7 @@ class HandleInertiaRequests extends Middleware
         $userPayload = null;
         $adminReview = null;
         $contributorAlerts = null;
+        $pushSettings = null;
         if ($authUser instanceof User) {
             PermissionBootstrapper::syncUserFromLegacyRole($authUser);
 
@@ -70,6 +72,7 @@ class HandleInertiaRequests extends Middleware
                     'monster_follow' => $authUser->can('monster.follow'),
                     'contributor_alert_view' => $authUser->can('contributor-alert.view.own'),
                     'contributor_alert_mark_read' => $authUser->can('contributor-alert.mark-read.own'),
+                    'push_test' => $authUser->can('push.test'),
                 ],
             ];
 
@@ -99,6 +102,18 @@ class HandleInertiaRequests extends Middleware
                         ->count(),
                 ];
             }
+
+            $pushSettings = [
+                'vapid_configured' => filled(config('webpush.vapid.public_key'))
+                    && filled(config('webpush.vapid.private_key'))
+                    && filled(config('webpush.vapid.subject')),
+                'subscriptions_count' => PushSubscription::query()
+                    ->where('user_id', $authUser->id)
+                    ->count(),
+                'has_active_subscription' => PushSubscription::query()
+                    ->where('user_id', $authUser->id)
+                    ->exists(),
+            ];
         }
 
         return [
@@ -108,6 +123,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'adminReview' => $adminReview,
             'contributorAlerts' => $contributorAlerts,
+            'push' => $pushSettings,
         ];
     }
 }

@@ -18,6 +18,7 @@ export interface User {
         monster_follow: boolean;
         contributor_alert_view: boolean;
         contributor_alert_mark_read: boolean;
+        push_test: boolean;
     };
 }
 
@@ -34,5 +35,10 @@ export type PageProps<
     contributorAlerts?: {
         unread: number;
         total: number;
+    } | null;
+    push?: {
+        vapid_configured: boolean;
+        subscriptions_count: number;
+        has_active_subscription: boolean;
     } | null;
 };

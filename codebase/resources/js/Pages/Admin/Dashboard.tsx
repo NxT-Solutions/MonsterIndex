@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 
 type DashboardStats = {
     monsters_total: number;
@@ -51,10 +51,17 @@ type RecentRun = {
     };
 };
 
+type PushTestUser = {
+    id: number;
+    name: string;
+    email: string;
+};
+
 export default function AdminDashboard({
     stats,
     charts,
     recentRuns,
+    pushTestUsers,
 }: {
     stats: DashboardStats;
     charts: {
@@ -63,9 +70,16 @@ export default function AdminDashboard({
         top_domains: TopDomain[];
     };
     recentRuns: RecentRun[];
+    pushTestUsers: PushTestUser[];
 }) {
     const { locale, x } = useLocale();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const pushTestForm = useForm({
+        user_id: pushTestUsers[0]?.id ?? 0,
+        title: x('Test notification', 'Testmelding'),
+        body: x('This is a push test from admin.', 'Dit is een push test van admin.'),
+        url: '/dashboard',
+    });
 
     return (
         <AuthenticatedLayout
@@ -184,6 +198,117 @@ export default function AdminDashboard({
                             hint={x('Community backlog', 'Community backlog')}
                             accent="cyan"
                         />
+                    </section>
+
+                    <section>
+                        <Card className="border-white/10 bg-[color:var(--landing-surface)] shadow-[0_12px_30px_rgba(0,0,0,.24)]">
+                            <CardHeader>
+                                <CardTitle className="font-display text-lg text-white">
+                                    {x('Push Test Sender', 'Push Testzender')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <form
+                                    className="grid gap-3 md:grid-cols-12"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        pushTestForm.post(route('api.admin.push.test'), {
+                                            preserveScroll: true,
+                                        });
+                                    }}
+                                >
+                                    <div className="md:col-span-3">
+                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x('Target User', 'Doelgebruiker')}
+                                        </label>
+                                        <select
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
+                                            value={pushTestForm.data.user_id}
+                                            onChange={(event) =>
+                                                pushTestForm.setData(
+                                                    'user_id',
+                                                    Number(event.target.value),
+                                                )
+                                            }
+                                        >
+                                            {pushTestUsers.map((user) => (
+                                                <option
+                                                    key={user.id}
+                                                    value={user.id}
+                                                    className="text-black"
+                                                >
+                                                    {user.name} ({user.email})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="md:col-span-3">
+                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x('Title', 'Titel')}
+                                        </label>
+                                        <input
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                            value={pushTestForm.data.title}
+                                            onChange={(event) =>
+                                                pushTestForm.setData('title', event.target.value)
+                                            }
+                                            required
+                                        />
+                                    </div>
+                                    <div className="md:col-span-4">
+                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x('Body', 'Inhoud')}
+                                        </label>
+                                        <input
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                            value={pushTestForm.data.body}
+                                            onChange={(event) =>
+                                                pushTestForm.setData('body', event.target.value)
+                                            }
+                                            required
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            URL
+                                        </label>
+                                        <input
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                            value={pushTestForm.data.url}
+                                            onChange={(event) =>
+                                                pushTestForm.setData('url', event.target.value)
+                                            }
+                                            required
+                                        />
+                                    </div>
+                                    <div className="md:col-span-12 md:flex md:justify-end">
+                                        <button
+                                            type="submit"
+                                            className={cn(
+                                                buttonVariants({ size: 'sm' }),
+                                                'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                            )}
+                                            disabled={
+                                                pushTestForm.processing ||
+                                                pushTestUsers.length === 0
+                                            }
+                                        >
+                                            {pushTestForm.processing
+                                                ? x('Sending...', 'Versturen...')
+                                                : x('Send Push Test', 'Verstuur Push Test')}
+                                        </button>
+                                    </div>
+                                </form>
+                                {pushTestUsers.length === 0 && (
+                                    <p className="mt-2 text-xs text-white/55">
+                                        {x(
+                                            'No users available to target yet.',
+                                            'Nog geen gebruikers beschikbaar als doel.',
+                                        )}
+                                    </p>
+                                )}
+                            </CardContent>
+                        </Card>
                     </section>
 
                     <section className="grid gap-4 xl:grid-cols-2">
