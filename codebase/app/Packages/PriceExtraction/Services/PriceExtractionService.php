@@ -2,9 +2,9 @@
 
 namespace Packages\PriceExtraction\Services;
 
-use Packages\Base\Data\ExtractionResult;
 use App\Models\Monitor;
 use Illuminate\Support\Facades\Http;
+use Packages\Base\Data\ExtractionResult;
 use Throwable;
 
 class PriceExtractionService

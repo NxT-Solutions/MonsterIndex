@@ -1,8 +1,8 @@
 import BarMeter from '@/Components/admin/BarMeter';
 import KpiCard from '@/Components/admin/KpiCard';
+import Modal from '@/Components/Modal';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { currencyOptionsForLocale } from '@/lib/currencies';
 import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
@@ -61,21 +61,26 @@ type RunsEventPayload = {
 export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
     const { locale, x } = useLocale();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
-    const currencyOptions = useMemo(
-        () => currencyOptionsForLocale(locale),
-        [locale],
-    );
 
     const form = useForm({
         site_name: '',
         product_url: '',
-        currency: 'EUR',
+        check_interval_minutes: 60,
+        active: true,
+    });
+    const editForm = useForm({
+        monster_id: monster.id,
+        site_id: 0,
+        product_url: '',
         check_interval_minutes: 60,
         active: true,
     });
 
     const [loadingSelector, setLoadingSelector] = useState<number | null>(null);
     const [loadingRun, setLoadingRun] = useState<number | null>(null);
+    const [editingMonitor, setEditingMonitor] = useState<MonitorRecord | null>(
+        null,
+    );
     const [runningMonitorIds, setRunningMonitorIds] = useState<number[]>(
         () => initialRunningMonitorIds(monster.monitors),
     );
@@ -264,6 +269,42 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
         }
     };
 
+    const openEditModal = (record: MonitorRecord) => {
+        setEditingMonitor(record);
+        editForm.clearErrors();
+        editForm.setData({
+            monster_id: monster.id,
+            site_id: record.site.id,
+            product_url: record.product_url,
+            check_interval_minutes: record.check_interval_minutes,
+            active: record.active,
+        });
+    };
+
+    const closeEditModal = () => {
+        if (editForm.processing) {
+            return;
+        }
+
+        setEditingMonitor(null);
+        editForm.reset();
+    };
+
+    const submitEditMonitor = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        if (!editingMonitor) {
+            return;
+        }
+
+        editForm.put(route('admin.monitors.update', editingMonitor.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setEditingMonitor(null);
+            },
+        });
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -325,59 +366,58 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                             </CardHeader>
                             <CardContent>
                                 <form
-                                    className="grid gap-3 md:grid-cols-5"
+                                    className="grid gap-3 md:grid-cols-12"
                                     onSubmit={submitRecord}
                                 >
-                                    <input
-                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                        placeholder={x(
-                                            'Website name (optional)',
-                                            'Websitenaam (optioneel)',
-                                        )}
-                                        value={form.data.site_name}
-                                        onChange={(event) =>
-                                            form.setData('site_name', event.target.value)
-                                        }
-                                    />
-                                    <input
-                                        className="md:col-span-2 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                        placeholder="https://example.com/product-url"
-                                        value={form.data.product_url}
-                                        onChange={(event) =>
-                                            form.setData('product_url', event.target.value)
-                                        }
-                                        required
-                                    />
-                                    <select
-                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
-                                        value={form.data.currency}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'currency',
-                                                event.target.value,
-                                            )
-                                        }
-                                    >
-                                        {currencyOptions.map((currency) => (
-                                            <option
-                                                key={currency.code}
-                                                value={currency.code}
-                                                className="text-black"
-                                            >
-                                                {currency.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <button
-                                        type="submit"
-                                        className={cn(
-                                            buttonVariants({ variant: 'default' }),
-                                            'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
-                                        )}
-                                        disabled={form.processing}
-                                    >
-                                        {x('Add Record', 'Record Toevoegen')}
-                                    </button>
+                                    <div className="space-y-1 md:col-span-3">
+                                        <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x('Website Name', 'Websitenaam')}
+                                        </label>
+                                        <input
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
+                                            placeholder={x('Optional', 'Optioneel')}
+                                            value={form.data.site_name}
+                                            onChange={(event) =>
+                                                form.setData('site_name', event.target.value)
+                                            }
+                                        />
+                                    </div>
+                                    <div className="space-y-1 md:col-span-5">
+                                        <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x('Product URL', 'Product-URL')}
+                                        </label>
+                                        <input
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
+                                            placeholder="https://example.com/product-url"
+                                            value={form.data.product_url}
+                                            onChange={(event) =>
+                                                form.setData('product_url', event.target.value)
+                                            }
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-1 md:col-span-2">
+                                        <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x('Currency', 'Valuta')}
+                                        </label>
+                                        <input
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
+                                            value="EUR"
+                                            disabled
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2 md:self-end">
+                                        <button
+                                            type="submit"
+                                            className={cn(
+                                                buttonVariants({ variant: 'default' }),
+                                                'w-full bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                            )}
+                                            disabled={form.processing}
+                                        >
+                                            {x('Add Record', 'Record Toevoegen')}
+                                        </button>
+                                    </div>
                                 </form>
                                 <p className="mt-2 text-xs text-white/60">
                                     {x(
@@ -470,6 +510,21 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                             </div>
 
                                             <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    type="button"
+                                                    className={cn(
+                                                        buttonVariants({
+                                                            variant: 'outline',
+                                                            size: 'sm',
+                                                        }),
+                                                        'border-white/20 bg-transparent text-white hover:bg-white/10',
+                                                    )}
+                                                    onClick={() =>
+                                                        openEditModal(record)
+                                                    }
+                                                >
+                                                    {x('Edit', 'Bewerken')}
+                                                </button>
                                                 <button
                                                     type="button"
                                                     className={cn(
@@ -586,6 +641,140 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                     </Card>
                 </div>
             </div>
+
+            <Modal show={editingMonitor !== null} maxWidth="2xl" onClose={closeEditModal}>
+                <form
+                    onSubmit={submitEditMonitor}
+                    className="space-y-5 bg-[color:var(--landing-surface)] p-6 text-white"
+                >
+                    <div>
+                        <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--landing-accent)]">
+                            {x('Monitor', 'Monitor')}
+                        </p>
+                        <h3 className="mt-1 font-display text-xl font-semibold">
+                            {x('Edit Website Record', 'Website-Record Bewerken')}
+                        </h3>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-1">
+                            <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
+                                {x('Store', 'Winkel')}
+                            </label>
+                            <input
+                                value={
+                                    editingMonitor
+                                        ? `${editingMonitor.site.name} (${editingMonitor.site.domain})`
+                                        : ''
+                                }
+                                disabled
+                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
+                                {x('Currency', 'Valuta')}
+                            </label>
+                            <input
+                                value="EUR"
+                                disabled
+                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label
+                            htmlFor="edit-record-product-url"
+                            className="block text-xs uppercase tracking-[0.12em] text-white/60"
+                        >
+                            {x('Product URL', 'Product-URL')}
+                        </label>
+                        <input
+                            id="edit-record-product-url"
+                            value={editForm.data.product_url}
+                            onChange={(event) =>
+                                editForm.setData('product_url', event.target.value)
+                            }
+                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
+                            placeholder="https://example.com/product-url"
+                            required
+                        />
+                        {editForm.errors.product_url && (
+                            <p className="text-xs text-red-300">{editForm.errors.product_url}</p>
+                        )}
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+                        <div className="space-y-1">
+                            <label
+                                htmlFor="edit-record-interval"
+                                className="block text-xs uppercase tracking-[0.12em] text-white/60"
+                            >
+                                {x('Interval (minutes)', 'Interval (minuten)')}
+                            </label>
+                            <input
+                                id="edit-record-interval"
+                                type="number"
+                                min={15}
+                                max={1440}
+                                value={editForm.data.check_interval_minutes}
+                                onChange={(event) =>
+                                    editForm.setData(
+                                        'check_interval_minutes',
+                                        Number(event.target.value),
+                                    )
+                                }
+                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
+                                required
+                            />
+                            {editForm.errors.check_interval_minutes && (
+                                <p className="text-xs text-red-300">
+                                    {editForm.errors.check_interval_minutes}
+                                </p>
+                            )}
+                        </div>
+
+                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white">
+                            <input
+                                type="checkbox"
+                                checked={editForm.data.active}
+                                onChange={(event) =>
+                                    editForm.setData('active', event.target.checked)
+                                }
+                                className="h-4 w-4 rounded border-white/40 bg-transparent text-[color:var(--landing-accent)] focus:ring-[color:var(--landing-accent)]"
+                            />
+                            {x('Active', 'Actief')}
+                        </label>
+                    </div>
+
+                    <div className="flex flex-wrap justify-end gap-2">
+                        <button
+                            type="button"
+                            className={cn(
+                                buttonVariants({ variant: 'outline' }),
+                                'border-white/20 bg-transparent text-white hover:bg-white/10',
+                            )}
+                            onClick={closeEditModal}
+                            disabled={editForm.processing}
+                        >
+                            {x('Cancel', 'Annuleren')}
+                        </button>
+                        <button
+                            type="submit"
+                            className={cn(
+                                buttonVariants({ variant: 'default' }),
+                                'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                            )}
+                            disabled={editForm.processing}
+                        >
+                            {editForm.processing
+                                ? x('Saving...', 'Opslaan...')
+                                : x('Save Changes', 'Wijzigingen Opslaan')}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </AuthenticatedLayout>
     );
 }
@@ -671,5 +860,5 @@ function parseRunsEvent(rawData: string): RunsEventPayload | null {
 }
 
 function isActiveRunStatus(status: string | undefined | null): boolean {
-    return status === 'queued' || status === 'running';
+    return status === 'running';
 }

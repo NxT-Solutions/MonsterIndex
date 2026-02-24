@@ -3,14 +3,16 @@
 namespace Packages\Bookmarklet\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Monitor;
 use App\Models\PriceSnapshot;
-use Packages\Bookmarklet\Services\BookmarkletSessionService;
-use Packages\Monitoring\Services\BestPriceProjector;
-use Packages\PriceExtraction\Services\PriceExtractionService;
+use App\Support\UrlCanonicalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
+use Packages\Bookmarklet\Services\BookmarkletSessionService;
+use Packages\Monitoring\Services\BestPriceProjector;
+use Packages\PriceExtraction\Services\PriceExtractionService;
 
 class BookmarkletCaptureController extends Controller
 {
@@ -89,48 +91,77 @@ class BookmarkletCaptureController extends Controller
 
         $monitor->selector_config = $selectorConfig;
         $monitor->product_url = $validated['page_url'];
+        $monitor->canonical_product_url = UrlCanonicalizer::canonicalize($validated['page_url']);
+        $monitor->validation_status = Monitor::VALIDATION_PENDING;
+        $monitor->validation_checked_at = null;
+        $monitor->validation_result = null;
         $monitor->save();
 
         $result = $this->priceExtractionService->extract($monitor, allowHeadlessFallback: false);
+        $isValidationSuccess = $result->status !== 'failed';
+        $monitorCurrency = (string) ($monitor->currency ?: Monitor::DEFAULT_CURRENCY);
+
+        $monitor->forceFill([
+            'validation_status' => $isValidationSuccess
+                ? Monitor::VALIDATION_SUCCESS
+                : Monitor::VALIDATION_FAILED,
+            'validation_checked_at' => now(),
+            'validation_result' => [
+                'status' => $result->status,
+                'error_code' => $result->errorCode,
+                'price_cents' => $result->priceCents,
+                'shipping_cents' => $result->shippingCents,
+                'effective_total_cents' => $result->effectiveTotalCents,
+                'can_count' => $result->canCount,
+                'price_per_can_cents' => $result->pricePerCanCents,
+                'currency' => $monitorCurrency,
+            ],
+        ])->save();
 
         if ($result->status === 'failed') {
             return $this->errorResponse(
                 request: $request,
-                message: $this->translate(
-                    $lang,
-                    'Selector capture saved, but validation failed. Please retry with a better price selector.',
-                    'Selectoropslag is bewaard, maar validatie faalde. Probeer opnieuw met een betere prijsselector.',
-                ),
+                message: $this->validationFailedMessage($lang, $result->errorCode),
                 status: 422,
                 lang: $lang,
             );
         }
 
-        $snapshot = PriceSnapshot::query()->create([
-            'monitor_id' => $monitor->id,
-            'checked_at' => now(),
-            'price_cents' => $result->priceCents,
-            'shipping_cents' => $result->shippingCents,
-            'effective_total_cents' => $result->effectiveTotalCents,
-            'can_count' => $result->canCount,
-            'price_per_can_cents' => $result->pricePerCanCents,
-            'currency' => $result->currency,
-            'availability' => $result->availability,
-            'raw_text' => $result->rawText,
-            'status' => $result->status,
-            'error_code' => $result->errorCode,
-        ]);
+        if ($monitor->submission_status === Monitor::STATUS_APPROVED) {
+            $snapshot = PriceSnapshot::query()->create([
+                'monitor_id' => $monitor->id,
+                'checked_at' => now(),
+                'price_cents' => $result->priceCents,
+                'shipping_cents' => $result->shippingCents,
+                'effective_total_cents' => $result->effectiveTotalCents,
+                'can_count' => $result->canCount,
+                'price_per_can_cents' => $result->pricePerCanCents,
+                'currency' => $monitorCurrency,
+                'availability' => $result->availability,
+                'raw_text' => $result->rawText,
+                'status' => $result->status,
+                'error_code' => $result->errorCode,
+            ]);
 
-        $this->bestPriceProjector->projectFromSnapshot($snapshot);
+            $this->bestPriceProjector->projectFromSnapshot($snapshot);
+        }
 
         $this->bookmarkletSessionService->markUsed($session);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'ok' => true,
-                'message' => $this->translate($lang, 'Selectors captured and validated.', 'Selectors opgeslagen en gevalideerd.'),
+                'message' => $this->translate(
+                    $lang,
+                    $monitor->submission_status === Monitor::STATUS_APPROVED
+                        ? 'Selectors captured and validated.'
+                        : 'Selectors captured and validation stored. Submit this monitor for admin review.',
+                    $monitor->submission_status === Monitor::STATUS_APPROVED
+                        ? 'Selectors opgeslagen en gevalideerd.'
+                        : 'Selectors opgeslagen en validatie bewaard. Dien deze monitor nu in voor adminreview.',
+                ),
                 'status' => $result->status,
-                'currency' => $result->currency,
+                'currency' => $monitorCurrency,
                 'price_cents' => $result->priceCents,
                 'shipping_cents' => $result->shippingCents,
                 'effective_total_cents' => $result->effectiveTotalCents,
@@ -224,6 +255,25 @@ class BookmarkletCaptureController extends Controller
     private function translate(string $lang, string $english, string $dutch): string
     {
         return $lang === 'nl' ? $dutch : $english;
+    }
+
+    private function validationFailedMessage(string $lang, ?string $errorCode): string
+    {
+        $code = is_string($errorCode) && $errorCode !== ''
+            ? $errorCode
+            : 'UNKNOWN';
+
+        return $this->translate(
+            $lang,
+            sprintf(
+                'Selector capture saved, but validation failed (%s). This is usually a selector mismatch. Select the exact price text and retry.',
+                $code,
+            ),
+            sprintf(
+                'Selectoropslag is bewaard, maar validatie faalde (%s). Dit is meestal een selector-mismatch. Selecteer exact de prijstekst en probeer opnieuw.',
+                $code,
+            ),
+        );
     }
 
     /**

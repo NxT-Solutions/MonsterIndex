@@ -3,8 +3,12 @@
 use App\Models\Monster;
 use App\Models\Site;
 use App\Models\User;
+use Illuminate\Support\Facades\Queue;
+use Packages\Monitoring\Jobs\CheckMonitorPriceJob;
 
 it('creates a new store from product url when monitor form uses other store option', function () {
+    Queue::fake();
+
     $admin = User::factory()->create([
         'role' => User::ROLE_ADMIN,
     ]);
@@ -35,4 +39,6 @@ it('creates a new store from product url when monitor form uses other store opti
         'product_url' => 'https://shop.smallenergy.example/products/monster-ultra',
         'currency' => 'EUR',
     ]);
+
+    Queue::assertPushed(CheckMonitorPriceJob::class);
 });

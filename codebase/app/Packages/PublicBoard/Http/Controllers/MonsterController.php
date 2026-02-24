@@ -3,17 +3,24 @@
 namespace Packages\PublicBoard\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Monitor;
 use App\Models\Monster;
+use App\Models\MonsterFollow;
 use App\Models\PriceSnapshot;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class MonsterController extends Controller
 {
-    public function show(Monster $monster): Response
+    public function show(Request $request, Monster $monster): Response
     {
         $snapshots = PriceSnapshot::query()
-            ->whereHas('monitor', fn ($query) => $query->where('monster_id', $monster->id))
+            ->whereHas('monitor', fn ($query) => $query
+                ->where('monster_id', $monster->id)
+                ->where('submission_status', Monitor::STATUS_APPROVED)
+                ->where('active', true))
+            ->where('status', '!=', 'failed')
             ->with(['monitor:id,site_id,product_url,selector_config', 'monitor.site:id,name,domain'])
             ->latest('checked_at')
             ->limit(200)
@@ -48,9 +55,29 @@ class MonsterController extends Controller
             })
             ->values();
 
+        $availableCurrencies = $snapshots
+            ->pluck('currency')
+            ->filter(fn ($currency): bool => is_string($currency) && $currency !== '')
+            ->unique()
+            ->values();
+
+        $followedCurrencies = collect();
+        $authUser = $request->user();
+        if ($authUser && $authUser->can('monster.follow')) {
+            $followedCurrencies = MonsterFollow::query()
+                ->where('user_id', $authUser->id)
+                ->where('monster_id', $monster->id)
+                ->pluck('currency')
+                ->filter(fn ($currency): bool => is_string($currency) && $currency !== '')
+                ->unique()
+                ->values();
+        }
+
         return Inertia::render('Monsters/Show', [
             'monster' => $monster,
             'snapshots' => $snapshots,
+            'available_currencies' => $availableCurrencies,
+            'followed_currencies' => $followedCurrencies,
         ]);
     }
 

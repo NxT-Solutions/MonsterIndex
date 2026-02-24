@@ -3,10 +3,11 @@
 namespace Packages\Admin\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\MonitorRun;
 use App\Models\Monitor;
+use App\Models\MonitorRun;
 use App\Models\Monster;
 use App\Models\Site;
+use App\Support\UrlCanonicalizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,6 +18,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MonsterController extends Controller
 {
+    private const QUEUED_STALE_MINUTES = 15;
+
+    private const RUNNING_STALE_MINUTES = 20;
+
     public function index(): Response
     {
         return Inertia::render('Admin/Monsters/Index', [
@@ -29,6 +34,8 @@ class MonsterController extends Controller
 
     public function show(Monster $monster): Response
     {
+        $this->closeStaleRuns();
+
         $monster->load([
             'monitors' => fn ($query) => $query
                 ->with(['site:id,name,domain', 'latestSnapshot', 'latestRun'])
@@ -101,7 +108,6 @@ class MonsterController extends Controller
         $validated = $request->validate([
             'site_name' => ['nullable', 'string', 'max:255'],
             'product_url' => ['required', 'url', 'max:2048'],
-            'currency' => ['nullable', 'string', 'size:3'],
             'check_interval_minutes' => ['nullable', 'integer', 'min:15', 'max:1440'],
             'active' => ['sometimes', 'boolean'],
         ]);
@@ -138,12 +144,18 @@ class MonsterController extends Controller
         $monitor = Monitor::query()->create([
             'monster_id' => $monster->id,
             'site_id' => $site->id,
+            'created_by_user_id' => $request->user()?->id,
+            'approved_by_user_id' => $request->user()?->id,
             'product_url' => $validated['product_url'],
+            'canonical_product_url' => UrlCanonicalizer::canonicalize($validated['product_url']),
             'selector_config' => null,
-            'currency' => strtoupper((string) ($validated['currency'] ?? 'EUR')),
+            'currency' => Monitor::DEFAULT_CURRENCY,
             'check_interval_minutes' => (int) ($validated['check_interval_minutes'] ?? 60),
             'next_check_at' => now(),
             'active' => $validated['active'] ?? true,
+            'submission_status' => Monitor::STATUS_APPROVED,
+            'approved_at' => now(),
+            'validation_status' => Monitor::VALIDATION_PENDING,
         ]);
 
         if (! $monitor->next_check_at) {
@@ -216,16 +228,58 @@ class MonsterController extends Controller
             return [];
         }
 
+        $this->closeStaleRuns($monitorIds);
+
         return MonitorRun::query()
             ->whereIn('monitor_id', $monitorIds)
-            ->whereIn('status', ['queued', 'running'])
+            ->where('status', 'running')
             ->whereNull('finished_at')
-            ->pluck('monitor_id')
+            ->whereNotExists(function ($query): void {
+                $query->selectRaw('1')
+                    ->from('monitor_runs as newer_runs')
+                    ->whereColumn('newer_runs.monitor_id', 'monitor_runs.monitor_id')
+                    ->whereColumn('newer_runs.id', '>', 'monitor_runs.id');
+            })
+            ->pluck('monitor_runs.monitor_id')
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->sort()
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  list<int>|null  $monitorIds
+     */
+    private function closeStaleRuns(?array $monitorIds = null): void
+    {
+        $now = now();
+
+        MonitorRun::query()
+            ->when($monitorIds !== null && $monitorIds !== [], function ($query) use ($monitorIds): void {
+                $query->whereIn('monitor_id', $monitorIds);
+            })
+            ->where('status', 'queued')
+            ->whereNull('finished_at')
+            ->where('started_at', '<=', $now->copy()->subMinutes(self::QUEUED_STALE_MINUTES))
+            ->update([
+                'status' => 'skipped',
+                'finished_at' => $now,
+                'error_message' => 'Auto-closed: queue job never started.',
+            ]);
+
+        MonitorRun::query()
+            ->when($monitorIds !== null && $monitorIds !== [], function ($query) use ($monitorIds): void {
+                $query->whereIn('monitor_id', $monitorIds);
+            })
+            ->where('status', 'running')
+            ->whereNull('finished_at')
+            ->where('started_at', '<=', $now->copy()->subMinutes(self::RUNNING_STALE_MINUTES))
+            ->update([
+                'status' => 'error',
+                'finished_at' => $now,
+                'error_message' => 'Auto-closed: run exceeded expected timeout.',
+            ]);
     }
 
     private function resolveUniqueSlug(string $baseSlug, ?int $ignoreId = null): string

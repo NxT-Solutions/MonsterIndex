@@ -246,20 +246,103 @@
     highlighted.style.outline = '2px solid #f97316';
   };
 
-  const cssPath = (element) => {
-    if (!(element instanceof Element)) return '';
+  const escapeCss = (value) => {
+    const input = String(value || '');
+    if (window.CSS && typeof window.CSS.escape === 'function') {
+      return window.CSS.escape(input);
+    }
+
+    return input.replace(/[^a-zA-Z0-9_-]/g, (char) => `\\${char}`);
+  };
+
+  const escapeAttr = (value) =>
+    String(value || '')
+      .replace(/\\/g, '\\\\')
+      .replace(/"/g, '\\"');
+
+  const isUniqueSelector = (selector) => {
+    if (!selector || typeof selector !== 'string') {
+      return false;
+    }
+
+    try {
+      return document.querySelectorAll(selector).length === 1;
+    } catch {
+      return false;
+    }
+  };
+
+  const stableClassNames = (element) => {
+    if (!(element instanceof Element)) {
+      return [];
+    }
+
+    const genericClassPattern = /^(active|selected|disabled|hidden|visible|open|closed)$/i;
+
+    return Array.from(element.classList || [])
+      .map((name) => name.trim())
+      .filter(
+        (name) =>
+          name !== '' &&
+          name.length <= 60 &&
+          /^[a-zA-Z0-9_-]+$/.test(name) &&
+          !genericClassPattern.test(name),
+      );
+  };
+
+  const selectorCandidates = (element) => {
+    if (!(element instanceof Element)) {
+      return [];
+    }
+
+    const tag = element.nodeName.toLowerCase();
+    const candidates = [];
+
+    if (element.id && element.id.trim() !== '') {
+      candidates.push(`#${escapeCss(element.id.trim())}`);
+      candidates.push(`${tag}#${escapeCss(element.id.trim())}`);
+    }
+
+    const attrs = ['data-testid', 'data-test', 'data-qa', 'itemprop', 'name', 'aria-label'];
+    attrs.forEach((attr) => {
+      const value = element.getAttribute(attr);
+      if (typeof value === 'string' && value.trim() !== '' && value.length <= 120) {
+        candidates.push(`${tag}[${attr}="${escapeAttr(value.trim())}"]`);
+      }
+    });
+
+    const classes = stableClassNames(element);
+    if (classes.length > 0) {
+      const topClasses = classes.slice(0, 3);
+      candidates.push(`${tag}.${topClasses.map((name) => escapeCss(name)).join('.')}`);
+      topClasses.forEach((name) => {
+        candidates.push(`${tag}.${escapeCss(name)}`);
+      });
+    }
+
+    candidates.push(tag);
+
+    return [...new Set(candidates)].filter((candidate) => candidate !== '');
+  };
+
+  const absoluteCssPath = (element) => {
+    if (!(element instanceof Element)) {
+      return '';
+    }
+
     const path = [];
+    let current = element;
 
-    while (element && element.nodeType === Node.ELEMENT_NODE) {
-      let selector = element.nodeName.toLowerCase();
+    while (current && current.nodeType === Node.ELEMENT_NODE) {
+      let selector = current.nodeName.toLowerCase();
 
-      if (element.id) {
-        selector += `#${CSS.escape(element.id)}`;
+      if (current.id) {
+        selector += `#${escapeCss(current.id)}`;
         path.unshift(selector);
         break;
       }
 
-      let sibling = element;
+      let sibling = current;
       let nth = 1;
       while ((sibling = sibling.previousElementSibling)) {
         if (sibling.nodeName.toLowerCase() === selector) nth++;
@@ -267,10 +350,69 @@
 
       selector += `:nth-of-type(${nth})`;
       path.unshift(selector);
-      element = element.parentElement;
+      current = current.parentElement;
     }
 
     return path.join(' > ');
+  };
+
+  const cssPath = (element) => {
+    if (!(element instanceof Element)) {
+      return '';
+    }
+
+    const directCandidates = selectorCandidates(element);
+    const firstUniqueDirect = directCandidates.find((candidate) => isUniqueSelector(candidate));
+    if (firstUniqueDirect) {
+      return firstUniqueDirect;
+    }
+
+    const preferredChild =
+      directCandidates.find(
+        (candidate) =>
+          candidate.startsWith('#') || candidate.includes('[data-') || candidate.includes('.'),
+      ) || directCandidates[0];
+
+    if (!preferredChild) {
+      return absoluteCssPath(element);
+    }
+
+    let childChain = preferredChild;
+    let parent = element.parentElement;
+    let depth = 0;
+
+    while (parent && depth < 6) {
+      const parentCandidates = selectorCandidates(parent);
+      for (const parentCandidate of parentCandidates) {
+        const direct = `${parentCandidate} > ${childChain}`;
+        if (isUniqueSelector(direct)) {
+          return direct;
+        }
+
+        const descendant = `${parentCandidate} ${childChain}`;
+        if (isUniqueSelector(descendant)) {
+          return descendant;
+        }
+      }
+
+      const preferredParent =
+        parentCandidates.find(
+          (candidate) =>
+            candidate.startsWith('#') || candidate.includes('[data-') || candidate.includes('.'),
+        ) || parentCandidates[0];
+
+      if (preferredParent) {
+        childChain = `${preferredParent} > ${childChain}`;
+        if (isUniqueSelector(childChain)) {
+          return childChain;
+        }
+      }
+
+      parent = parent.parentElement;
+      depth++;
+    }
+
+    return absoluteCssPath(element);
   };
 
   const xpathPath = (element) => {

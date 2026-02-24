@@ -16,12 +16,13 @@ class MonsterFactory extends Factory
      */
     public function definition(): array
     {
-        $name = sprintf('Monster %s %soz', fake()->word(), fake()->numberBetween(12, 24));
+        $sizeLabel = fake()->randomElement(['355ml', '500ml', '710ml']);
+        $name = sprintf('Monster %s %s', fake()->word(), $sizeLabel);
 
         return [
             'name' => $name,
             'slug' => str($name)->slug()->toString().'-'.fake()->unique()->numberBetween(100, 999),
-            'size_label' => fake()->randomElement(['12oz', '16oz', '24oz']),
+            'size_label' => $sizeLabel,
             'active' => true,
         ];
     }

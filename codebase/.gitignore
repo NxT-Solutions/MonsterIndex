@@ -17,6 +17,9 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/database/*.sqlite
+/storage/database/*.sqlite-shm
+/storage/database/*.sqlite-wal
 /storage/pail
 /vendor
 Homestead.json

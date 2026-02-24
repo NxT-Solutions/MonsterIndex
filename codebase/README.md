@@ -5,17 +5,25 @@ This folder contains the Laravel + Inertia React application for MonsterIndex.
 ## Architecture Notes
 
 - Google OAuth-only auth (Socialite)
-- Admin-only management for monsters, sites, monitors, and alerts
+- Spatie RBAC (`admin`, `contributor`) + granular permissions
+- Public read access for board and history pages
+- Contributor monitor proposals + admin moderation workflow
+- Contributor monster suggestions + admin moderation workflow
+- Approved-only monitor visibility in public pages/scheduler
 - Public best-price dashboard + monster detail history
-- Hybrid extraction: HTTP parser first, then Playwright headless fallback
+- Selector-driven extraction: HTTP parser first, then Playwright headless fallback
 - DDD-style package modules under `app/Packages`
+- SQLite + Redis runtime profile by default
+- Frontend package/runtime tooling uses Bun (`bun install`, `bun run dev`, `bun run build`)
 
 ## Package-Oriented App Structure
 
 - `app/Packages/Base` shared contracts/data objects
 - `app/Packages/Bookmarklet` selector session + capture services
+- `app/Packages/Contributions` contributor monitor + suggestion flows
 - `app/Packages/PriceExtraction` selector-based extractor services
 - `app/Packages/Monitoring` monitor jobs + best-price projection services
+- `app/Packages/Admin` admin dashboards + moderation controllers
 - `app/Packages/*/.example` package template for new bounded contexts
 
 ## Local Runtime
@@ -39,6 +47,10 @@ docker compose --env-file .docker/local/.env -f .docker/local/compose.yaml exec 
 
 Hot reload is automatic via the persistent `node` service (Vite watch mode).
 
+Default infrastructure profile:
+- DB: SQLite (`storage/database/monsterindex.sqlite`)
+- Queue/Cache/Session/Rate-limit coordination: Redis
+
 ## OAuth Configuration
 
 Set in `codebase/.env`:
@@ -49,4 +61,5 @@ GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
 ```
 
-Admin emails are configured in `codebase/config/authz.php`.
+Admin bootstrap emails are configured in `codebase/config/authz.php`.
+Users in this list get `admin` role on Google login; others get `contributor`.

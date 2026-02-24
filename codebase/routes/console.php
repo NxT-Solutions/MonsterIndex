@@ -1,8 +1,8 @@
 <?php
 
-use Packages\Monitoring\Jobs\DispatchDueMonitorsJob;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use Packages\Monitoring\Jobs\DispatchDueMonitorsJob;
 
 Artisan::command('inspire', function () {
     $this->comment('Keep shipping.');

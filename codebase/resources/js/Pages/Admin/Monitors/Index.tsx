@@ -1,14 +1,14 @@
 import BarMeter from '@/Components/admin/BarMeter';
 import KpiCard from '@/Components/admin/KpiCard';
+import Modal from '@/Components/Modal';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { currencyOptionsForLocale } from '@/lib/currencies';
 import { useLocale } from '@/lib/locale';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
-import { type FormEvent, useMemo, useState } from 'react';
+import { useEffect, type FormEvent, useMemo, useState } from 'react';
 
 const OTHER_STORE_ID = -1;
 
@@ -38,6 +38,13 @@ type MonitorRow = {
         currency: string;
         status: string;
     } | null;
+    latest_run?: {
+        id: number;
+        status: string;
+        started_at: string | null;
+        finished_at: string | null;
+        error_message: string | null;
+    } | null;
 };
 
 type Option = {
@@ -55,6 +62,11 @@ type BookmarkletSession = {
     selector_browser_url: string;
 };
 
+type RunsEventPayload = {
+    running_monitor_ids: number[];
+    timestamp: string;
+};
+
 export default function MonitorsIndex({
     monitors,
     monsters,
@@ -66,23 +78,33 @@ export default function MonitorsIndex({
 }) {
     const { locale, x } = useLocale();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
-    const currencyOptions = useMemo(
-        () => currencyOptionsForLocale(locale),
-        [locale],
-    );
 
     const form = useForm({
         monster_id: monsters[0]?.id ?? 0,
         site_id: sites[0]?.id ?? OTHER_STORE_ID,
         site_name: '',
         product_url: '',
-        currency: 'EUR',
         check_interval_minutes: 60,
         active: true,
     });
 
     const [loadingRun, setLoadingRun] = useState<number | null>(null);
     const [loadingSelector, setLoadingSelector] = useState<number | null>(null);
+    const [editingMonitor, setEditingMonitor] = useState<MonitorRow | null>(null);
+    const [runningMonitorIds, setRunningMonitorIds] = useState<number[]>(
+        () => initialRunningMonitorIds(monitors),
+    );
+    const editForm = useForm({
+        monster_id: 0,
+        site_id: 0,
+        product_url: '',
+        check_interval_minutes: 60,
+        active: true,
+    });
+    const runningMonitorSet = useMemo(
+        () => new Set(runningMonitorIds),
+        [runningMonitorIds],
+    );
 
     const stats = useMemo(() => {
         const active = monitors.filter((monitor) => monitor.active).length;
@@ -119,8 +141,80 @@ export default function MonitorsIndex({
                 label: x('Last run failed', 'Laatste run mislukt'),
                 value: stats.failedLast,
             },
+            {
+                id: 'running',
+                label: x('Running now', 'Nu bezig'),
+                value: runningMonitorIds.length,
+            },
         ];
-    }, [stats, x]);
+    }, [runningMonitorIds.length, stats, x]);
+
+    useEffect(() => {
+        setRunningMonitorIds(initialRunningMonitorIds(monitors));
+    }, [monitors]);
+
+    useEffect(() => {
+        let source: EventSource | null = null;
+        let reconnectTimer: number | null = null;
+
+        const connect = () => {
+            source = new EventSource(route('api.admin.monitors.events'));
+
+            source.addEventListener('monitor-runs', (event) => {
+                if (!(event instanceof MessageEvent)) {
+                    return;
+                }
+
+                const payload = parseRunsEvent(event.data);
+                if (!payload) {
+                    return;
+                }
+
+                const nextRunning = payload.running_monitor_ids;
+                setRunningMonitorIds((currentRunning) => {
+                    const completed = currentRunning.filter(
+                        (monitorId) => !nextRunning.includes(monitorId),
+                    );
+
+                    if (completed.length > 0) {
+                        router.reload({
+                            only: ['monitors'],
+                        });
+                    }
+
+                    return nextRunning;
+                });
+            });
+
+            source.onerror = () => {
+                if (source) {
+                    source.close();
+                    source = null;
+                }
+
+                if (reconnectTimer !== null) {
+                    return;
+                }
+
+                reconnectTimer = window.setTimeout(() => {
+                    reconnectTimer = null;
+                    connect();
+                }, 1500);
+            };
+        };
+
+        connect();
+
+        return () => {
+            if (reconnectTimer !== null) {
+                window.clearTimeout(reconnectTimer);
+            }
+
+            if (source) {
+                source.close();
+            }
+        };
+    }, []);
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -194,37 +288,36 @@ export default function MonitorsIndex({
         }
     };
 
-    const editMonitor = (monitor: MonitorRow) => {
-        const productUrl =
-            window.prompt(
-                x('Product URL', 'Product-URL'),
-                monitor.product_url,
-            ) ??
-            monitor.product_url;
-        const currency =
-            window.prompt(
-                x('Currency (3-letter)', 'Valuta (3 letters)'),
-                monitor.currency,
-            ) ??
-            monitor.currency;
-        const interval = Number(
-            window.prompt(
-                x('Check interval minutes', 'Controle-interval minuten'),
-                String(monitor.check_interval_minutes),
-            ) ?? monitor.check_interval_minutes,
-        );
+    const openEditModal = (monitor: MonitorRow) => {
+        setEditingMonitor(monitor);
+        editForm.setData('monster_id', monitor.monster_id);
+        editForm.setData('site_id', monitor.site_id);
+        editForm.setData('product_url', monitor.product_url);
+        editForm.setData('check_interval_minutes', monitor.check_interval_minutes);
+        editForm.setData('active', monitor.active);
+        editForm.clearErrors();
+    };
 
-        if (!productUrl || !currency || !Number.isFinite(interval)) {
+    const closeEditModal = () => {
+        setEditingMonitor(null);
+        editForm.reset();
+        editForm.clearErrors();
+    };
+
+    const submitEditMonitor = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!editingMonitor) {
             return;
         }
 
-        router.put(route('admin.monitors.update', monitor.id), {
-            monster_id: monitor.monster_id,
-            site_id: monitor.site_id,
-            product_url: productUrl,
-            currency,
-            check_interval_minutes: interval,
-            active: monitor.active,
+        editForm.transform((data) => ({
+            ...data,
+            product_url: data.product_url.trim(),
+        }));
+
+        editForm.put(route('admin.monitors.update', editingMonitor.id), {
+            preserveScroll: true,
+            onSuccess: closeEditModal,
         });
     };
 
@@ -233,7 +326,6 @@ export default function MonitorsIndex({
             monster_id: monitor.monster_id,
             site_id: monitor.site_id,
             product_url: monitor.product_url,
-            currency: monitor.currency,
             check_interval_minutes: monitor.check_interval_minutes,
             active: !monitor.active,
         });
@@ -367,27 +459,12 @@ export default function MonitorsIndex({
                                         >
                                             {x('Currency', 'Valuta')}
                                         </label>
-                                        <select
+                                        <input
                                             id="create-monitor-currency"
-                                            className="w-full min-w-0 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
-                                            value={form.data.currency}
-                                            onChange={(event) =>
-                                                form.setData(
-                                                    'currency',
-                                                    event.target.value,
-                                                )
-                                            }
-                                        >
-                                            {currencyOptions.map((currency) => (
-                                                <option
-                                                    key={currency.code}
-                                                    value={currency.code}
-                                                    className="text-black"
-                                                >
-                                                    {currency.label}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            value="EUR"
+                                            disabled
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
+                                        />
                                     </div>
 
                                     {isOtherStoreSelected && (
@@ -517,50 +594,74 @@ export default function MonitorsIndex({
                                 </p>
                             )}
 
-                            {monitors.map((monitor) => (
-                                <article
-                                    key={monitor.id}
-                                    className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4"
-                                >
-                                    <div className="flex flex-wrap items-start justify-between gap-3">
-                                        <div className="space-y-1 text-sm text-white/75">
-                                            <p className="font-semibold text-white">
-                                                {monitor.monster.name} @ {monitor.site.name}
-                                            </p>
-                                            <p className="break-all text-white/65">{monitor.product_url}</p>
-                                            <p>
-                                                {x('Interval:', 'Interval:')}{' '}
-                                                {monitor.check_interval_minutes}m •{' '}
-                                                {x('Currency:', 'Valuta:')} {monitor.currency} •{' '}
-                                                {x('Active:', 'Actief:')}{' '}
-                                                {monitor.active
-                                                    ? x('Yes', 'Ja')
-                                                    : x('No', 'Nee')}
-                                            </p>
-                                            <p>
-                                                {x('Next check:', 'Volgende check:')}{' '}
-                                                {monitor.next_check_at
-                                                    ? new Date(
-                                                          monitor.next_check_at,
-                                                      ).toLocaleString(dateLocale)
-                                                    : x('N/A', 'N/B')}
-                                            </p>
-                                            {monitor.latest_snapshot && (
-                                                <p>
-                                                    {x('Latest:', 'Laatste:')}{' '}
-                                                    {monitor.latest_snapshot
-                                                        .effective_total_cents !==
-                                                    null
-                                                        ? `${monitor.latest_snapshot.currency} ${(monitor.latest_snapshot.effective_total_cents / 100).toFixed(2)}`
-                                                        : x('N/A', 'N/B')}
-                                                    {' • '}
-                                                    {
-                                                        monitor.latest_snapshot
-                                                            .status
-                                                    }
+                            {monitors.map((monitor) => {
+                                const isQueueing = loadingRun === monitor.id;
+                                const isRunning = runningMonitorSet.has(monitor.id);
+
+                                return (
+                                    <article
+                                        key={monitor.id}
+                                        className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4"
+                                    >
+                                        <div className="flex flex-wrap items-start justify-between gap-3">
+                                            <div className="space-y-1 text-sm text-white/75">
+                                                <p className="font-semibold text-white">
+                                                    {monitor.monster.name} @ {monitor.site.name}
                                                 </p>
-                                            )}
-                                        </div>
+                                                <p className="break-all text-white/65">{monitor.product_url}</p>
+                                                <p>
+                                                    {x('Interval:', 'Interval:')}{' '}
+                                                    {monitor.check_interval_minutes}m •{' '}
+                                                    {x('Currency:', 'Valuta:')} EUR •{' '}
+                                                    {x('Active:', 'Actief:')}{' '}
+                                                    {monitor.active
+                                                        ? x('Yes', 'Ja')
+                                                        : x('No', 'Nee')}
+                                                </p>
+                                                <p>
+                                                    {x('Next check:', 'Volgende check:')}{' '}
+                                                    {monitor.next_check_at
+                                                        ? new Date(
+                                                              monitor.next_check_at,
+                                                          ).toLocaleString(dateLocale)
+                                                        : x('N/A', 'N/B')}
+                                                </p>
+                                                {monitor.latest_snapshot && (
+                                                    <p>
+                                                        {x('Latest:', 'Laatste:')}{' '}
+                                                        {monitor.latest_snapshot
+                                                            .effective_total_cents !==
+                                                        null
+                                                            ? `${monitor.latest_snapshot.currency} ${(monitor.latest_snapshot.effective_total_cents / 100).toFixed(2)}`
+                                                            : x('N/A', 'N/B')}
+                                                        {' • '}
+                                                        {
+                                                            monitor.latest_snapshot
+                                                                .status
+                                                        }
+                                                    </p>
+                                                )}
+                                                <div className="mt-3">
+                                                    {isRunning ? (
+                                                        <div className="max-w-xs space-y-1.5">
+                                                            <div className="flex items-center gap-2 text-xs font-medium text-orange-200">
+                                                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-orange-300 border-t-transparent" />
+                                                                {x(
+                                                                    'Scraping now...',
+                                                                    'Nu aan het scrapen...',
+                                                                )}
+                                                            </div>
+                                                            <div className="mt-1.5 h-1.5 overflow-hidden rounded bg-orange-900/40">
+                                                                <div className="h-full w-1/2 animate-pulse rounded bg-orange-300" />
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-white/55">
+                                                            {x('Idle', 'Inactief')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
 
                                         <div className="flex flex-wrap gap-2">
                                             <button
@@ -572,7 +673,7 @@ export default function MonitorsIndex({
                                                     }),
                                                     'border-white/20 bg-transparent text-white hover:bg-white/10',
                                                 )}
-                                                onClick={() => editMonitor(monitor)}
+                                                onClick={() => openEditModal(monitor)}
                                             >
                                                 {x('Edit', 'Bewerken')}
                                             </button>
@@ -602,12 +703,14 @@ export default function MonitorsIndex({
                                                     }),
                                                     'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                                 )}
-                                                disabled={loadingRun === monitor.id}
+                                                disabled={isQueueing || isRunning}
                                                 onClick={() => runNow(monitor)}
                                             >
-                                                {loadingRun === monitor.id
-                                                    ? x('Running...', 'Draait...')
-                                                    : x('Run Now', 'Nu Draaien')}
+                                                {isQueueing
+                                                    ? x('Queueing...', 'In wachtrij...')
+                                                    : isRunning
+                                                      ? x('Running...', 'Draait...')
+                                                      : x('Run Now', 'Nu Draaien')}
                                             </button>
                                             <button
                                                 type="button"
@@ -653,11 +756,146 @@ export default function MonitorsIndex({
                                         </div>
                                     </div>
                                 </article>
-                            ))}
+                                );
+                            })}
                         </CardContent>
                     </Card>
                 </div>
             </div>
+
+            <Modal show={editingMonitor !== null} maxWidth="2xl" onClose={closeEditModal}>
+                <form
+                    onSubmit={submitEditMonitor}
+                    className="space-y-5 bg-[color:var(--landing-surface)] p-6 text-white"
+                >
+                    <div>
+                        <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--landing-accent)]">
+                            {x('Monitor', 'Monitor')}
+                        </p>
+                        <h3 className="mt-1 font-display text-xl font-semibold">
+                            {x('Edit Monitor', 'Monitor Bewerken')}
+                        </h3>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-1">
+                            <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
+                                {x('Monster', 'Monster')}
+                            </label>
+                            <input
+                                value={editingMonitor?.monster.name ?? ''}
+                                disabled
+                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
+                                {x('Store', 'Winkel')}
+                            </label>
+                            <input
+                                value={
+                                    editingMonitor
+                                        ? `${editingMonitor.site.name} (${editingMonitor.site.domain})`
+                                        : ''
+                                }
+                                disabled
+                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label
+                            htmlFor="edit-monitor-product-url"
+                            className="block text-xs uppercase tracking-[0.12em] text-white/60"
+                        >
+                            {x('Product URL', 'Product-URL')}
+                        </label>
+                        <input
+                            id="edit-monitor-product-url"
+                            value={editForm.data.product_url}
+                            onChange={(event) =>
+                                editForm.setData('product_url', event.target.value)
+                            }
+                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
+                            placeholder="https://example.com/product-url"
+                            required
+                        />
+                        {editForm.errors.product_url && (
+                            <p className="text-xs text-red-300">{editForm.errors.product_url}</p>
+                        )}
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+                        <div className="space-y-1">
+                            <label
+                                htmlFor="edit-monitor-interval"
+                                className="block text-xs uppercase tracking-[0.12em] text-white/60"
+                            >
+                                {x('Interval (minutes)', 'Interval (minuten)')}
+                            </label>
+                            <input
+                                id="edit-monitor-interval"
+                                type="number"
+                                min={15}
+                                max={1440}
+                                value={editForm.data.check_interval_minutes}
+                                onChange={(event) =>
+                                    editForm.setData(
+                                        'check_interval_minutes',
+                                        Number(event.target.value),
+                                    )
+                                }
+                                className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
+                                required
+                            />
+                            {editForm.errors.check_interval_minutes && (
+                                <p className="text-xs text-red-300">
+                                    {editForm.errors.check_interval_minutes}
+                                </p>
+                            )}
+                        </div>
+
+                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white">
+                            <input
+                                type="checkbox"
+                                checked={editForm.data.active}
+                                onChange={(event) =>
+                                    editForm.setData('active', event.target.checked)
+                                }
+                                className="h-4 w-4 rounded border-white/40 bg-transparent text-[color:var(--landing-accent)] focus:ring-[color:var(--landing-accent)]"
+                            />
+                            {x('Active', 'Actief')}
+                        </label>
+                    </div>
+
+                    <div className="flex flex-wrap justify-end gap-2">
+                        <button
+                            type="button"
+                            className={cn(
+                                buttonVariants({ variant: 'outline' }),
+                                'border-white/20 bg-transparent text-white hover:bg-white/10',
+                            )}
+                            onClick={closeEditModal}
+                            disabled={editForm.processing}
+                        >
+                            {x('Cancel', 'Annuleren')}
+                        </button>
+                        <button
+                            type="submit"
+                            className={cn(
+                                buttonVariants({ variant: 'default' }),
+                                'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                            )}
+                            disabled={editForm.processing}
+                        >
+                            {editForm.processing
+                                ? x('Saving...', 'Opslaan...')
+                                : x('Save Changes', 'Wijzigingen Opslaan')}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </AuthenticatedLayout>
     );
 }
@@ -682,4 +920,43 @@ function hasPriceSelectorConfig(selectorConfig: Record<string, unknown> | null):
     return (price?.parts ?? []).some(
         (part) => (part.css ?? '').trim() !== '' || (part.xpath ?? '').trim() !== '',
     );
+}
+
+function isActiveRunStatus(status?: string | null): boolean {
+    return status === 'running';
+}
+
+function initialRunningMonitorIds(records: MonitorRow[]): number[] {
+    return records
+        .filter(
+            (record) =>
+                isActiveRunStatus(record.latest_run?.status) &&
+                record.latest_run?.finished_at === null,
+        )
+        .map((record) => record.id)
+        .sort((a, b) => a - b);
+}
+
+function parseRunsEvent(rawData: string): RunsEventPayload | null {
+    try {
+        const payload = JSON.parse(rawData) as Partial<RunsEventPayload>;
+        if (!Array.isArray(payload.running_monitor_ids)) {
+            return null;
+        }
+
+        const runningMonitorIds = payload.running_monitor_ids
+            .map((value) => Number(value))
+            .filter((value) => Number.isInteger(value) && value > 0)
+            .sort((a, b) => a - b);
+
+        return {
+            running_monitor_ids: Array.from(new Set(runningMonitorIds)),
+            timestamp:
+                typeof payload.timestamp === 'string'
+                    ? payload.timestamp
+                    : new Date().toISOString(),
+        };
+    } catch {
+        return null;
+    }
 }

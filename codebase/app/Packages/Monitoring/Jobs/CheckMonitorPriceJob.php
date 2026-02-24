@@ -5,11 +5,13 @@ namespace Packages\Monitoring\Jobs;
 use App\Models\Monitor;
 use App\Models\MonitorRun;
 use App\Models\PriceSnapshot;
-use Packages\Monitoring\Services\BestPriceProjector;
-use Packages\Monitoring\Services\DomainRateLimiter;
-use Packages\PriceExtraction\Services\PriceExtractionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Packages\Contributions\Services\ContributorAlertService;
+use Packages\Monitoring\Services\BestPriceProjector;
+use Packages\Monitoring\Services\DomainRateLimiter;
+use Packages\Monitoring\Services\MonitorFailureGuardService;
+use Packages\PriceExtraction\Services\PriceExtractionService;
 use Throwable;
 
 class CheckMonitorPriceJob implements ShouldQueue
@@ -42,12 +44,20 @@ class CheckMonitorPriceJob implements ShouldQueue
         PriceExtractionService $priceExtractionService,
         DomainRateLimiter $domainRateLimiter,
         BestPriceProjector $bestPriceProjector,
+        ContributorAlertService $contributorAlertService,
+        MonitorFailureGuardService $monitorFailureGuardService,
     ): void {
         $monitor = Monitor::query()
             ->with(['site', 'monster'])
             ->find($this->monitorId);
 
-        if (! $monitor || ! $monitor->active) {
+        if (! $monitor || ! $monitor->canRunScheduledChecks()) {
+            $this->markRunSkipped(
+                $monitor
+                    ? 'Monitor is not active or approved anymore.'
+                    : 'Monitor was deleted before processing started.',
+            );
+
             return;
         }
 
@@ -78,14 +88,23 @@ class CheckMonitorPriceJob implements ShouldQueue
                 'effective_total_cents' => $result->effectiveTotalCents,
                 'can_count' => $result->canCount,
                 'price_per_can_cents' => $result->pricePerCanCents,
-                'currency' => $result->currency,
+                'currency' => (string) ($monitor->currency ?: Monitor::DEFAULT_CURRENCY),
                 'availability' => $result->availability,
                 'raw_text' => $result->rawText,
                 'status' => $result->status,
                 'error_code' => $result->errorCode,
             ]);
 
+            $wasAutoRemoved = $monitorFailureGuardService->handleFailedSnapshot($monitor, $snapshot);
+            if ($wasAutoRemoved) {
+                $bestPriceProjector->recomputeForMonsterCurrency(
+                    (int) $monitor->monster_id,
+                    (string) ($monitor->currency ?: Monitor::DEFAULT_CURRENCY),
+                );
+            }
+
             $bestPriceProjector->projectFromSnapshot($snapshot);
+            $contributorAlertService->handleSnapshot($snapshot, $monitor);
 
             $run->update([
                 'status' => $result->status === 'failed' ? 'failed' : 'success',
@@ -130,5 +149,22 @@ class CheckMonitorPriceJob implements ShouldQueue
             'status' => 'running',
             'attempt' => $this->attempts(),
         ]);
+    }
+
+    private function markRunSkipped(string $reason): void
+    {
+        if ($this->monitorRunId === null) {
+            return;
+        }
+
+        MonitorRun::query()
+            ->where('id', $this->monitorRunId)
+            ->whereNull('finished_at')
+            ->update([
+                'status' => 'skipped',
+                'finished_at' => now(),
+                'attempt' => $this->attempts(),
+                'error_message' => $reason,
+            ]);
     }
 }

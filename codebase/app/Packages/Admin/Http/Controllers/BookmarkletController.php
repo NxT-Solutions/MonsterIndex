@@ -4,11 +4,12 @@ namespace Packages\Admin\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Monitor;
-use Packages\Bookmarklet\Services\BookmarkletSessionService;
+use App\Support\Authorization\PermissionBootstrapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
+use Packages\Bookmarklet\Services\BookmarkletSessionService;
 use Throwable;
 
 class BookmarkletController extends Controller
@@ -19,12 +20,17 @@ class BookmarkletController extends Controller
 
     public function session(Request $request): JsonResponse
     {
+        if ($request->user()) {
+            PermissionBootstrapper::syncUserFromLegacyRole($request->user());
+        }
+
         $validated = $request->validate([
             'monitor_id' => ['required', 'integer', 'exists:monitors,id'],
             'lang' => ['nullable', 'in:en,nl'],
         ]);
 
         $monitor = Monitor::query()->findOrFail($validated['monitor_id']);
+        $this->authorize('update', $monitor);
         $session = $this->bookmarkletSessionService->create($monitor, $request->user());
         $lang = $validated['lang'] ?? 'en';
 
@@ -42,6 +48,10 @@ class BookmarkletController extends Controller
 
     public function selectorBrowser(Request $request, Monitor $monitor): Response
     {
+        if ($request->user()) {
+            PermissionBootstrapper::syncUserFromLegacyRole($request->user());
+        }
+
         $monitor->loadMissing('monster');
 
         $validated = $request->validate([
@@ -59,6 +69,8 @@ class BookmarkletController extends Controller
             403,
             'Selector token is invalid or expired.',
         );
+
+        $this->authorize('update', $monitor);
 
         $targetUrl = $validated['url'] ?: $monitor->product_url;
         if (! $this->supportsUrl($targetUrl)) {
@@ -79,12 +91,16 @@ class BookmarkletController extends Controller
             ]);
         }
 
-        $returnUrl = $monitor->monster
-            ? route('admin.monsters.show', [
-                'monster' => $monitor->monster->slug,
-                'lang' => $lang,
-            ], absolute: true)
-            : route('admin.monsters.index', ['lang' => $lang], absolute: true);
+        $user = $request->user();
+        $isAdmin = $user?->can('monitors.manage.any') ?? false;
+        $returnUrl = $isAdmin
+            ? ($monitor->monster
+                ? route('admin.monsters.show', [
+                    'monster' => $monitor->monster->slug,
+                    'lang' => $lang,
+                ], absolute: true)
+                : route('admin.monsters.index', ['lang' => $lang], absolute: true))
+            : route('contribute.monitors.index', ['lang' => $lang], absolute: true);
 
         $selectorScriptUrl = route('bookmarklet.script', [
             'token' => $session->token,
