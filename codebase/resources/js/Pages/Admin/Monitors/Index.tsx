@@ -284,7 +284,7 @@ export default function MonitorsIndex({
                                     className="grid gap-3 md:grid-cols-12"
                                     onSubmit={submit}
                                 >
-                                    <div className="min-w-0 space-y-1.5 md:col-span-6">
+                                    <div className="min-w-0 space-y-1.5 md:col-span-4">
                                         <label
                                             htmlFor="create-monitor-monster"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
@@ -314,7 +314,7 @@ export default function MonitorsIndex({
                                         </select>
                                     </div>
 
-                                    <div className="min-w-0 space-y-1.5 md:col-span-6">
+                                    <div className="min-w-0 space-y-1.5 md:col-span-4">
                                         <label
                                             htmlFor="create-monitor-store"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
@@ -344,6 +344,21 @@ export default function MonitorsIndex({
                                                 )}
                                             </option>
                                         </select>
+                                    </div>
+
+                                    <div className="min-w-0 space-y-1.5 md:col-span-4">
+                                        <label
+                                            htmlFor="create-monitor-currency"
+                                            className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
+                                        >
+                                            {x('Currency', 'Valuta')}
+                                        </label>
+                                        <input
+                                            id="create-monitor-currency"
+                                            value="EUR"
+                                            disabled
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
+                                        />
                                     </div>
 
                                     {isOtherStoreSelected && (

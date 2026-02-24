@@ -205,7 +205,7 @@ export default function ContributionMonitorsIndex({
                         </CardHeader>
                         <CardContent>
                             <form className="grid gap-3 md:grid-cols-12" onSubmit={submitCreate}>
-                                <div className="md:col-span-6">
+                                <div className="md:col-span-4">
                                     <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
                                         {x('Monster', 'Monster')}
                                     </label>
@@ -222,7 +222,7 @@ export default function ContributionMonitorsIndex({
                                     </select>
                                 </div>
 
-                                <div className="md:col-span-6">
+                                <div className="md:col-span-4">
                                     <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
                                         {x('Store', 'Winkel')}
                                     </label>
@@ -240,6 +240,17 @@ export default function ContributionMonitorsIndex({
                                             {x('Other (create from URL)', 'Andere (maak uit URL)')}
                                         </option>
                                     </select>
+                                </div>
+
+                                <div className="md:col-span-4">
+                                    <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                        {x('Currency', 'Valuta')}
+                                    </label>
+                                    <input
+                                        className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
+                                        value="EUR"
+                                        disabled
+                                    />
                                 </div>
 
                                 {isOtherStore && (

@@ -319,7 +319,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                             </CardHeader>
                             <CardContent>
                                 <form
-                                    className="grid gap-3 md:grid-cols-4"
+                                    className="grid gap-3 md:grid-cols-5"
                                     onSubmit={submitRecord}
                                 >
                                     <input
@@ -342,6 +342,16 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                         }
                                         required
                                     />
+                                    <div>
+                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x('Currency', 'Valuta')}
+                                        </label>
+                                        <input
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
+                                            value="EUR"
+                                            disabled
+                                        />
+                                    </div>
                                     <button
                                         type="submit"
                                         className={cn(
