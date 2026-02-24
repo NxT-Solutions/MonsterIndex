@@ -319,31 +319,38 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                             </CardHeader>
                             <CardContent>
                                 <form
-                                    className="grid gap-3 md:grid-cols-5"
+                                    className="grid gap-3 md:grid-cols-12"
                                     onSubmit={submitRecord}
                                 >
-                                    <input
-                                        className="rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                        placeholder={x(
-                                            'Website name (optional)',
-                                            'Websitenaam (optioneel)',
-                                        )}
-                                        value={form.data.site_name}
-                                        onChange={(event) =>
-                                            form.setData('site_name', event.target.value)
-                                        }
-                                    />
-                                    <input
-                                        className="md:col-span-2 rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                        placeholder="https://example.com/product-url"
-                                        value={form.data.product_url}
-                                        onChange={(event) =>
-                                            form.setData('product_url', event.target.value)
-                                        }
-                                        required
-                                    />
-                                    <div>
-                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                    <div className="space-y-1 md:col-span-3">
+                                        <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x('Website Name', 'Websitenaam')}
+                                        </label>
+                                        <input
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
+                                            placeholder={x('Optional', 'Optioneel')}
+                                            value={form.data.site_name}
+                                            onChange={(event) =>
+                                                form.setData('site_name', event.target.value)
+                                            }
+                                        />
+                                    </div>
+                                    <div className="space-y-1 md:col-span-5">
+                                        <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
+                                            {x('Product URL', 'Product-URL')}
+                                        </label>
+                                        <input
+                                            className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
+                                            placeholder="https://example.com/product-url"
+                                            value={form.data.product_url}
+                                            onChange={(event) =>
+                                                form.setData('product_url', event.target.value)
+                                            }
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-1 md:col-span-2">
+                                        <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
                                             {x('Currency', 'Valuta')}
                                         </label>
                                         <input
@@ -352,16 +359,18 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                             disabled
                                         />
                                     </div>
-                                    <button
-                                        type="submit"
-                                        className={cn(
-                                            buttonVariants({ variant: 'default' }),
-                                            'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
-                                        )}
-                                        disabled={form.processing}
-                                    >
-                                        {x('Add Record', 'Record Toevoegen')}
-                                    </button>
+                                    <div className="md:col-span-2 md:self-end">
+                                        <button
+                                            type="submit"
+                                            className={cn(
+                                                buttonVariants({ variant: 'default' }),
+                                                'w-full bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                            )}
+                                            disabled={form.processing}
+                                        >
+                                            {x('Add Record', 'Record Toevoegen')}
+                                        </button>
+                                    </div>
                                 </form>
                                 <p className="mt-2 text-xs text-white/60">
                                     {x(
