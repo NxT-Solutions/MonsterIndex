@@ -9,8 +9,6 @@ services:
       - redis
     volumes:
       - ../../codebase:/var/www/html
-      - ../../.persistent/laravel/storage:/var/www/html/storage
-      - ../../.persistent/laravel/storage-public:/var/www/html/public/storage
 
   scheduler:
     extends:
@@ -24,8 +22,6 @@ services:
       CONTAINER_ROLE: scheduler
     volumes:
       - ../../codebase:/var/www/html
-      - ../../.persistent/laravel/storage:/var/www/html/storage
-      - ../../.persistent/laravel/storage-public:/var/www/html/public/storage
 
   queue:
     extends:
@@ -39,8 +35,6 @@ services:
       CONTAINER_ROLE: queue
     volumes:
       - ../../codebase:/var/www/html
-      - ../../.persistent/laravel/storage:/var/www/html/storage
-      - ../../.persistent/laravel/storage-public:/var/www/html/public/storage
 
   www:
     extends:

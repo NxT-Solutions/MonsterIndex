@@ -1,6 +1,5 @@
 .docker/local/.env
 .docker/local/.env~
-.persistent
 
 .DS_Store
 .idea
