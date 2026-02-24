@@ -159,9 +159,10 @@ it('creates contributor alerts on price drops with cooldown', function () {
         $monitor->fresh(['monster', 'site']),
     );
 
+    // New global best per-can updates bypass cooldown for followers.
     expect(ContributorAlert::query()
         ->where('user_id', $contributor->id)
-        ->count())->toBe(1);
+        ->count())->toBe(2);
 
     $this->travel(6)->hours();
     $this->travel(1)->minutes();
@@ -183,7 +184,7 @@ it('creates contributor alerts on price drops with cooldown', function () {
 
     expect(ContributorAlert::query()
         ->where('user_id', $contributor->id)
-        ->count())->toBe(2);
+        ->count())->toBe(3);
 });
 
 it('creates contributor alerts when a new monitor snapshot beats the previous monster best', function () {

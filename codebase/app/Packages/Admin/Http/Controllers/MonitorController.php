@@ -21,6 +21,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MonitorController extends Controller
 {
+    private const QUEUED_STALE_MINUTES = 15;
+
+    private const RUNNING_STALE_MINUTES = 20;
+
     public function __construct(
         private readonly BestPriceProjector $bestPriceProjector,
     ) {}
@@ -152,6 +156,15 @@ class MonitorController extends Controller
                 'ok' => false,
                 'message' => 'Only approved and active monitors can be executed.',
             ], 422);
+        }
+
+        $existingRun = $this->latestInFlightRun((int) $monitor->id);
+        if ($existingRun) {
+            return response()->json([
+                'ok' => true,
+                'message' => 'Monitor run already queued.',
+                'monitor_run_id' => $existingRun->id,
+            ]);
         }
 
         $run = MonitorRun::query()->create([
@@ -306,6 +319,11 @@ class MonitorController extends Controller
 
     private function queueImmediateRun(Monitor $monitor, string $triggeredBy): void
     {
+        $existingRun = $this->latestInFlightRun((int) $monitor->id);
+        if ($existingRun) {
+            return;
+        }
+
         $run = MonitorRun::query()->create([
             'monitor_id' => $monitor->id,
             'started_at' => now(),
@@ -359,7 +377,7 @@ class MonitorController extends Controller
             })
             ->where('status', 'queued')
             ->whereNull('finished_at')
-            ->where('started_at', '<=', $now->copy()->subMinutes(3))
+            ->where('started_at', '<=', $now->copy()->subMinutes(self::QUEUED_STALE_MINUTES))
             ->update([
                 'status' => 'skipped',
                 'finished_at' => $now,
@@ -372,11 +390,21 @@ class MonitorController extends Controller
             })
             ->where('status', 'running')
             ->whereNull('finished_at')
-            ->where('started_at', '<=', $now->copy()->subMinutes(10))
+            ->where('started_at', '<=', $now->copy()->subMinutes(self::RUNNING_STALE_MINUTES))
             ->update([
                 'status' => 'error',
                 'finished_at' => $now,
                 'error_message' => 'Auto-closed: run exceeded expected timeout.',
             ]);
+    }
+
+    private function latestInFlightRun(int $monitorId): ?MonitorRun
+    {
+        return MonitorRun::query()
+            ->where('monitor_id', $monitorId)
+            ->whereIn('status', ['queued', 'running'])
+            ->whereNull('finished_at')
+            ->latest('id')
+            ->first();
     }
 }

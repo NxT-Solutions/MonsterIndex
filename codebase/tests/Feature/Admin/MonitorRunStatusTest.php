@@ -32,6 +32,39 @@ it('creates a queued monitor run when admin triggers run-now', function () {
     Queue::assertPushed(CheckMonitorPriceJob::class);
 });
 
+it('does not enqueue duplicate in-flight monitor runs for run-now', function () {
+    Queue::fake();
+
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $monitor = Monitor::factory()->create();
+
+    $first = $this->actingAs($admin)
+        ->postJson(route('api.admin.monitors.run-now', $monitor->id));
+
+    $first->assertOk()
+        ->assertJsonPath('ok', true)
+        ->assertJsonStructure(['monitor_run_id']);
+
+    $firstRunId = (int) $first->json('monitor_run_id');
+
+    $second = $this->actingAs($admin)
+        ->postJson(route('api.admin.monitors.run-now', $monitor->id));
+
+    $second->assertOk()
+        ->assertJsonPath('ok', true)
+        ->assertJsonPath('monitor_run_id', $firstRunId);
+
+    expect(MonitorRun::query()
+        ->where('monitor_id', $monitor->id)
+        ->whereNull('finished_at')
+        ->count())->toBe(1);
+
+    Queue::assertPushed(CheckMonitorPriceJob::class, 1);
+});
+
 it('streams running monitor ids for admin monster records', function () {
     $admin = User::factory()->create([
         'role' => User::ROLE_ADMIN,

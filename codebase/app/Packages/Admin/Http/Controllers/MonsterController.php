@@ -18,6 +18,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MonsterController extends Controller
 {
+    private const QUEUED_STALE_MINUTES = 15;
+
+    private const RUNNING_STALE_MINUTES = 20;
+
     public function index(): Response
     {
         return Inertia::render('Admin/Monsters/Index', [
@@ -257,7 +261,7 @@ class MonsterController extends Controller
             })
             ->where('status', 'queued')
             ->whereNull('finished_at')
-            ->where('started_at', '<=', $now->copy()->subMinutes(3))
+            ->where('started_at', '<=', $now->copy()->subMinutes(self::QUEUED_STALE_MINUTES))
             ->update([
                 'status' => 'skipped',
                 'finished_at' => $now,
@@ -270,7 +274,7 @@ class MonsterController extends Controller
             })
             ->where('status', 'running')
             ->whereNull('finished_at')
-            ->where('started_at', '<=', $now->copy()->subMinutes(10))
+            ->where('started_at', '<=', $now->copy()->subMinutes(self::RUNNING_STALE_MINUTES))
             ->update([
                 'status' => 'error',
                 'finished_at' => $now,

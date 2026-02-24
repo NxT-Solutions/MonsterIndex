@@ -25,7 +25,10 @@ if [ -f /var/www/html/artisan ]; then
 fi
 
 if [ "$role" = "queue" ]; then
-  php /var/www/html/artisan queue:work --verbose --tries=3 --timeout=120
+  while true; do
+    php /var/www/html/artisan queue:work --verbose --tries=3 --timeout=120 --sleep=1 --max-jobs=250 --max-time=1800
+    sleep 1
+  done
 elif [ "$role" = "scheduler" ]; then
   while true; do
     php /var/www/html/artisan schedule:run --verbose --no-interaction

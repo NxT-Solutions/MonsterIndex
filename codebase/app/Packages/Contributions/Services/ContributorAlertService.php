@@ -55,6 +55,9 @@ class ContributorAlertService
             $currency,
             $snapshot,
         );
+        $isNewGlobalPerCanLow = $currentPerCanCents !== null
+            && $previousBestPerCanCents !== null
+            && $currentPerCanCents < $previousBestPerCanCents;
 
         $hasTotalDrop = $previousSnapshotByTotal !== null
             && $previousSnapshotByTotal->effective_total_cents !== null
@@ -76,18 +79,23 @@ class ContributorAlertService
 
         $hasDropFromPreviousSnapshot = $hasSequentialTotalDrop || $hasSequentialPerCanDrop;
 
-        if (! $hasDropFromPreviousSnapshot && ! $hasTotalDrop && ! $hasPerCanDropFromNewMonitor) {
+        if (! $hasDropFromPreviousSnapshot && ! $hasTotalDrop && ! $hasPerCanDropFromNewMonitor && ! $isNewGlobalPerCanLow) {
             return;
         }
 
-        $eligibleFollows = MonsterFollow::query()
+        $eligibleFollowsQuery = MonsterFollow::query()
             ->where('monster_id', $monitor->monster_id)
-            ->where('currency', $currency)
-            ->where(function ($query): void {
+            ->where('currency', $currency);
+
+        // Always notify followers when a brand-new global best per-can price is found.
+        if (! $isNewGlobalPerCanLow) {
+            $eligibleFollowsQuery->where(function ($query): void {
                 $query->whereNull('last_alerted_at')
                     ->orWhere('last_alerted_at', '<=', now()->subHours(self::ALERT_COOLDOWN_HOURS));
-            })
-            ->get();
+            });
+        }
+
+        $eligibleFollows = $eligibleFollowsQuery->get();
 
         if ($eligibleFollows->isEmpty()) {
             return;
@@ -100,7 +108,9 @@ class ContributorAlertService
             ?? $this->resolvePerCanCentsFromSnapshot($snapshot);
         $previousPerCanForMessage = null;
 
-        if ($hasDropFromPreviousSnapshot) {
+        if ($isNewGlobalPerCanLow) {
+            $previousPerCanForMessage = $previousBestPerCanCents;
+        } elseif ($hasDropFromPreviousSnapshot) {
             $previousPerCanForMessage = $previousMonitorPerCanCents;
         } elseif ($hasTotalDrop) {
             $previousPerCanForMessage = $previousSnapshotByTotal

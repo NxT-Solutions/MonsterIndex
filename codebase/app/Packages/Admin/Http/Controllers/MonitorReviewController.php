@@ -114,12 +114,21 @@ class MonitorReviewController extends Controller
 
         $monitor->save();
 
-        $run = MonitorRun::query()->create([
-            'monitor_id' => $monitor->id,
-            'started_at' => now(),
-            'status' => 'queued',
-            'attempt' => 1,
-        ]);
+        $run = MonitorRun::query()
+            ->where('monitor_id', $monitor->id)
+            ->whereIn('status', ['queued', 'running'])
+            ->whereNull('finished_at')
+            ->latest('id')
+            ->first();
+
+        if (! $run) {
+            $run = MonitorRun::query()->create([
+                'monitor_id' => $monitor->id,
+                'started_at' => now(),
+                'status' => 'queued',
+                'attempt' => 1,
+            ]);
+        }
 
         CheckMonitorPriceJob::dispatch($monitor->id, 'moderation-approval', $run->id);
     }
