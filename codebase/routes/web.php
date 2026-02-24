@@ -11,9 +11,9 @@ use Packages\Admin\Http\Controllers\MonsterController as AdminMonsterController;
 use Packages\Admin\Http\Controllers\MonsterSuggestionReviewController as AdminMonsterSuggestionReviewController;
 use Packages\Admin\Http\Controllers\PushTestController as AdminPushTestController;
 use Packages\Admin\Http\Controllers\SiteController as AdminSiteController;
-use Packages\Contributions\Http\Controllers\MonitorContributionController;
 use Packages\Contributions\Http\Controllers\ContributorAlertController;
 use Packages\Contributions\Http\Controllers\FollowedMonsterController;
+use Packages\Contributions\Http\Controllers\MonitorContributionController;
 use Packages\Contributions\Http\Controllers\MonsterFollowController;
 use Packages\Contributions\Http\Controllers\MonsterSuggestionController;
 use Packages\Notifications\Http\Controllers\PushSubscriptionController;
@@ -74,13 +74,16 @@ Route::middleware('auth')->group(function () {
             ->name('contribute.suggestions.store');
     });
 
-    Route::middleware(['contributor_only', 'permission:monster.follow'])->group(function () {
+    Route::middleware(['permission:monster.follow'])->group(function () {
         Route::post('/monsters/{monster:slug}/follow', [MonsterFollowController::class, 'store'])
             ->middleware('throttle:follow-actions')
             ->name('monsters.follow.store');
         Route::delete('/monsters/{monster:slug}/follow', [MonsterFollowController::class, 'destroy'])
             ->middleware('throttle:follow-actions')
             ->name('monsters.follow.destroy');
+    });
+
+    Route::middleware(['contributor_only', 'permission:monster.follow'])->group(function () {
         Route::get('/contribute/follows', [FollowedMonsterController::class, 'index'])
             ->name('contribute.follows.index');
     });

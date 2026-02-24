@@ -65,7 +65,7 @@ export default function AuthenticatedLayout({
             },
         ];
 
-        if (user.can.monitor_submit) {
+        if (!isAdmin && user.can.monitor_submit) {
             items.push({
                 label: x('My Monitors', 'Mijn Monitoren'),
                 href: route('contribute.monitors.index'),
@@ -73,7 +73,7 @@ export default function AuthenticatedLayout({
             });
         }
 
-        if (user.can.monster_suggestion_submit) {
+        if (!isAdmin && user.can.monster_suggestion_submit) {
             items.push({
                 label: x('Suggestions', 'Suggesties'),
                 href: route('contribute.suggestions.index'),
@@ -81,7 +81,7 @@ export default function AuthenticatedLayout({
             });
         }
 
-        if (user.can.monster_follow) {
+        if (!isAdmin && user.can.monster_follow) {
             items.push({
                 label: x('Following', 'Volgend'),
                 href: route('contribute.follows.index'),
@@ -89,7 +89,7 @@ export default function AuthenticatedLayout({
             });
         }
 
-        if (user.can.contributor_alert_view) {
+        if (!isAdmin && user.can.contributor_alert_view) {
             items.push({
                 label: x('Alerts', 'Meldingen'),
                 href: route('contribute.alerts.index'),
@@ -100,6 +100,7 @@ export default function AuthenticatedLayout({
 
         return items;
     }, [
+        isAdmin,
         contributorAlerts.unread,
         user.can.monitor_submit,
         user.can.monster_suggestion_submit,

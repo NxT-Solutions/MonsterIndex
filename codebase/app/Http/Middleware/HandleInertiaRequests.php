@@ -3,8 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Models\ContributorAlert;
-use App\Models\MonsterSuggestion;
 use App\Models\Monitor;
+use App\Models\MonsterSuggestion;
 use App\Models\PushSubscription;
 use App\Models\User;
 use App\Support\Authorization\PermissionBootstrapper;
@@ -70,7 +70,7 @@ class HandleInertiaRequests extends Middleware
                     'monster_suggestion_review' => $authUser->can('monster-suggestion.review'),
                     'stores_manage' => $authUser->can('stores.manage'),
                     'monsters_manage' => $authUser->can('monsters.manage'),
-                    'monster_follow' => ! $isAdmin && $authUser->can('monster.follow'),
+                    'monster_follow' => $authUser->can('monster.follow'),
                     'contributor_alert_view' => ! $isAdmin && $authUser->can('contributor-alert.view.own'),
                     'contributor_alert_mark_read' => ! $isAdmin && $authUser->can('contributor-alert.mark-read.own'),
                     'push_test' => $authUser->can('push.test'),
@@ -89,7 +89,7 @@ class HandleInertiaRequests extends Middleware
                             ->where('status', MonsterSuggestion::STATUS_PENDING)
                             ->count()
                         : 0,
-                    ];
+                ];
             }
 
             if (! $isAdmin && $authUser->can('contributor-alert.view.own')) {

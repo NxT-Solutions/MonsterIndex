@@ -27,7 +27,7 @@ it('redirects admins away from contributor pages', function () {
         ->assertRedirect(route('admin.dashboard'));
 });
 
-it('forbids admins from contributor actions', function () {
+it('forbids admins from contributor actions but allows follow actions', function () {
     $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
     PermissionBootstrapper::syncUserRole($admin, true);
 
@@ -54,7 +54,13 @@ it('forbids admins from contributor actions', function () {
         ->post(route('monsters.follow.store', $monster->slug), [
             'currency' => 'EUR',
         ])
-        ->assertForbidden();
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('monster_follows', [
+        'user_id' => $admin->id,
+        'monster_id' => $monster->id,
+        'currency' => 'EUR',
+    ]);
 });
 
 it('still allows admins to access bookmarklet session tooling', function () {
