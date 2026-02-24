@@ -110,6 +110,8 @@ it('creates contributor alerts on price drops with cooldown', function () {
         'effective_total_cents' => 3600,
         'price_cents' => 3600,
         'shipping_cents' => 0,
+        'can_count' => 1,
+        'price_per_can_cents' => null,
         'currency' => 'EUR',
         'status' => 'ok',
     ]);
@@ -120,6 +122,8 @@ it('creates contributor alerts on price drops with cooldown', function () {
         'effective_total_cents' => 3200,
         'price_cents' => 3200,
         'shipping_cents' => 0,
+        'can_count' => 1,
+        'price_per_can_cents' => null,
         'currency' => 'EUR',
         'status' => 'ok',
     ]);
@@ -137,6 +141,7 @@ it('creates contributor alerts on price drops with cooldown', function () {
         'type' => 'price_drop',
         'currency' => 'EUR',
         'effective_total_cents' => 3200,
+        'title' => sprintf('Price drop: %s now EUR 32.00 per can', $monster->name),
     ]);
 
     $duringCooldown = PriceSnapshot::factory()->create([
@@ -354,6 +359,8 @@ it('creates contributor alerts when monitor price drops versus its own previous 
         'effective_total_cents' => 1000,
         'price_cents' => 1000,
         'shipping_cents' => 0,
+        'can_count' => 1,
+        'price_per_can_cents' => null,
         'currency' => 'EUR',
         'status' => 'ok',
     ]);
@@ -364,6 +371,8 @@ it('creates contributor alerts when monitor price drops versus its own previous 
         'effective_total_cents' => 1500,
         'price_cents' => 1500,
         'shipping_cents' => 0,
+        'can_count' => 1,
+        'price_per_can_cents' => null,
         'currency' => 'EUR',
         'status' => 'ok',
     ]);
@@ -374,6 +383,8 @@ it('creates contributor alerts when monitor price drops versus its own previous 
         'effective_total_cents' => 1400,
         'price_cents' => 1400,
         'shipping_cents' => 0,
+        'can_count' => 1,
+        'price_per_can_cents' => null,
         'currency' => 'EUR',
         'status' => 'ok',
     ]);
@@ -391,6 +402,7 @@ it('creates contributor alerts when monitor price drops versus its own previous 
         'type' => 'price_drop',
         'currency' => 'EUR',
         'effective_total_cents' => 1400,
+        'title' => sprintf('Price drop: %s now EUR 14.00 per can', $monster->name),
     ]);
 });
 

@@ -96,61 +96,36 @@ class ContributorAlertService
         $monsterName = (string) ($monitor->monster?->name ?: 'Monster');
         $siteName = (string) ($monitor->site?->name ?: 'Unknown store');
 
+        $currentPerCanForMessage = $currentPerCanCents
+            ?? $this->resolvePerCanCentsFromSnapshot($snapshot);
+        $previousPerCanForMessage = null;
+
         if ($hasDropFromPreviousSnapshot) {
-            if ($hasSequentialPerCanDrop && $previousMonitorPerCanCents !== null) {
-                $title = sprintf(
-                    'Price drop: %s now %s per can',
-                    $monsterName,
-                    $this->formatCents((int) $currentPerCanCents, $currency),
-                );
-                $body = sprintf(
-                    '%s dropped from %s per can to %s per can on %s.',
-                    $monsterName,
-                    $this->formatCents((int) $previousMonitorPerCanCents, $currency),
-                    $this->formatCents((int) $currentPerCanCents, $currency),
-                    $siteName,
-                );
-            } else {
-                $title = sprintf(
-                    'Price drop: %s now %s',
-                    $monsterName,
-                    $this->formatCents((int) $snapshot->effective_total_cents, $currency),
-                );
-                $body = sprintf(
-                    '%s dropped from %s to %s on %s.',
-                    $monsterName,
-                    $this->formatCents((int) $previousSnapshotForMonitor->effective_total_cents, $currency),
-                    $this->formatCents((int) $snapshot->effective_total_cents, $currency),
-                    $siteName,
-                );
-            }
+            $previousPerCanForMessage = $previousMonitorPerCanCents;
         } elseif ($hasTotalDrop) {
-            $title = sprintf(
-                'Price drop: %s now %s',
-                $monsterName,
-                $this->formatCents((int) $snapshot->effective_total_cents, $currency),
-            );
-            $body = sprintf(
-                '%s dropped from %s to %s on %s.',
-                $monsterName,
-                $this->formatCents((int) $previousSnapshotByTotal->effective_total_cents, $currency),
-                $this->formatCents((int) $snapshot->effective_total_cents, $currency),
-                $siteName,
-            );
+            $previousPerCanForMessage = $previousSnapshotByTotal
+                ? $this->resolvePerCanCentsFromSnapshot($previousSnapshotByTotal)
+                : null;
         } else {
-            $title = sprintf(
-                'Price drop: %s now %s per can',
-                $monsterName,
-                $this->formatCents((int) $currentPerCanCents, $currency),
-            );
-            $body = sprintf(
-                '%s dropped from %s per can to %s per can on %s.',
-                $monsterName,
-                $this->formatCents((int) $previousBestPerCanCents, $currency),
-                $this->formatCents((int) $currentPerCanCents, $currency),
-                $siteName,
-            );
+            $previousPerCanForMessage = $previousBestPerCanCents;
         }
+
+        if ($currentPerCanForMessage === null || $previousPerCanForMessage === null) {
+            return;
+        }
+
+        $title = sprintf(
+            'Price drop: %s now %s per can',
+            $monsterName,
+            $this->formatCents((int) $currentPerCanForMessage, $currency),
+        );
+        $body = sprintf(
+            '%s dropped from %s per can to %s per can on %s.',
+            $monsterName,
+            $this->formatCents((int) $previousPerCanForMessage, $currency),
+            $this->formatCents((int) $currentPerCanForMessage, $currency),
+            $siteName,
+        );
 
         $createdForFollowIds = [];
         foreach ($eligibleFollows as $follow) {

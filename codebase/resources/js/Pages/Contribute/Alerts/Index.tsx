@@ -33,6 +33,8 @@ type AlertRow = {
         id: number;
         checked_at: string | null;
         effective_total_cents: number | null;
+        price_per_can_cents: number | null;
+        can_count: number | null;
         currency: string;
     } | null;
 };
@@ -122,57 +124,74 @@ export default function ContributorAlertsIndex({
                                     )}
                                 </p>
                             ) : (
-                                alerts.data.map((alert) => (
-                                    <article
-                                        key={alert.id}
-                                        className={cn(
-                                            'rounded-xl border p-4',
-                                            alert.read_at
-                                                ? 'border-white/10 bg-[color:var(--landing-surface-2)]'
-                                                : 'border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-surface-2)]/95',
-                                        )}
-                                    >
-                                        <div className="flex flex-wrap items-start justify-between gap-2">
-                                            <div>
-                                                <h3 className="font-medium text-white">
-                                                    {alert.title}
-                                                </h3>
-                                                <p className="text-xs text-white/60">
-                                                    {alert.monster.name}
-                                                    {alert.monster.size_label
-                                                        ? ` (${alert.monster.size_label})`
-                                                        : ''}{' '}
-                                                    • {alert.currency}
-                                                </p>
+                                alerts.data.map((alert) => {
+                                    const currentPerCan = perCanCents(alert);
+                                    const displayTitle =
+                                        alert.type === 'price_drop'
+                                            ? `${x(
+                                                  'Price drop',
+                                                  'Prijsdaling',
+                                              )}: ${alert.monster.name}${
+                                                  alert.monster.size_label
+                                                      ? ` ${alert.monster.size_label}`
+                                                      : ''
+                                              } ${x('now', 'nu')} ${formatMoney(
+                                                  currentPerCan,
+                                                  alert.currency,
+                                              )} ${x('per can', 'per blik')}`
+                                            : alert.title;
+
+                                    return (
+                                        <article
+                                            key={alert.id}
+                                            className={cn(
+                                                'rounded-xl border p-4',
+                                                alert.read_at
+                                                    ? 'border-white/10 bg-[color:var(--landing-surface-2)]'
+                                                    : 'border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-surface-2)]/95',
+                                            )}
+                                        >
+                                            <div className="flex flex-wrap items-start justify-between gap-2">
+                                                <div>
+                                                    <h3 className="font-medium text-white">
+                                                        {displayTitle}
+                                                    </h3>
+                                                    <p className="text-xs text-white/60">
+                                                        {alert.monster.name}
+                                                        {alert.monster.size_label
+                                                            ? ` (${alert.monster.size_label})`
+                                                            : ''}{' '}
+                                                        • {alert.currency}
+                                                    </p>
+                                                </div>
+                                                <span className="text-xs text-white/55">
+                                                    {new Date(alert.created_at).toLocaleString(
+                                                        dateLocale,
+                                                    )}
+                                                </span>
                                             </div>
-                                            <span className="text-xs text-white/55">
-                                                {new Date(alert.created_at).toLocaleString(dateLocale)}
-                                            </span>
-                                        </div>
 
-                                        <p className="mt-2 text-sm text-white/75">{alert.body}</p>
-                                        <p className="mt-2 text-xs text-white/60">
-                                            {x('Store', 'Winkel')}: {alert.monitor.site?.name ?? x('Unknown', 'Onbekend')}{' '}
-                                            • {x('Total', 'Totaal')}: {alert.currency}{' '}
-                                            {(alert.effective_total_cents / 100).toFixed(2)}
-                                        </p>
+                                            <p className="mt-2 text-sm text-white/75">
+                                                {alert.body}
+                                            </p>
+                                            <p className="mt-2 text-xs text-white/60">
+                                                {x('Store', 'Winkel')}:{' '}
+                                                {alert.monitor.site?.name ??
+                                                    x('Unknown', 'Onbekend')}{' '}
+                                                • {x('Per Can', 'Per Blik')}:{' '}
+                                                {formatMoney(currentPerCan, alert.currency)}
+                                                {alert.snapshot?.can_count &&
+                                                alert.snapshot.can_count > 1
+                                                    ? ` (${alert.snapshot.can_count}-${x('pack', 'pack')})`
+                                                    : ''}
+                                            </p>
 
-                                        <div className="mt-3 flex flex-wrap gap-2">
-                                            <Link
-                                                href={route('monsters.show', alert.monster.slug)}
-                                                className={cn(
-                                                    buttonVariants({
-                                                        variant: 'outline',
-                                                        size: 'sm',
-                                                    }),
-                                                    'border-white/20 bg-transparent text-white hover:bg-white/10',
-                                                )}
-                                            >
-                                                {x('Open Monster', 'Open Monster')}
-                                            </Link>
-                                            {!alert.read_at && (
-                                                <button
-                                                    type="button"
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                <Link
+                                                    href={route(
+                                                        'monsters.show',
+                                                        alert.monster.slug,
+                                                    )}
                                                     className={cn(
                                                         buttonVariants({
                                                             variant: 'outline',
@@ -180,26 +199,43 @@ export default function ContributorAlertsIndex({
                                                         }),
                                                         'border-white/20 bg-transparent text-white hover:bg-white/10',
                                                     )}
-                                                    onClick={() =>
-                                                        router.post(
-                                                            route(
-                                                                'contribute.alerts.mark-read',
-                                                                alert.id,
-                                                            ),
-                                                            {},
-                                                            { preserveScroll: true },
-                                                        )
-                                                    }
                                                 >
-                                                    {x(
-                                                        'Mark Read',
-                                                        'Markeer Gelezen',
-                                                    )}
-                                                </button>
-                                            )}
-                                        </div>
-                                    </article>
-                                ))
+                                                    {x('Open Monster', 'Open Monster')}
+                                                </Link>
+                                                {!alert.read_at && (
+                                                    <button
+                                                        type="button"
+                                                        className={cn(
+                                                            buttonVariants({
+                                                                variant: 'outline',
+                                                                size: 'sm',
+                                                            }),
+                                                            'border-white/20 bg-transparent text-white hover:bg-white/10',
+                                                        )}
+                                                        onClick={() =>
+                                                            router.post(
+                                                                route(
+                                                                    'contribute.alerts.mark-read',
+                                                                    alert.id,
+                                                                ),
+                                                                {},
+                                                                {
+                                                                    preserveScroll:
+                                                                        true,
+                                                                },
+                                                            )
+                                                        }
+                                                    >
+                                                        {x(
+                                                            'Mark Read',
+                                                            'Markeer Gelezen',
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </article>
+                                    );
+                                })
                             )}
                         </CardContent>
                     </Card>
@@ -209,3 +245,20 @@ export default function ContributorAlertsIndex({
     );
 }
 
+function perCanCents(alert: AlertRow): number {
+    if (alert.snapshot?.price_per_can_cents !== null && alert.snapshot?.price_per_can_cents !== undefined) {
+        return alert.snapshot.price_per_can_cents;
+    }
+
+    const totalCents =
+        alert.snapshot?.effective_total_cents ?? alert.effective_total_cents;
+    const canCount = alert.snapshot?.can_count && alert.snapshot.can_count > 0
+        ? alert.snapshot.can_count
+        : 1;
+
+    return Math.round(totalCents / canCount);
+}
+
+function formatMoney(cents: number, currency: string): string {
+    return `${currency} ${(cents / 100).toFixed(2)}`;
+}

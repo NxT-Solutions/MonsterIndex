@@ -23,7 +23,7 @@ class ContributorAlertController extends Controller
                 'monster:id,name,slug,size_label',
                 'monitor:id,site_id',
                 'monitor.site:id,name,domain',
-                'snapshot:id,checked_at,effective_total_cents,currency',
+                'snapshot:id,checked_at,effective_total_cents,price_per_can_cents,can_count,currency',
             ])
             ->latest('id')
             ->paginate(50)
@@ -86,4 +86,3 @@ class ContributorAlertController extends Controller
         return back()->with('success', 'All alerts marked as read.');
     }
 }
-
