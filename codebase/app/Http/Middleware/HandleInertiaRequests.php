@@ -42,6 +42,7 @@ class HandleInertiaRequests extends Middleware
         $pushSettings = null;
         if ($authUser instanceof User) {
             PermissionBootstrapper::syncUserFromLegacyRole($authUser);
+            $isAdmin = $authUser->can('admin.access');
 
             $roles = PermissionBootstrapper::isReady()
                 ? $authUser->getRoleNames()->values()->all()
@@ -61,17 +62,17 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $roles,
                 'permissions' => $permissions,
                 'can' => [
-                    'admin_access' => $authUser->can('admin.access'),
-                    'monitor_submit' => $authUser->can('monitor.submit'),
+                    'admin_access' => $isAdmin,
+                    'monitor_submit' => ! $isAdmin && $authUser->can('monitor.submit'),
                     'monitor_manage_any' => $authUser->can('monitors.manage.any'),
                     'monitor_review' => $authUser->can('monitor.approve') || $authUser->can('monitor.reject'),
-                    'monster_suggestion_submit' => $authUser->can('monster-suggestion.submit'),
+                    'monster_suggestion_submit' => ! $isAdmin && $authUser->can('monster-suggestion.submit'),
                     'monster_suggestion_review' => $authUser->can('monster-suggestion.review'),
                     'stores_manage' => $authUser->can('stores.manage'),
                     'monsters_manage' => $authUser->can('monsters.manage'),
-                    'monster_follow' => $authUser->can('monster.follow'),
-                    'contributor_alert_view' => $authUser->can('contributor-alert.view.own'),
-                    'contributor_alert_mark_read' => $authUser->can('contributor-alert.mark-read.own'),
+                    'monster_follow' => ! $isAdmin && $authUser->can('monster.follow'),
+                    'contributor_alert_view' => ! $isAdmin && $authUser->can('contributor-alert.view.own'),
+                    'contributor_alert_mark_read' => ! $isAdmin && $authUser->can('contributor-alert.mark-read.own'),
                     'push_test' => $authUser->can('push.test'),
                 ],
             ];
@@ -91,7 +92,7 @@ class HandleInertiaRequests extends Middleware
                     ];
             }
 
-            if ($authUser->can('contributor-alert.view.own')) {
+            if (! $isAdmin && $authUser->can('contributor-alert.view.own')) {
                 $contributorAlerts = [
                     'unread' => ContributorAlert::query()
                         ->where('user_id', $authUser->id)

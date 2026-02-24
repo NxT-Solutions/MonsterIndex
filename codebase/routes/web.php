@@ -39,7 +39,17 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:push-subscribe')
         ->name('api.push.subscriptions.destroy');
 
-    Route::middleware(['permission:monitor.submit'])->group(function () {
+    Route::middleware(['permission:monitor.submit|monitors.manage.any'])->group(function () {
+        Route::post('/api/bookmarklet/session', [AdminBookmarkletController::class, 'session'])
+            ->middleware('throttle:selector-actions')
+            ->name('api.bookmarklet.session');
+        Route::get('/monitors/{monitor}/selector-browser', [AdminBookmarkletController::class, 'selectorBrowser'])
+            ->name('monitors.selector-browser');
+        Route::get('/admin/monitors/{monitor}/selector-browser', [AdminBookmarkletController::class, 'selectorBrowser'])
+            ->name('admin.monitors.selector-browser');
+    });
+
+    Route::middleware(['contributor_only', 'permission:monitor.submit'])->group(function () {
         Route::get('/contribute/monitors', [MonitorContributionController::class, 'index'])
             ->name('contribute.monitors.index');
         Route::post('/contribute/monitors', [MonitorContributionController::class, 'store'])
@@ -54,17 +64,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/contribute/monitors/{monitor}/submit', [MonitorContributionController::class, 'submit'])
             ->middleware(['can:submitForReview,monitor', 'throttle:monitor-submit'])
             ->name('contribute.monitors.submit');
-
-        Route::post('/api/bookmarklet/session', [AdminBookmarkletController::class, 'session'])
-            ->middleware('throttle:selector-actions')
-            ->name('api.bookmarklet.session');
-        Route::get('/monitors/{monitor}/selector-browser', [AdminBookmarkletController::class, 'selectorBrowser'])
-            ->name('monitors.selector-browser');
-        Route::get('/admin/monitors/{monitor}/selector-browser', [AdminBookmarkletController::class, 'selectorBrowser'])
-            ->name('admin.monitors.selector-browser');
     });
 
-    Route::middleware(['permission:monster-suggestion.submit'])->group(function () {
+    Route::middleware(['contributor_only', 'permission:monster-suggestion.submit'])->group(function () {
         Route::get('/contribute/suggestions', [MonsterSuggestionController::class, 'index'])
             ->name('contribute.suggestions.index');
         Route::post('/contribute/suggestions', [MonsterSuggestionController::class, 'store'])
@@ -72,7 +74,7 @@ Route::middleware('auth')->group(function () {
             ->name('contribute.suggestions.store');
     });
 
-    Route::middleware(['permission:monster.follow'])->group(function () {
+    Route::middleware(['contributor_only', 'permission:monster.follow'])->group(function () {
         Route::post('/monsters/{monster:slug}/follow', [MonsterFollowController::class, 'store'])
             ->middleware('throttle:follow-actions')
             ->name('monsters.follow.store');
@@ -83,12 +85,12 @@ Route::middleware('auth')->group(function () {
             ->name('contribute.follows.index');
     });
 
-    Route::middleware(['permission:contributor-alert.view.own'])->group(function () {
+    Route::middleware(['contributor_only', 'permission:contributor-alert.view.own'])->group(function () {
         Route::get('/contribute/alerts', [ContributorAlertController::class, 'index'])
             ->name('contribute.alerts.index');
     });
 
-    Route::middleware(['permission:contributor-alert.mark-read.own'])->group(function () {
+    Route::middleware(['contributor_only', 'permission:contributor-alert.mark-read.own'])->group(function () {
         Route::post('/contribute/alerts/{alert}/read', [ContributorAlertController::class, 'markRead'])
             ->middleware('throttle:alert-actions')
             ->name('contribute.alerts.mark-read');
