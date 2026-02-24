@@ -46,6 +46,37 @@ it('allows contributors to create draft monitor proposals and blocks canonical d
         ->assertSessionHasErrors('product_url');
 });
 
+it('auto-resolves contributor monitor store from product URL when selected store domain mismatches', function () {
+    $contributor = User::factory()->create(['role' => User::ROLE_USER]);
+    PermissionBootstrapper::syncUserRole($contributor, false);
+
+    $monster = Monster::factory()->create();
+    $selectedSite = Site::factory()->create([
+        'name' => 'Amazon BE',
+        'domain' => 'amazon.com.be',
+    ]);
+    $existingSiteCount = Site::query()->count();
+
+    $this->actingAs($contributor)
+        ->post(route('contribute.monitors.store'), [
+            'monster_id' => $monster->id,
+            'site_id' => $selectedSite->id,
+            'product_url' => 'https://halalsnoepkopen.nl/products/monster-ultra-white?variant=52370595184983',
+        ])
+        ->assertRedirect();
+
+    $monitor = Monitor::query()->latest('id')->first();
+    expect($monitor)->not->toBeNull();
+    expect((int) $monitor->site_id)->not->toBe((int) $selectedSite->id);
+
+    $resolvedSite = Site::query()->find($monitor->site_id);
+    expect($resolvedSite)->not->toBeNull()
+        ->and($resolvedSite?->domain)->toBe('halalsnoepkopen.nl')
+        ->and($resolvedSite?->name)->toBe('Halalsnoepkopen');
+
+    expect(Site::query()->count())->toBe($existingSiteCount + 1);
+});
+
 it('prevents contributors from editing monitors they do not own', function () {
     $owner = User::factory()->create(['role' => User::ROLE_USER]);
     $otherContributor = User::factory()->create(['role' => User::ROLE_USER]);

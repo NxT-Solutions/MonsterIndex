@@ -282,33 +282,17 @@ class MonitorContributionController extends Controller
      */
     private function resolveStoreId(array $validated): int
     {
-        if (isset($validated['site_id']) && is_int($validated['site_id'])) {
-            return $validated['site_id'];
-        }
-
-        $domain = strtolower((string) parse_url((string) $validated['product_url'], PHP_URL_HOST));
-        if ($domain === '') {
-            throw ValidationException::withMessages([
-                'product_url' => 'Could not resolve a domain from the provided product URL.',
-            ]);
-        }
-
+        $domain = $this->extractDomainFromProductUrl((string) $validated['product_url']);
         $customName = trim((string) ($validated['site_name'] ?? ''));
-        $siteName = $customName !== '' ? $customName : $this->guessSiteNameFromDomain($domain);
 
-        $site = Site::query()->firstOrCreate(
-            ['domain' => $domain],
-            [
-                'name' => $siteName,
-                'active' => true,
-            ],
-        );
-
-        if ($customName !== '' && $site->name !== $customName) {
-            $site->forceFill(['name' => $customName])->save();
+        if (isset($validated['site_id']) && is_int($validated['site_id'])) {
+            $selectedSite = Site::query()->find($validated['site_id']);
+            if ($selectedSite && $this->normalizeDomain($selectedSite->domain) === $domain) {
+                return (int) $selectedSite->id;
+            }
         }
 
-        return (int) $site->id;
+        return (int) $this->resolveSiteByDomain($domain, $customName)->id;
     }
 
     private function guessSiteNameFromDomain(string $domain): string
@@ -319,6 +303,56 @@ class MonitorContributionController extends Controller
             ->toString();
 
         return $name !== '' ? $name : $domain;
+    }
+
+    private function extractDomainFromProductUrl(string $productUrl): string
+    {
+        $rawDomain = (string) parse_url($productUrl, PHP_URL_HOST);
+        $domain = $this->normalizeDomain($rawDomain);
+        if ($domain === '') {
+            throw ValidationException::withMessages([
+                'product_url' => 'Could not resolve a domain from the provided product URL.',
+            ]);
+        }
+
+        return $domain;
+    }
+
+    private function normalizeDomain(string $domain): string
+    {
+        $normalized = strtolower(trim($domain));
+        if ($normalized === '') {
+            return '';
+        }
+
+        return (string) preg_replace('/^www\./', '', $normalized);
+    }
+
+    private function resolveSiteByDomain(string $domain, string $customName = ''): Site
+    {
+        $domainCandidates = collect([
+            $domain,
+            'www.'.$domain,
+        ])->unique()->values();
+
+        $existing = Site::query()
+            ->whereIn('domain', $domainCandidates->all())
+            ->orderByRaw('case when domain = ? then 0 else 1 end', [$domain])
+            ->first();
+
+        if ($existing) {
+            if ($customName !== '' && $existing->name !== $customName) {
+                $existing->forceFill(['name' => $customName])->save();
+            }
+
+            return $existing;
+        }
+
+        return Site::query()->create([
+            'domain' => $domain,
+            'name' => $customName !== '' ? $customName : $this->guessSiteNameFromDomain($domain),
+            'active' => true,
+        ]);
     }
 
     private function ensureNoDuplicate(
