@@ -6,7 +6,6 @@ services:
       service: php
     container_name: ${COMPOSE_PROJECT_NAME}-php
     depends_on:
-      - mysql
       - redis
     volumes:
       - ../../codebase:/var/www/html
@@ -52,16 +51,6 @@ services:
       - php
     volumes:
       - ../../codebase:/var/www/html
-
-  mysql:
-    extends:
-      file: ./images/mysql.yaml
-      service: mysql
-    container_name: ${COMPOSE_PROJECT_NAME}-mysql
-    ports:
-      - ${MYSQL_EXPOSED_PORT}:3306
-    volumes:
-      - ../../.persistent/db/mysql:/var/lib/mysql
 
   redis:
     extends:

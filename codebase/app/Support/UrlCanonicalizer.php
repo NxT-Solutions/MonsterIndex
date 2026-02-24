@@ -4,9 +4,6 @@ namespace App\Support;
 
 class UrlCanonicalizer
 {
-    /**
-     * @param  string|null  $url
-     */
     public static function canonicalize(?string $url): ?string
     {
         if (! is_string($url)) {

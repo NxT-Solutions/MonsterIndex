@@ -14,7 +14,7 @@ RUN apk --no-cache update && apk --no-cache add \
 
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-RUN install-php-extensions pdo_mysql zip exif pcntl intl redis opcache bcmath @composer
+RUN install-php-extensions pdo_mysql pdo_sqlite sqlite3 zip exif pcntl intl redis opcache bcmath @composer
 
 ADD ./configs/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 ADD ./configs/init.sh /init.sh
