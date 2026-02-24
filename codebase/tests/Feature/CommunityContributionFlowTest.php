@@ -68,6 +68,54 @@ it('prevents contributors from editing monitors they do not own', function () {
         ->assertForbidden();
 });
 
+it('allows contributors to edit pending monitors but blocks approved monitors', function () {
+    $contributor = User::factory()->create(['role' => User::ROLE_USER]);
+    PermissionBootstrapper::syncUserRole($contributor, false);
+
+    $pendingMonitor = Monitor::factory()->create([
+        'created_by_user_id' => $contributor->id,
+        'submission_status' => Monitor::STATUS_PENDING_REVIEW,
+        'active' => false,
+    ]);
+
+    $approvedMonitor = Monitor::factory()->create([
+        'created_by_user_id' => $contributor->id,
+        'submission_status' => Monitor::STATUS_APPROVED,
+        'active' => true,
+    ]);
+
+    $this->actingAs($contributor)
+        ->put(route('contribute.monitors.update', $pendingMonitor), [
+            'monster_id' => $pendingMonitor->monster_id,
+            'site_id' => $pendingMonitor->site_id,
+            'product_url' => 'https://example.com/product/pending-updated',
+            'currency' => 'EUR',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('monitors', [
+        'id' => $pendingMonitor->id,
+        'product_url' => 'https://example.com/product/pending-updated',
+    ]);
+
+    $this->actingAs($contributor)
+        ->put(route('contribute.monitors.update', $approvedMonitor), [
+            'monster_id' => $approvedMonitor->monster_id,
+            'site_id' => $approvedMonitor->site_id,
+            'product_url' => 'https://example.com/product/approved-updated',
+            'currency' => 'EUR',
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($contributor)
+        ->delete(route('contribute.monitors.destroy', $approvedMonitor))
+        ->assertForbidden();
+
+    $this->actingAs($contributor)
+        ->post(route('contribute.monitors.submit', $approvedMonitor))
+        ->assertForbidden();
+});
+
 it('submits a monitor for review and allows admin approval with immediate queueing', function () {
     Queue::fake();
 

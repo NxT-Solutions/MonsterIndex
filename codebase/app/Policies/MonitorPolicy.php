@@ -34,7 +34,8 @@ class MonitorPolicy
         }
 
         return $user->can('monitor.update.own')
-            && (int) $monitor->created_by_user_id === (int) $user->id;
+            && (int) $monitor->created_by_user_id === (int) $user->id
+            && $monitor->submission_status !== Monitor::STATUS_APPROVED;
     }
 
     public function delete(User $user, Monitor $monitor): bool
@@ -44,7 +45,8 @@ class MonitorPolicy
         }
 
         return $user->can('monitor.delete.own')
-            && (int) $monitor->created_by_user_id === (int) $user->id;
+            && (int) $monitor->created_by_user_id === (int) $user->id
+            && $monitor->submission_status !== Monitor::STATUS_APPROVED;
     }
 
     public function submitForReview(User $user, Monitor $monitor): bool
@@ -54,7 +56,8 @@ class MonitorPolicy
         }
 
         return $user->can('monitor.submit')
-            && (int) $monitor->created_by_user_id === (int) $user->id;
+            && (int) $monitor->created_by_user_id === (int) $user->id
+            && $monitor->submission_status !== Monitor::STATUS_APPROVED;
     }
 
     public function approve(User $user, Monitor $monitor): bool

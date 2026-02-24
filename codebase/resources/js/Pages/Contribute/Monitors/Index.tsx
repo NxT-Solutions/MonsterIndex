@@ -83,6 +83,10 @@ export default function ContributionMonitorsIndex({
     const isOtherStore = form.data.site_id === OTHER_STORE_ID;
     const [loadingSelector, setLoadingSelector] = useState<number | null>(null);
     const [submittingMonitor, setSubmittingMonitor] = useState<number | null>(null);
+    const [editingMonitor, setEditingMonitor] = useState<MonitorRow | null>(null);
+    const editForm = useForm({
+        product_url: '',
+    });
 
     const submitCreate = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -136,39 +140,51 @@ export default function ContributionMonitorsIndex({
         );
     };
 
-    const editMonitor = (monitor: MonitorRow) => {
-        const productUrl = window.prompt(
-            x('Product URL', 'Product-URL'),
-            monitor.product_url,
-        )?.trim();
-        if (!productUrl) {
+    const openEditModal = (monitor: MonitorRow) => {
+        setEditingMonitor(monitor);
+        editForm.setData('product_url', monitor.product_url);
+        editForm.clearErrors();
+    };
+
+    const closeEditModal = () => {
+        setEditingMonitor(null);
+        editForm.reset();
+        editForm.clearErrors();
+    };
+
+    const submitEditMonitor = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!editingMonitor) {
             return;
         }
 
-        router.put(
-            route('contribute.monitors.update', monitor.id),
-            {
-                monster_id: monitor.monster_id,
-                site_id: monitor.site_id,
-                create_site: false,
-                site_name: null,
-                product_url: productUrl,
+        editForm.transform((data) => ({
+            ...data,
+            monster_id: editingMonitor.monster_id,
+            site_id: editingMonitor.site_id,
+            create_site: false,
+            site_name: null,
+            product_url: data.product_url.trim(),
+        }));
+
+        editForm.put(route('contribute.monitors.update', editingMonitor.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                closeEditModal();
             },
-            { preserveScroll: true },
-        );
+        });
     };
 
     const deleteOrWithdraw = (monitor: MonitorRow) => {
+        if (monitor.submission_status === 'approved') {
+            return;
+        }
+
         const confirmed = window.confirm(
-            monitor.submission_status === 'approved'
-                ? x(
-                      'Withdraw this approved monitor from public tracking?',
-                      'Deze goedgekeurde monitor uit publieke tracking verwijderen?',
-                  )
-                : x(
-                      'Delete this monitor draft/proposal?',
-                      'Deze monitor draft/voorstel verwijderen?',
-                  ),
+            x(
+                'Delete this monitor draft/proposal?',
+                'Deze monitor draft/voorstel verwijderen?',
+            ),
         );
 
         if (!confirmed) {
@@ -317,11 +333,14 @@ export default function ContributionMonitorsIndex({
                                     )}
                                 </p>
                             ) : (
-                                monitors.map((monitor) => (
-                                    <div
-                                        key={monitor.id}
-                                        className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4"
-                                    >
+                                monitors.map((monitor) => {
+                                    const isApproved = monitor.submission_status === 'approved';
+
+                                    return (
+                                        <div
+                                            key={monitor.id}
+                                            className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4"
+                                        >
                                         <div className="flex flex-wrap items-start justify-between gap-2">
                                             <div>
                                                 <p className="font-display text-base text-white">
@@ -357,66 +376,149 @@ export default function ContributionMonitorsIndex({
                                             </p>
                                         </div>
 
-                                        <div className="mt-3 flex flex-wrap gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => openSelector(monitor)}
-                                                className={cn(
-                                                    buttonVariants({ variant: 'secondary', size: 'sm' }),
-                                                    'border border-white/10 bg-white/5 text-white hover:bg-white/10',
-                                                )}
-                                                disabled={loadingSelector === monitor.id}
-                                            >
-                                                {loadingSelector === monitor.id
-                                                    ? x('Opening...', 'Openen...')
-                                                    : x('Configure Selectors', 'Configureer Selectors')}
-                                            </button>
+                                        {!isApproved ? (
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openSelector(monitor)}
+                                                    className={cn(
+                                                        buttonVariants({ variant: 'secondary', size: 'sm' }),
+                                                        'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                                    )}
+                                                    disabled={loadingSelector === monitor.id}
+                                                >
+                                                    {loadingSelector === monitor.id
+                                                        ? x('Opening...', 'Openen...')
+                                                        : x('Configure Selectors', 'Configureer Selectors')}
+                                                </button>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => submitForReview(monitor)}
-                                                className={cn(
-                                                    buttonVariants({ size: 'sm' }),
-                                                    'bg-[color:var(--landing-accent)] text-[#0b1201]',
-                                                )}
-                                                disabled={submittingMonitor === monitor.id || monitor.submission_status === 'pending_review'}
-                                            >
-                                                {submittingMonitor === monitor.id
-                                                    ? x('Submitting...', 'Indienen...')
-                                                    : x('Submit for Review', 'Indienen voor Review')}
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => submitForReview(monitor)}
+                                                    className={cn(
+                                                        buttonVariants({ size: 'sm' }),
+                                                        'bg-[color:var(--landing-accent)] text-[#0b1201]',
+                                                    )}
+                                                    disabled={
+                                                        submittingMonitor === monitor.id
+                                                        || monitor.submission_status === 'pending_review'
+                                                    }
+                                                >
+                                                    {submittingMonitor === monitor.id
+                                                        ? x('Submitting...', 'Indienen...')
+                                                        : x('Submit for Review', 'Indienen voor Review')}
+                                                </button>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => editMonitor(monitor)}
-                                                className={cn(
-                                                    buttonVariants({ variant: 'secondary', size: 'sm' }),
-                                                    'border border-white/10 bg-white/5 text-white hover:bg-white/10',
-                                                )}
-                                            >
-                                                {x('Edit', 'Bewerk')}
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openEditModal(monitor)}
+                                                    className={cn(
+                                                        buttonVariants({ variant: 'secondary', size: 'sm' }),
+                                                        'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                                    )}
+                                                >
+                                                    {x('Edit', 'Bewerk')}
+                                                </button>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => deleteOrWithdraw(monitor)}
-                                                className={cn(
-                                                    buttonVariants({ variant: 'secondary', size: 'sm' }),
-                                                    'border border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20',
+                                                <button
+                                                    type="button"
+                                                    onClick={() => deleteOrWithdraw(monitor)}
+                                                    className={cn(
+                                                        buttonVariants({ variant: 'secondary', size: 'sm' }),
+                                                        'border border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20',
+                                                    )}
+                                                >
+                                                    {x('Delete', 'Verwijderen')}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <p className="mt-3 text-xs text-white/60">
+                                                {x(
+                                                    'This monitor is approved and managed by admins.',
+                                                    'Deze monitor is goedgekeurd en wordt beheerd door admins.',
                                                 )}
-                                            >
-                                                {monitor.submission_status === 'approved'
-                                                    ? x('Withdraw', 'Intrekken')
-                                                    : x('Delete', 'Verwijderen')}
-                                            </button>
+                                            </p>
+                                        )}
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </CardContent>
                     </Card>
                 </div>
             </div>
+
+            {editingMonitor && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <button
+                        type="button"
+                        className="absolute inset-0 bg-black/70"
+                        onClick={closeEditModal}
+                        aria-label={x('Close edit dialog', 'Sluit bewerkdialoog')}
+                    />
+                    <div className="relative z-10 w-full max-w-xl rounded-xl border border-white/15 bg-[color:var(--landing-surface)] p-5 shadow-2xl shadow-black/50">
+                        <div className="mb-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--landing-accent)]">
+                                {x('Edit Proposal', 'Bewerk Voorstel')}
+                            </p>
+                            <h3 className="mt-1 font-display text-xl font-semibold text-white">
+                                {editingMonitor.monster.name}
+                            </h3>
+                            <p className="mt-1 text-xs text-white/60">
+                                {editingMonitor.site.name} ({editingMonitor.site.domain})
+                            </p>
+                        </div>
+
+                        <form className="space-y-4" onSubmit={submitEditMonitor}>
+                            <div>
+                                <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                    {x('Product URL', 'Product-URL')}
+                                </label>
+                                <input
+                                    className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
+                                    value={editForm.data.product_url}
+                                    placeholder="https://example.com/product/monster"
+                                    onChange={(event) =>
+                                        editForm.setData('product_url', event.target.value)
+                                    }
+                                    disabled={editForm.processing}
+                                />
+                                {editForm.errors.product_url && (
+                                    <p className="mt-1 text-xs text-rose-300">
+                                        {editForm.errors.product_url}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="flex flex-wrap justify-end gap-2">
+                                <button
+                                    type="button"
+                                    className={cn(
+                                        buttonVariants({ variant: 'secondary', size: 'sm' }),
+                                        'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                    )}
+                                    onClick={closeEditModal}
+                                    disabled={editForm.processing}
+                                >
+                                    {x('Cancel', 'Annuleren')}
+                                </button>
+                                <button
+                                    type="submit"
+                                    className={cn(
+                                        buttonVariants({ size: 'sm' }),
+                                        'bg-[color:var(--landing-accent)] text-[#0b1201]',
+                                    )}
+                                    disabled={editForm.processing}
+                                >
+                                    {editForm.processing
+                                        ? x('Saving...', 'Opslaan...')
+                                        : x('Save Changes', 'Wijzigingen Opslaan')}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }
