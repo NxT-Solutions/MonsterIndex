@@ -11,6 +11,7 @@ it('parses common price formats into cents', function (string $input, int $expec
 })->with([
     ['$19.99', 1999],
     ['19,99', 1999],
+    ['€ 1,73*', 173],
     ['USD 20', 2000],
     ['1,299.50', 129950],
 ]);

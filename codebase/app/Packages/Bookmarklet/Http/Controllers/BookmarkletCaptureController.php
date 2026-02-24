@@ -121,11 +121,7 @@ class BookmarkletCaptureController extends Controller
         if ($result->status === 'failed') {
             return $this->errorResponse(
                 request: $request,
-                message: $this->translate(
-                    $lang,
-                    'Selector capture saved, but validation failed. Please retry with a better price selector.',
-                    'Selectoropslag is bewaard, maar validatie faalde. Probeer opnieuw met een betere prijsselector.',
-                ),
+                message: $this->validationFailedMessage($lang, $result->errorCode),
                 status: 422,
                 lang: $lang,
             );
@@ -259,6 +255,25 @@ class BookmarkletCaptureController extends Controller
     private function translate(string $lang, string $english, string $dutch): string
     {
         return $lang === 'nl' ? $dutch : $english;
+    }
+
+    private function validationFailedMessage(string $lang, ?string $errorCode): string
+    {
+        $code = is_string($errorCode) && $errorCode !== ''
+            ? $errorCode
+            : 'UNKNOWN';
+
+        return $this->translate(
+            $lang,
+            sprintf(
+                'Selector capture saved, but validation failed (%s). This is usually a selector mismatch. Select the exact price text and retry.',
+                $code,
+            ),
+            sprintf(
+                'Selectoropslag is bewaard, maar validatie faalde (%s). Dit is meestal een selector-mismatch. Selecteer exact de prijstekst en probeer opnieuw.',
+                $code,
+            ),
+        );
     }
 
     /**
