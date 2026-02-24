@@ -1,4 +1,5 @@
 import LandingNav from '@/Components/public/LandingNav';
+import PriceHistoryChart from '@/Components/public/PriceHistoryChart';
 import { buttonVariants } from '@/Components/ui/button';
 import { useLocale } from '@/lib/locale';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,18 @@ type Snapshot = {
     };
 };
 
+type TimespanKey = '24h' | '7d' | '30d' | 'all';
+
+const TIMESPAN_OPTIONS: Array<{
+    key: TimespanKey;
+    hours: number | null;
+}> = [
+    { key: '24h', hours: 24 },
+    { key: '7d', hours: 24 * 7 },
+    { key: '30d', hours: 24 * 30 },
+    { key: 'all', hours: null },
+];
+
 export default function MonsterShow({
     auth,
     monster,
@@ -50,6 +63,7 @@ export default function MonsterShow({
         followed_currencies,
     );
     const [loadingCurrency, setLoadingCurrency] = useState<string | null>(null);
+    const [selectedTimespan, setSelectedTimespan] = useState<TimespanKey>('7d');
     const canonicalUrl = route('monsters.show', monster.slug);
     const pageTitle = `${monster.name}${monster.size_label ? ` (${monster.size_label})` : ''} | ${x(
         'Monster Price History',
@@ -61,8 +75,12 @@ export default function MonsterShow({
     );
     const ogImageUrl = new URL('/brand/monsterindex-og.png', canonicalUrl).toString();
 
+    const visibleSnapshots = useMemo(() => {
+        return snapshots.filter((snapshot) => snapshot.status !== 'failed');
+    }, [snapshots]);
+
     const bestSnapshot = useMemo(() => {
-        return [...snapshots]
+        return [...visibleSnapshots]
             .filter((snapshot) => snapshot.effective_total_cents !== null)
             .sort((left, right) => {
                 const leftPerCan =
@@ -78,15 +96,149 @@ export default function MonsterShow({
                     (left.effective_total_cents ?? Number.MAX_SAFE_INTEGER);
             })
             .at(0);
-    }, [snapshots]);
+    }, [visibleSnapshots]);
 
     const latestCheckedAt = useMemo(() => {
-        return snapshots
+        return visibleSnapshots
             .map((snapshot) => snapshot.checked_at)
             .find((checkedAt) => checkedAt !== null);
-    }, [snapshots]);
+    }, [visibleSnapshots]);
 
     const bestPerCan = bestSnapshot ? effectivePerCanCents(bestSnapshot) : null;
+    const selectedTimespanHours = useMemo(() => {
+        return TIMESPAN_OPTIONS.find((entry) => entry.key === selectedTimespan)?.hours ?? null;
+    }, [selectedTimespan]);
+
+    const timespanCutoff = useMemo(() => {
+        if (selectedTimespanHours === null) {
+            return null;
+        }
+
+        return Date.now() - selectedTimespanHours * 60 * 60 * 1000;
+    }, [selectedTimespanHours]);
+
+    const snapshotsInTimespan = useMemo(() => {
+        return visibleSnapshots.filter((snapshot) => {
+            if (timespanCutoff === null) {
+                return true;
+            }
+
+            if (snapshot.checked_at === null) {
+                return false;
+            }
+
+            return new Date(snapshot.checked_at).getTime() >= timespanCutoff;
+        });
+    }, [timespanCutoff, visibleSnapshots]);
+
+    const chartPoints = useMemo(() => {
+        const bucketed = new Map<
+            number,
+            {
+                timestamp: number;
+                value: number;
+            }
+        >();
+
+        for (const snapshot of snapshotsInTimespan) {
+            if (snapshot.checked_at === null) {
+                continue;
+            }
+
+            const perCanCents = effectivePerCanCents(snapshot);
+            if (perCanCents === null) {
+                continue;
+            }
+
+            const checkedAt = new Date(snapshot.checked_at);
+            const checkedTimestamp = checkedAt.getTime();
+            if (Number.isNaN(checkedTimestamp)) {
+                continue;
+            }
+
+            const bucketDate = new Date(checkedTimestamp);
+            if (selectedTimespan === '24h') {
+                bucketDate.setMinutes(0, 0, 0);
+            } else {
+                bucketDate.setHours(0, 0, 0, 0);
+            }
+
+            const bucketTimestamp = bucketDate.getTime();
+            const current = bucketed.get(bucketTimestamp);
+            if (current === undefined || perCanCents < current.value) {
+                bucketed.set(bucketTimestamp, {
+                    timestamp: bucketTimestamp,
+                    value: perCanCents,
+                });
+            }
+        }
+
+        return [...bucketed.values()]
+            .sort((left, right) => left.timestamp - right.timestamp)
+            .map((entry) => {
+                const bucketDate = new Date(entry.timestamp);
+
+                return {
+                    label:
+                        selectedTimespan === '24h'
+                            ? bucketDate.toLocaleTimeString(dateLocale, {
+                                  hour: 'numeric',
+                                  hour12: true,
+                              })
+                            : bucketDate.toLocaleDateString(dateLocale, {
+                                  month: 'short',
+                                  day: 'numeric',
+                              }),
+                    value: entry.value,
+                    timestamp: entry.timestamp,
+                };
+            });
+    }, [dateLocale, selectedTimespan, snapshotsInTimespan]);
+
+    const timespanLabel = useMemo(() => {
+        return selectedTimespan === '24h'
+            ? x('24h', '24u')
+            : selectedTimespan === '7d'
+              ? x('7 days', '7 dagen')
+              : selectedTimespan === '30d'
+                ? x('30 days', '30 dagen')
+                : x('All', 'Alles');
+    }, [selectedTimespan, x]);
+
+    const trend = useMemo(() => {
+        if (chartPoints.length < 2) {
+            return {
+                direction: 'flat' as const,
+                diffCents: 0,
+            };
+        }
+
+        const first = chartPoints[0].value;
+        const last = chartPoints[chartPoints.length - 1].value;
+        const diffCents = last - first;
+
+        if (diffCents > 0) {
+            return {
+                direction: 'up' as const,
+                diffCents,
+            };
+        }
+
+        if (diffCents < 0) {
+            return {
+                direction: 'down' as const,
+                diffCents: Math.abs(diffCents),
+            };
+        }
+
+        return {
+            direction: 'flat' as const,
+            diffCents: 0,
+        };
+    }, [chartPoints]);
+    const chartStartPoint = chartPoints.length > 0 ? chartPoints[0] : null;
+    const chartEndPoint =
+        chartPoints.length > 0 ? chartPoints[chartPoints.length - 1] : null;
 
     useEffect(() => {
         setFollowedCurrenciesState(followed_currencies);
@@ -265,7 +417,7 @@ export default function MonsterShow({
                                     {x('Snapshots', 'Snapshots')}
                                 </p>
                                 <p className="mt-2 font-display text-3xl font-bold text-[color:var(--landing-accent)]">
-                                    {snapshots.length}
+                                    {visibleSnapshots.length}
                                 </p>
                             </div>
                             <div className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4">
@@ -304,6 +456,127 @@ export default function MonsterShow({
                         </div>
                     </section>
 
+                    <section className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface)] p-6 sm:p-8">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--landing-accent)]">
+                                    {x('Price Trend', 'Prijstrend')}
+                                </p>
+                                <h2 className="mt-1 font-display text-2xl font-semibold text-white">
+                                    {x(
+                                        'Per-Can History Over Time',
+                                        'Per-Blik Geschiedenis Over Tijd',
+                                    )}
+                                </h2>
+                                <p className="mt-2 text-sm text-white/70">
+                                    {trend.direction === 'down'
+                                        ? x(
+                                              `Price is down ${formatMoney(
+                                                  trend.diffCents,
+                                                  'EUR',
+                                              )} compared to the first point in this timespan.`,
+                                              `Prijs is ${formatMoney(
+                                                  trend.diffCents,
+                                                  'EUR',
+                                              )} gedaald ten opzichte van het eerste punt in deze periode.`,
+                                          )
+                                        : trend.direction === 'up'
+                                          ? x(
+                                                `Price is up ${formatMoney(
+                                                    trend.diffCents,
+                                                    'EUR',
+                                                )} compared to the first point in this timespan.`,
+                                                `Prijs is ${formatMoney(
+                                                    trend.diffCents,
+                                                    'EUR',
+                                                )} gestegen ten opzichte van het eerste punt in deze periode.`,
+                                            )
+                                          : x(
+                                                'Price is stable in this timespan.',
+                                                'Prijs is stabiel in deze periode.',
+                                            )}
+                                </p>
+                                {chartStartPoint && chartEndPoint && (
+                                    <p className="mt-1 text-sm text-white/70">
+                                        {x(
+                                            `From ${formatMoney(
+                                                chartStartPoint.value,
+                                                'EUR',
+                                            )} to ${formatMoney(chartEndPoint.value, 'EUR')}.`,
+                                            `Van ${formatMoney(
+                                                chartStartPoint.value,
+                                                'EUR',
+                                            )} naar ${formatMoney(chartEndPoint.value, 'EUR')}.`,
+                                        )}
+                                    </p>
+                                )}
+                                <p className="mt-1 text-xs uppercase tracking-[0.14em] text-white/55">
+                                    {x(
+                                        `Showing ${snapshotsInTimespan.length} of ${visibleSnapshots.length} snapshots (${timespanLabel}).`,
+                                        `Toont ${snapshotsInTimespan.length} van ${visibleSnapshots.length} snapshots (${timespanLabel}).`,
+                                    )}
+                                </p>
+                                <p className="mt-1 text-xs text-white/55">
+                                    {selectedTimespan === '24h'
+                                        ? x(
+                                              'Chart points show the lowest per-can price per hour.',
+                                              'Grafiekpunten tonen de laagste prijs per blik per uur.',
+                                          )
+                                        : x(
+                                              'Chart points show the lowest per-can price per day.',
+                                              'Grafiekpunten tonen de laagste prijs per blik per dag.',
+                                          )}
+                                </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                                {TIMESPAN_OPTIONS.map((option) => (
+                                    <button
+                                        key={option.key}
+                                        type="button"
+                                        onClick={() => setSelectedTimespan(option.key)}
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'outline',
+                                                size: 'sm',
+                                            }),
+                                            selectedTimespan === option.key
+                                                ? 'border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95'
+                                                : 'border-white/20 bg-transparent text-white hover:bg-white/10',
+                                        )}
+                                    >
+                                        {option.key === '24h'
+                                            ? x('24h', '24u')
+                                            : option.key === '7d'
+                                              ? x('7 days', '7 dagen')
+                                              : option.key === '30d'
+                                                ? x('30 days', '30 dagen')
+                                                : x('All', 'Alles')}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="mt-5">
+                            <PriceHistoryChart
+                                points={chartPoints}
+                                lineLabel={x(
+                                    'Lowest per-can price (EUR)',
+                                    'Laagste prijs per blik (EUR)',
+                                )}
+                                emptyLabel={x(
+                                    'No valid price points in this timespan.',
+                                    'Geen geldige prijspunten in deze periode.',
+                                )}
+                                ariaLabel={x(
+                                    'Monster price trend chart',
+                                    'Monster prijstrend grafiek',
+                                )}
+                                valueFormatter={(value) => formatMoney(value, 'EUR')}
+                            />
+                        </div>
+                    </section>
+
                     <section className="overflow-hidden rounded-2xl border border-white/10 bg-[color:var(--landing-surface)]">
                         <div className="border-b border-white/10 px-6 py-4">
                             <h2 className="font-display text-xl font-semibold text-white">
@@ -311,17 +584,17 @@ export default function MonsterShow({
                             </h2>
                         </div>
 
-                        {snapshots.length === 0 && (
+                        {snapshotsInTimespan.length === 0 && (
                             <div className="px-6 py-5 font-body text-sm text-white/70">
                                 {x(
-                                    'No snapshots yet for this monster.',
-                                    'Nog geen snapshots voor deze monster.',
+                                    'No successful snapshots in this selected timespan.',
+                                    'Geen geslaagde snapshots in de gekozen periode.',
                                 )}
                             </div>
                         )}
 
                         <div className="grid gap-3 p-4 md:hidden">
-                            {snapshots.map((snapshot) => {
+                            {snapshotsInTimespan.map((snapshot) => {
                                 const perCan = effectivePerCanCents(snapshot);
 
                                 return (
@@ -442,7 +715,7 @@ export default function MonsterShow({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {snapshots.map((snapshot) => (
+                                    {snapshotsInTimespan.map((snapshot) => (
                                         <tr
                                             key={snapshot.id}
                                             className="border-b border-white/10 text-white/85 transition-colors hover:bg-white/[0.03]"

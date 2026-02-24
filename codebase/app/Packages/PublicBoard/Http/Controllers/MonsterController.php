@@ -20,6 +20,7 @@ class MonsterController extends Controller
                 ->where('monster_id', $monster->id)
                 ->where('submission_status', Monitor::STATUS_APPROVED)
                 ->where('active', true))
+            ->where('status', '!=', 'failed')
             ->with(['monitor:id,site_id,product_url,selector_config', 'monitor.site:id,name,domain'])
             ->latest('checked_at')
             ->limit(200)
