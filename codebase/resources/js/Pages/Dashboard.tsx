@@ -23,6 +23,7 @@ export default function Dashboard({ auth, push }: PageProps) {
     const pushSupported = isPushSupported();
     const pushConfigured = Boolean(push?.vapid_configured);
     const pushEnabled = Boolean(push?.has_active_subscription);
+    const [subscriptionActive, setSubscriptionActive] = useState(pushEnabled);
 
     useEffect(() => {
         if (!pushSupported) {
@@ -33,6 +34,10 @@ export default function Dashboard({ auth, push }: PageProps) {
 
         setPermission(Notification.permission);
     }, [pushSupported]);
+
+    useEffect(() => {
+        setSubscriptionActive(pushEnabled);
+    }, [pushEnabled]);
 
     const refreshPushState = () => {
         router.reload({
@@ -192,7 +197,7 @@ export default function Dashboard({ auth, push }: PageProps) {
                                     {' • '}
                                     {x('Configured', 'Geconfigureerd')}: {pushConfigured ? x('Yes', 'Ja') : x('No', 'Nee')}
                                     {' • '}
-                                    {x('Subscribed', 'Geabonneerd')}: {pushEnabled ? x('Yes', 'Ja') : x('No', 'Nee')}
+                                    {x('Subscribed', 'Geabonneerd')}: {subscriptionActive ? x('Yes', 'Ja') : x('No', 'Nee')}
                                 </p>
                                 {pushFeedback && (
                                     <p className="text-xs text-[color:var(--landing-accent)]">
@@ -200,94 +205,110 @@ export default function Dashboard({ auth, push }: PageProps) {
                                     </p>
                                 )}
                                 <div className="flex flex-wrap gap-2">
-                                    <button
-                                        type="button"
-                                        className={cn(
-                                            buttonVariants({
-                                                variant: 'default',
-                                                size: 'sm',
-                                            }),
-                                            'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
-                                        )}
-                                        disabled={
-                                            pushBusy ||
-                                            !pushSupported ||
-                                            !pushConfigured
-                                        }
-                                        onClick={async () => {
-                                            setPushBusy(true);
-                                            setPushFeedback(null);
-                                            try {
-                                                const result = await enablePushNotifications();
-                                                setPermission(result.permission);
-                                                if (result.ok) {
+                                    {!subscriptionActive && (
+                                        <button
+                                            type="button"
+                                            className={cn(
+                                                buttonVariants({
+                                                    variant: 'default',
+                                                    size: 'sm',
+                                                }),
+                                                'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                            )}
+                                            disabled={
+                                                pushBusy ||
+                                                !pushSupported ||
+                                                !pushConfigured
+                                            }
+                                            onClick={async () => {
+                                                setPushBusy(true);
+                                                setPushFeedback(null);
+                                                try {
+                                                    const result = await enablePushNotifications();
+                                                    setPermission(result.permission);
+                                                    if (result.ok) {
+                                                        setSubscriptionActive(true);
+                                                        setPushFeedback(
+                                                            x(
+                                                                'Push notifications enabled.',
+                                                                'Pushmeldingen ingeschakeld.',
+                                                            ),
+                                                        );
+                                                    } else {
+                                                        setPushFeedback(
+                                                            x(
+                                                                'Could not enable push notifications.',
+                                                                'Kon pushmeldingen niet inschakelen.',
+                                                            ),
+                                                        );
+                                                    }
+                                                } catch {
                                                     setPushFeedback(
                                                         x(
-                                                            'Push notifications enabled.',
-                                                            'Pushmeldingen ingeschakeld.',
+                                                            'Push setup failed. Check browser permissions and VAPID config.',
+                                                            'Pushinstelling mislukt. Controleer browserrechten en VAPID-configuratie.',
                                                         ),
                                                     );
-                                                } else {
-                                                    setPushFeedback(
-                                                        x(
-                                                            'Could not enable push notifications.',
-                                                            'Kon pushmeldingen niet inschakelen.',
-                                                        ),
-                                                    );
+                                                } finally {
+                                                    setPushBusy(false);
+                                                    refreshPushState();
                                                 }
-                                            } catch {
-                                                setPushFeedback(
-                                                    x(
-                                                        'Push setup failed. Check browser permissions and VAPID config.',
-                                                        'Pushinstelling mislukt. Controleer browserrechten en VAPID-configuratie.',
-                                                    ),
-                                                );
-                                            } finally {
-                                                setPushBusy(false);
-                                                refreshPushState();
-                                            }
-                                        }}
-                                    >
-                                        {pushBusy
-                                            ? x('Processing...', 'Verwerken...')
-                                            : x('Enable Push', 'Push Inschakelen')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={cn(
-                                            buttonVariants({
-                                                variant: 'secondary',
-                                                size: 'sm',
-                                            }),
-                                            'border border-white/10 bg-white/5 text-white hover:bg-white/10',
-                                        )}
-                                        disabled={pushBusy || !pushSupported}
-                                        onClick={async () => {
-                                            setPushBusy(true);
-                                            setPushFeedback(null);
-                                            try {
-                                                await disablePushNotifications();
-                                                setPushFeedback(
-                                                    x(
-                                                        'Push notifications disabled.',
-                                                        'Pushmeldingen uitgeschakeld.',
-                                                    ),
-                                                );
-                                            } catch {
-                                                setPushFeedback(
-                                                    x(
-                                                        'Could not disable push notifications.',
-                                                        'Kon pushmeldingen niet uitschakelen.',
-                                                    ),
-                                                );
-                                            } finally {
-                                                setPushBusy(false);
-                                                refreshPushState();
-                                            }
-                                        }}
-                                    >
-                                        {x('Disable Push', 'Push Uitschakelen')}
-                                    </button>
+                                            }}
+                                        >
+                                            {pushBusy
+                                                ? x('Processing...', 'Verwerken...')
+                                                : x('Enable Push', 'Push Inschakelen')}
+                                        </button>
+                                    )}
+                                    {subscriptionActive && (
+                                        <button
+                                            type="button"
+                                            className={cn(
+                                                buttonVariants({
+                                                    variant: 'secondary',
+                                                    size: 'sm',
+                                                }),
+                                                'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                                            )}
+                                            disabled={pushBusy || !pushSupported}
+                                            onClick={async () => {
+                                                setPushBusy(true);
+                                                setPushFeedback(null);
+                                                try {
+                                                    const result = await disablePushNotifications();
+                                                    setPermission(result.permission);
+                                                    setSubscriptionActive(false);
+                                                    if (result.browserPermissionRevoked) {
+                                                        setPushFeedback(
+                                                            x(
+                                                                'Push notifications disabled.',
+                                                                'Pushmeldingen uitgeschakeld.',
+                                                            ),
+                                                        );
+                                                    } else {
+                                                        setPushFeedback(
+                                                            x(
+                                                                'Push notifications disabled. Browser notification permission is still granted; change it in your browser site settings if you want to be asked again.',
+                                                                'Pushmeldingen uitgeschakeld. Browsermeldingsrechten blijven toegestaan; wijzig dit in je browser-site-instellingen als je opnieuw gevraagd wil worden.',
+                                                            ),
+                                                        );
+                                                    }
+                                                } catch {
+                                                    setPushFeedback(
+                                                        x(
+                                                            'Could not disable push notifications.',
+                                                            'Kon pushmeldingen niet uitschakelen.',
+                                                        ),
+                                                    );
+                                                } finally {
+                                                    setPushBusy(false);
+                                                    refreshPushState();
+                                                }
+                                            }}
+                                        >
+                                            {x('Disable Push', 'Push Uitschakelen')}
+                                        </button>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

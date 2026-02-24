@@ -59,10 +59,7 @@ export async function enablePushNotifications(): Promise<{
         };
     }
 
-    let permission = Notification.permission;
-    if (permission === 'default') {
-        permission = await Notification.requestPermission();
-    }
+    const permission = await Notification.requestPermission();
 
     if (permission !== 'granted') {
         return {
@@ -94,28 +91,39 @@ export async function enablePushNotifications(): Promise<{
 
 export async function disablePushNotifications(): Promise<{
     ok: boolean;
+    permission: NotificationPermission | 'unsupported';
+    browserPermissionRevoked: boolean;
 }> {
     if (!isPushSupported()) {
-        return { ok: false };
+        return {
+            ok: false,
+            permission: 'unsupported',
+            browserPermissionRevoked: false,
+        };
     }
 
-    const registration = await navigator.serviceWorker.getRegistration('/');
-    const subscription = registration
-        ? await registration.pushManager.getSubscription()
-        : null;
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    const registration = registrations[0] ?? null;
+    const subscription = registration ? await registration.pushManager.getSubscription() : null;
 
-    if (!subscription) {
-        return { ok: true };
+    if (subscription) {
+        await axios.delete(route('api.push.subscriptions.destroy'), {
+            data: {
+                endpoint: subscription.endpoint,
+            },
+        });
+        await subscription.unsubscribe();
     }
 
-    await axios.delete(route('api.push.subscriptions.destroy'), {
-        data: {
-            endpoint: subscription.endpoint,
-        },
-    });
-    await subscription.unsubscribe();
+    await Promise.all(registrations.map((item) => item.unregister()));
 
-    return { ok: true };
+    const permission = Notification.permission;
+
+    return {
+        ok: true,
+        permission,
+        browserPermissionRevoked: permission === 'default',
+    };
 }
 
 async function fetchVapidPublicKey(): Promise<string> {
