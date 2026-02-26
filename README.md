@@ -95,3 +95,30 @@ cp /opt/monsterindex/.docker/staging/.env.example /opt/monsterindex/.docker/stag
 Then fill `/opt/monsterindex/.docker/staging/.env` with your real values (`APP_KEY`, OAuth keys, web push keys, `APP_URL`, etc.).
 
 Yes: you can use GitHub Container Registry (`ghcr.io`) instead of Docker Hub.
+
+## Production Deploy (Hetzner + GitHub Actions + GHCR)
+
+The production deployment files live in `/Users/codana/lokal.host/projects/MonsterIndex/.docker/production`.
+
+GitHub Actions workflow:
+- `.github/workflows/production-deploy.yml`
+- Trigger: push a git tag matching `v*` (example: `v1.0.0`) or run it manually with `workflow_dispatch`.
+- Builds and pushes:
+- `ghcr.io/<owner>/monsterindex-app:production`
+- `ghcr.io/<owner>/monsterindex-web:production`
+- Deploys to your production VPS over SSH.
+
+Required GitHub repository secrets:
+- `PRODUCTION_HOST`
+- `PRODUCTION_USER`
+- `PRODUCTION_SSH_KEY`
+- `PRODUCTION_PORT` (optional, defaults to `22`)
+- `PRODUCTION_PATH` (example: `/opt/monsterindex`)
+- `GHCR_USERNAME`
+- `GHCR_TOKEN` (`read:packages` for pull on server, `write:packages` for push from Actions if not using `GITHUB_TOKEN`)
+
+First-time VPS bootstrap:
+```bash
+mkdir -p /opt/monsterindex/.docker/production
+cp /opt/monsterindex/.docker/production/.env.example /opt/monsterindex/.docker/production/.env
+```
