@@ -1,5 +1,6 @@
 .docker/local/.env
 .docker/local/.env~
+.docker/staging/.env
 
 .DS_Store
 .idea

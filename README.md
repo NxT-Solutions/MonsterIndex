@@ -66,3 +66,32 @@ Available:
 - `dphp` run arbitrary commands in php container
 - `dvapid` generate `WEBPUSH_VAPID_PUBLIC_KEY` and `WEBPUSH_VAPID_PRIVATE_KEY`
 - `devite` tail Vite container logs
+
+## Staging Deploy (Hetzner + GitHub Actions + GHCR)
+
+The staging deployment files live in `/Users/codana/lokal.host/projects/MonsterIndex/.docker/staging`.
+
+GitHub Actions workflow:
+- Builds two images from `.docker/staging/images/Dockerfile`:
+- `app` target: `ghcr.io/<owner>/monsterindex-app:staging`
+- `web` target: `ghcr.io/<owner>/monsterindex-web:staging`
+- Deploys to your VPS over SSH and runs `docker compose pull && up -d`.
+
+Required GitHub repository secrets:
+- `STAGING_HOST` VPS hostname or IP
+- `STAGING_USER` SSH user
+- `STAGING_SSH_KEY` private key for SSH auth
+- `STAGING_PORT` SSH port (optional, defaults to `22`)
+- `STAGING_PATH` deploy path on VPS (example: `/opt/monsterindex`)
+- `GHCR_USERNAME` GitHub username for container pull auth
+- `GHCR_TOKEN` GitHub token/PAT with `read:packages`
+
+First-time VPS bootstrap:
+```bash
+mkdir -p /opt/monsterindex/.docker/staging
+cp /opt/monsterindex/.docker/staging/.env.example /opt/monsterindex/.docker/staging/.env
+```
+
+Then fill `/opt/monsterindex/.docker/staging/.env` with your real values (`APP_KEY`, OAuth keys, web push keys, `APP_URL`, etc.).
+
+Yes: you can use GitHub Container Registry (`ghcr.io`) instead of Docker Hub.
