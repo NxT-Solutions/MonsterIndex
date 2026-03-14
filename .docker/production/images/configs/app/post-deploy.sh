@@ -3,6 +3,9 @@ set -euo pipefail
 
 cd /var/www/html
 
+app_user="${APP_RUNTIME_USER:-www-data}"
+app_group="${APP_RUNTIME_GROUP:-www-data}"
+
 if [ -f .env.production ]; then
   cp .env.production .env
 fi
@@ -27,6 +30,12 @@ if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
 
   mkdir -p "$(dirname "$db_file")"
   touch "$db_file"
+fi
+
+if [ "$(id -u)" -eq 0 ]; then
+  chown -R "${app_user}:${app_group}" bootstrap/cache storage
+  chmod -R ug+rwX bootstrap/cache storage
+  exec su-exec "${app_user}:${app_group}" "$0" "$@"
 fi
 
 php artisan down --retry=60 || true

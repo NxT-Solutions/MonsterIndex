@@ -3,6 +3,17 @@ set -euo pipefail
 
 cd /var/www/html
 
+app_user="${APP_RUNTIME_USER:-www-data}"
+app_group="${APP_RUNTIME_GROUP:-www-data}"
+
+run_as_app() {
+  if [ "$(id -u)" -eq 0 ]; then
+    exec su-exec "${app_user}:${app_group}" "$@"
+  fi
+
+  exec "$@"
+}
+
 if [ -f .env.production ]; then
   cp .env.production .env
 fi
@@ -29,12 +40,17 @@ if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
   touch "$db_file"
 fi
 
+if [ "$(id -u)" -eq 0 ]; then
+  chown -R "${app_user}:${app_group}" bootstrap/cache storage
+  chmod -R ug+rwX bootstrap/cache storage
+fi
+
 role="${APP_RUNTIME_ROLE:-web}"
 
 case "$role" in
   web)
     if [ "${RUN_POST_DEPLOY_ON_BOOT:-false}" = "true" ]; then
-      /usr/local/bin/monsterindex-post-deploy
+      su-exec "${app_user}:${app_group}" /usr/local/bin/monsterindex-post-deploy
     fi
 
     php-fpm -F &
@@ -48,18 +64,18 @@ case "$role" in
     ;;
   queue)
     while true; do
-      php artisan queue:work --verbose --tries=3 --timeout=120 --sleep=1 --max-jobs=250 --max-time=1800
+      su-exec "${app_user}:${app_group}" php artisan queue:work --verbose --tries=3 --timeout=120 --sleep=1 --max-jobs=250 --max-time=1800
       sleep 1
     done
     ;;
   scheduler)
     while true; do
-      php artisan schedule:run --verbose --no-interaction
+      su-exec "${app_user}:${app_group}" php artisan schedule:run --verbose --no-interaction
       sleep 60
     done
     ;;
   post-deploy)
-    exec /usr/local/bin/monsterindex-post-deploy
+    run_as_app /usr/local/bin/monsterindex-post-deploy
     ;;
   *)
     printf 'Unknown APP_RUNTIME_ROLE=%s\n' "$role" >&2
