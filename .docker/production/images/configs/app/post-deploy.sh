@@ -33,6 +33,7 @@ if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
 fi
 
 if [ "$(id -u)" -eq 0 ]; then
+  ln -sfn /var/www/html/storage/app/public /var/www/html/public/storage
   chown -R "${app_user}:${app_group}" bootstrap/cache storage
   chmod -R ug+rwX bootstrap/cache storage
   exec su-exec "${app_user}:${app_group}" "$0" "$@"
@@ -42,6 +43,5 @@ php artisan down --retry=60 || true
 trap 'php artisan up || true' EXIT
 
 php artisan migrate --force
-php artisan storage:link || true
 php artisan optimize:clear
 php artisan optimize
