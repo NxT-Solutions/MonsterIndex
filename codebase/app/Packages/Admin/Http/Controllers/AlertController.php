@@ -104,7 +104,21 @@ class AlertController extends Controller
 
         return Inertia::render('Admin/Alerts/Index', [
             'alerts' => Alert::query()
-                ->with(['monster:id,name,slug', 'monitor.site:id,name'])
+                ->with([
+                    'monster:id,name,slug',
+                    'monitor:id,site_id',
+                    'monitor.site:id,name',
+                    'monitor.latestSnapshot' => fn ($query) => $query->select([
+                        'price_snapshots.id',
+                        'price_snapshots.monitor_id',
+                        'price_snapshots.checked_at',
+                        'price_snapshots.effective_total_cents',
+                        'price_snapshots.price_per_can_cents',
+                        'price_snapshots.can_count',
+                        'price_snapshots.currency',
+                        'price_snapshots.status',
+                    ]),
+                ])
                 ->latest()
                 ->paginate(50)
                 ->withQueryString(),

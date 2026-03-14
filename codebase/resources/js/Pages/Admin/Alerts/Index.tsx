@@ -24,6 +24,14 @@ type AlertRow = {
         site: {
             name: string;
         };
+        latest_snapshot?: {
+            checked_at: string | null;
+            effective_total_cents: number | null;
+            price_per_can_cents: number | null;
+            can_count: number | null;
+            currency: string;
+            status: string;
+        } | null;
     };
 };
 
@@ -65,6 +73,28 @@ type FollowedPriceDropRow = {
 
 function formatMoney(cents: number, currency = 'EUR'): string {
     return `${currency} ${(cents / 100).toFixed(2)}`;
+}
+
+function effectivePerCanCents(alert: AlertRow): number | null {
+    const snapshot = alert.monitor.latest_snapshot;
+
+    if (!snapshot || snapshot.status === 'failed') {
+        return null;
+    }
+
+    if (snapshot.price_per_can_cents !== null) {
+        return snapshot.price_per_can_cents;
+    }
+
+    if (
+        snapshot.effective_total_cents !== null &&
+        snapshot.can_count !== null &&
+        snapshot.can_count > 0
+    ) {
+        return Math.round(snapshot.effective_total_cents / snapshot.can_count);
+    }
+
+    return snapshot.effective_total_cents;
 }
 
 export default function AlertsIndex({
@@ -633,62 +663,74 @@ export default function AlertsIndex({
                                     </p>
                                 )}
 
-                                {alerts.data.map((alert) => (
-                                    <article
-                                        key={alert.id}
-                                        className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4"
-                                    >
-                                        <div className="flex flex-wrap items-start justify-between gap-2">
-                                            <h3 className="font-medium text-white">
-                                                {alert.title}
-                                            </h3>
-                                            <span className="text-xs text-white/55">
-                                                {new Date(
-                                                    alert.created_at,
-                                                ).toLocaleString(dateLocale)}
-                                            </span>
-                                        </div>
-                                        <p className="mt-2 text-sm text-white/75">
-                                            {alert.body}
-                                        </p>
-                                        <p className="mt-2 text-xs text-white/60">
-                                            {x('Monster:', 'Monster:')}{' '}
-                                            {alert.monster.name} •{' '}
-                                            {x('Store:', 'Winkel:')}{' '}
-                                            {alert.monitor.site.name} •{' '}
-                                            {x('Type:', 'Type:')} {alert.type}
-                                        </p>
-                                        {!alert.read_at && (
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    buttonVariants({
-                                                        variant: 'outline',
-                                                        size: 'sm',
-                                                    }),
-                                                    'mt-3 border-white/20 bg-transparent text-white hover:bg-white/10',
-                                                )}
-                                                onClick={() =>
-                                                    router.post(
-                                                        route(
-                                                            'admin.alerts.mark-read',
-                                                            alert.id,
-                                                        ),
-                                                        {},
-                                                        {
-                                                            preserveScroll: true,
-                                                        },
-                                                    )
-                                                }
-                                            >
-                                                {x(
-                                                    'Mark Read',
-                                                    'Markeer Als Gelezen',
-                                                )}
-                                            </button>
-                                        )}
-                                    </article>
-                                ))}
+                                {alerts.data.map((alert) => {
+                                    const currentPerCan = effectivePerCanCents(alert);
+                                    const displayBody =
+                                        alert.type === 'new_best_price' &&
+                                        currentPerCan !== null
+                                            ? x(
+                                                  `${alert.monster.name} now has a new best per-can price of ${formatMoney(currentPerCan, alert.monitor.latest_snapshot?.currency ?? 'EUR')} at ${alert.monitor.site.name}.`,
+                                                  `${alert.monster.name} heeft nu een nieuwe beste prijs per blik van ${formatMoney(currentPerCan, alert.monitor.latest_snapshot?.currency ?? 'EUR')} bij ${alert.monitor.site.name}.`,
+                                              )
+                                            : alert.body;
+
+                                    return (
+                                        <article
+                                            key={alert.id}
+                                            className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4"
+                                        >
+                                            <div className="flex flex-wrap items-start justify-between gap-2">
+                                                <h3 className="font-medium text-white">
+                                                    {alert.title}
+                                                </h3>
+                                                <span className="text-xs text-white/55">
+                                                    {new Date(
+                                                        alert.created_at,
+                                                    ).toLocaleString(dateLocale)}
+                                                </span>
+                                            </div>
+                                            <p className="mt-2 text-sm text-white/75">
+                                                {displayBody}
+                                            </p>
+                                            <p className="mt-2 text-xs text-white/60">
+                                                {x('Monster:', 'Monster:')}{' '}
+                                                {alert.monster.name} •{' '}
+                                                {x('Store:', 'Winkel:')}{' '}
+                                                {alert.monitor.site.name} •{' '}
+                                                {x('Type:', 'Type:')} {alert.type}
+                                            </p>
+                                            {!alert.read_at && (
+                                                <button
+                                                    type="button"
+                                                    className={cn(
+                                                        buttonVariants({
+                                                            variant: 'outline',
+                                                            size: 'sm',
+                                                        }),
+                                                        'mt-3 border-white/20 bg-transparent text-white hover:bg-white/10',
+                                                    )}
+                                                    onClick={() =>
+                                                        router.post(
+                                                            route(
+                                                                'admin.alerts.mark-read',
+                                                                alert.id,
+                                                            ),
+                                                            {},
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
+                                                        )
+                                                    }
+                                                >
+                                                    {x(
+                                                        'Mark Read',
+                                                        'Markeer Als Gelezen',
+                                                    )}
+                                                </button>
+                                            )}
+                                        </article>
+                                    );
+                                })}
                             </CardContent>
                         </Card>
                     </section>
