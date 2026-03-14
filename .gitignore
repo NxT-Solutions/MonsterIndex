@@ -1,6 +1,5 @@
 .docker/local/.env
 .docker/local/.env~
-
 .DS_Store
 .idea
 .cursor

@@ -13,13 +13,16 @@ The core model is public:
 - Laravel 12 + Inertia React + shadcn/ui
 - Google OAuth only
 - Spatie Roles/Permissions v7
-- SQLite (primary DB profile) + Redis (queue/cache/session/rate-limit)
+- SQLite as the primary data store
 - Docker-first local runtime in `.docker/local`
+- Production deploy assets in `.docker/production`
 
 ## Repository Layout
 
-- `/Users/codana/lokal.host/projects/MonsterIndex/codebase` Laravel app
-- `/Users/codana/lokal.host/projects/MonsterIndex/.docker/local` local Docker stack
+- `codebase/` Laravel app
+- `.docker/local/` local Docker stack
+- `.docker/production/` production image build assets
+- `.github/workflows/production-deploy.yml` production CI/CD pipeline
 
 ## Quick Start (Docker)
 
@@ -66,3 +69,32 @@ Available:
 - `dphp` run arbitrary commands in php container
 - `dvapid` generate `WEBPUSH_VAPID_PUBLIC_KEY` and `WEBPUSH_VAPID_PRIVATE_KEY`
 - `devite` tail Vite container logs
+
+## Production Deploy (Hetzner + GitHub Actions + GHCR)
+
+GitHub Actions workflow:
+- `.github/workflows/production-deploy.yml`
+- Trigger: pull requests build the image for validation, and pushes to `main` build, push, and deploy.
+- Builds and pushes a single GHCR image for MonsterIndex.
+- SSHes into the VPS and triggers the deploy from the ops repo runtime stack.
+
+Required GitHub repository secrets:
+- `PRODUCTION_HOST`
+- `PRODUCTION_USER`
+- `PRODUCTION_SSH_KEY`
+- `APP_KEY`
+- `GOOGLE_CLIENT_SECRET`
+- `WEBPUSH_VAPID_PRIVATE_KEY`
+- `GHCR_USERNAME`
+- `GHCR_PAT`
+
+Required GitHub repository variables:
+- `OPS_REPO_DIR` (example: `/opt/OPS__MicroSaasFree`)
+- `OPS_REPO_REF` (optional, defaults to `main`)
+- `GOOGLE_CLIENT_ID`
+- `WEBPUSH_VAPID_PUBLIC_KEY`
+
+Runtime notes:
+- No server-side application `.env` file is needed.
+- The workflow bakes `codebase/.env.production` plus GitHub secrets into the image at build time.
+- The runtime stack itself lives in the ops repo, where Caddy and the shared Docker networks are already managed.
