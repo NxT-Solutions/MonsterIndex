@@ -56,6 +56,25 @@
   --admin-gradient-end: #0f161a;
   --landing-nav-bg: rgba(20, 30, 35, 0.82);
   --landing-nav-bg-strong: rgba(24, 35, 40, 0.86);
+  --auth-background: #f5f9f1;
+  --auth-foreground: #1d2a24;
+  --auth-card: rgba(255, 255, 255, 0.74);
+  --auth-card-foreground: #1d2a24;
+  --auth-secondary: rgba(243, 248, 244, 0.86);
+  --auth-secondary-foreground: #22322b;
+  --auth-accent: rgba(224, 238, 228, 0.94);
+  --auth-accent-foreground: #1d2a24;
+  --auth-muted-foreground: rgba(29, 42, 36, 0.72);
+  --auth-border: rgba(29, 42, 36, 0.12);
+  --auth-shadow: rgba(14, 28, 21, 0.14);
+  --auth-glow-lime: rgba(157, 255, 0, 0.18);
+  --auth-glow-cyan: rgba(56, 189, 248, 0.14);
+  --auth-gradient-start: #f8fbf3;
+  --auth-gradient-mid: #eef6ef;
+  --auth-gradient-end: #e4efe9;
+  --auth-error-bg: rgba(220, 38, 38, 0.08);
+  --auth-error-border: rgba(220, 38, 38, 0.14);
+  --auth-error-foreground: #991b1b;
 }
 
 .dark {
@@ -104,6 +123,25 @@
   --admin-gradient-end: #06090a;
   --landing-nav-bg: rgba(8, 12, 12, 0.82);
   --landing-nav-bg-strong: rgba(8, 12, 12, 0.86);
+  --auth-background: #071011;
+  --auth-foreground: #edf6ef;
+  --auth-card: rgba(17, 28, 29, 0.8);
+  --auth-card-foreground: #edf6ef;
+  --auth-secondary: rgba(20, 33, 34, 0.88);
+  --auth-secondary-foreground: #edf6ef;
+  --auth-accent: rgba(40, 58, 53, 0.96);
+  --auth-accent-foreground: #edf6ef;
+  --auth-muted-foreground: rgba(237, 246, 239, 0.7);
+  --auth-border: rgba(179, 236, 128, 0.14);
+  --auth-shadow: rgba(0, 0, 0, 0.34);
+  --auth-glow-lime: rgba(157, 255, 0, 0.18);
+  --auth-glow-cyan: rgba(34, 211, 238, 0.13);
+  --auth-gradient-start: #040809;
+  --auth-gradient-mid: #091214;
+  --auth-gradient-end: #101916;
+  --auth-error-bg: rgba(248, 113, 113, 0.12);
+  --auth-error-border: rgba(248, 113, 113, 0.18);
+  --auth-error-foreground: #fecaca;
 }
 
 @theme inline {
