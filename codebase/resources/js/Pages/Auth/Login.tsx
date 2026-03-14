@@ -1,4 +1,4 @@
-import { Button, buttonVariants } from '@/Components/ui/button';
+import { buttonVariants } from '@/Components/ui/button';
 import {
     Card,
     CardContent,
@@ -24,14 +24,14 @@ export default function Login() {
 
     return (
         <GuestLayout>
-            <Head title={x('Continue with Google', 'Doorgaan met Google')} />
+            <Head title={x('Login', 'Inloggen')} />
 
-            <Card className="border-[color:var(--border)] shadow-none">
+            <Card className="border-[color:var(--border)] bg-[color:var(--card)] shadow-[0_24px_80px_var(--auth-shadow)] backdrop-blur-xl">
                 <CardHeader className="space-y-2">
-                    <CardTitle>
+                    <CardTitle className="font-display text-2xl text-[color:var(--card-foreground)]">
                         {x('Sign in to MonsterIndex', 'Meld je aan bij MonsterIndex')}
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="font-body text-sm leading-6 text-[color:var(--muted-foreground)]">
                         {x(
                             'OAuth-only authentication is enabled. Continue with your Google account.',
                             'Alleen OAuth-authenticatie is actief. Ga verder met je Google-account.',
@@ -40,7 +40,7 @@ export default function Login() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {errors.google && (
-                        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                        <p className="rounded-md border border-[color:var(--auth-error-border)] bg-[color:var(--auth-error-bg)] px-3 py-2 text-sm text-[color:var(--auth-error-foreground)]">
                             {errors.google}
                         </p>
                     )}
@@ -55,17 +55,6 @@ export default function Login() {
                         <GoogleIcon className="size-4" />
                         {x('Continue with Google', 'Doorgaan met Google')}
                     </a>
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        className="w-full"
-                        disabled
-                    >
-                        {x(
-                            'Password login disabled',
-                            'Inloggen met wachtwoord is uitgeschakeld',
-                        )}
-                    </Button>
                 </CardContent>
             </Card>
         </GuestLayout>

@@ -185,7 +185,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                     'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                 )}
                             >
-                                {x('Continue with Google', 'Doorgaan met Google')}
+                                {x('Login', 'Inloggen')}
                             </Link>
                         )}
                     </div>
@@ -271,7 +271,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                         'w-full justify-start bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                     )}
                                 >
-                                    {x('Continue with Google', 'Doorgaan met Google')}
+                                    {x('Login', 'Inloggen')}
                                 </Link>
                             )}
                         </div>
