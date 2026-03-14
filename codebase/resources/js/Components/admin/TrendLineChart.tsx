@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 type TrendPoint = {
     label: string;
     value: number;
@@ -15,6 +17,7 @@ export default function TrendLineChart({
     primaryLabel,
     secondaryLabel,
 }: TrendLineChartProps) {
+    const gradientId = useId();
     const width = 640;
     const height = 180;
     const paddingX = 14;
@@ -61,22 +64,33 @@ export default function TrendLineChart({
         <div className="space-y-3">
             <svg
                 viewBox={`0 0 ${width} ${height}`}
-                className="h-44 w-full overflow-visible rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)]"
+                className="h-44 w-full overflow-visible rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)]"
                 role="img"
                 aria-label={primaryLabel}
             >
                 <defs>
-                    <linearGradient id="admin-primary-area" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="rgba(157,255,0,0.45)" />
-                        <stop offset="100%" stopColor="rgba(157,255,0,0.03)" />
+                    <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="rgba(200,255,31,0.42)" />
+                        <stop offset="100%" stopColor="rgba(200,255,31,0.02)" />
                     </linearGradient>
                 </defs>
+                {[0.2, 0.4, 0.6, 0.8].map((ratio) => (
+                    <line
+                        key={ratio}
+                        x1={paddingX}
+                        y1={paddingY + innerHeight * ratio}
+                        x2={width - paddingX}
+                        y2={paddingY + innerHeight * ratio}
+                        stroke="rgba(255,255,255,0.08)"
+                        strokeDasharray="4 6"
+                    />
+                ))}
 
-                <path d={areaPath} fill="url(#admin-primary-area)" />
+                <path d={areaPath} fill={`url(#${gradientId})`} />
                 <path
                     d={linePath}
                     fill="none"
-                    stroke="rgb(157,255,0)"
+                    stroke="var(--chart-1)"
                     strokeWidth="3"
                     strokeLinejoin="round"
                     strokeLinecap="round"
@@ -85,7 +99,7 @@ export default function TrendLineChart({
                     <path
                         d={secondaryPath}
                         fill="none"
-                        stroke="rgb(56,189,248)"
+                        stroke="var(--chart-2)"
                         strokeWidth="2"
                         strokeLinejoin="round"
                         strokeLinecap="round"
@@ -94,15 +108,15 @@ export default function TrendLineChart({
                 )}
             </svg>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/60">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[color:var(--foreground-soft)]">
                 <div className="flex items-center gap-4">
                     <span className="inline-flex items-center gap-1.5">
-                        <span className="h-2.5 w-2.5 rounded-full bg-[color:var(--landing-accent)]" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-[color:var(--chart-1)]" />
                         {primaryLabel}
                     </span>
                     {secondaryLabel && (
                         <span className="inline-flex items-center gap-1.5">
-                            <span className="h-2.5 w-2.5 rounded-full bg-cyan-300" />
+                            <span className="h-2.5 w-2.5 rounded-full bg-[color:var(--chart-2)]" />
                             {secondaryLabel}
                         </span>
                     )}
@@ -144,4 +158,3 @@ function toAreaPath(points: Array<{ x: number; y: number }>, baselineY: number):
         2,
     )} L ${start.x.toFixed(2)} ${baselineY.toFixed(2)} Z`;
 }
-

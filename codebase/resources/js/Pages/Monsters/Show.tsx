@@ -7,6 +7,7 @@ import { PageProps } from '@/types';
 import axios from 'axios';
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 type Snapshot = {
     id: number;
@@ -362,7 +363,7 @@ export default function MonsterShow({
                                                                 );
                                                             }
                                                         } catch {
-                                                            window.alert(
+                                                            toast.error(
                                                                 x(
                                                                     'Could not update follow status right now.',
                                                                     'Kon de volgstatus nu niet bijwerken.',

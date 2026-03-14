@@ -84,14 +84,14 @@ export default function AdminDashboard({
     return (
         <AuthenticatedLayout
             header={
-                <div>
+                <div className="max-w-4xl">
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
                         {x('Admin Operations', 'Admin Operaties')}
                     </p>
-                    <h2 className="mt-1 font-display text-2xl font-semibold text-white sm:text-3xl">
+                    <h1 className="mt-1 font-display text-2xl font-semibold leading-tight text-white sm:text-3xl">
                         {x('Control Center', 'Control Center')}
-                    </h2>
-                    <p className="mt-1 font-body text-sm text-white/65">
+                    </h1>
+                    <p className="mt-1 min-h-5 max-w-3xl font-body text-sm leading-5 text-white/65">
                         {x(
                             'Track monitor health, selector coverage, and scraping volume in one place.',
                             'Volg monitorgezondheid, selector-dekking en scrapevolume op één plek.',
@@ -201,7 +201,7 @@ export default function AdminDashboard({
                     </section>
 
                     <section>
-                        <Card className="border-white/10 bg-[color:var(--landing-surface)] shadow-[0_12px_30px_rgba(0,0,0,.24)]">
+                        <Card className="min-h-[14rem] border-white/10 bg-[color:var(--landing-surface)] shadow-[0_12px_30px_rgba(0,0,0,.24)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
                                     {x('Push Test Sender', 'Push Testzender')}
@@ -218,10 +218,14 @@ export default function AdminDashboard({
                                     }}
                                 >
                                     <div className="md:col-span-3">
-                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                        <label
+                                            htmlFor="admin-push-test-user"
+                                            className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
+                                        >
                                             {x('Target User', 'Doelgebruiker')}
                                         </label>
                                         <select
+                                            id="admin-push-test-user"
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
                                             value={pushTestForm.data.user_id}
                                             onChange={(event) =>
@@ -243,10 +247,14 @@ export default function AdminDashboard({
                                         </select>
                                     </div>
                                     <div className="md:col-span-3">
-                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                        <label
+                                            htmlFor="admin-push-test-title"
+                                            className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
+                                        >
                                             {x('Title', 'Titel')}
                                         </label>
                                         <input
+                                            id="admin-push-test-title"
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
                                             value={pushTestForm.data.title}
                                             onChange={(event) =>
@@ -256,10 +264,14 @@ export default function AdminDashboard({
                                         />
                                     </div>
                                     <div className="md:col-span-4">
-                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                        <label
+                                            htmlFor="admin-push-test-body"
+                                            className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
+                                        >
                                             {x('Body', 'Inhoud')}
                                         </label>
                                         <input
+                                            id="admin-push-test-body"
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
                                             value={pushTestForm.data.body}
                                             onChange={(event) =>
@@ -269,10 +281,14 @@ export default function AdminDashboard({
                                         />
                                     </div>
                                     <div className="md:col-span-2">
-                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                        <label
+                                            htmlFor="admin-push-test-url"
+                                            className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
+                                        >
                                             URL
                                         </label>
                                         <input
+                                            id="admin-push-test-url"
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
                                             value={pushTestForm.data.url}
                                             onChange={(event) =>

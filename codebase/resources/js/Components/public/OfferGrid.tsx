@@ -12,6 +12,7 @@ import { PageProps } from '@/types';
 import axios from 'axios';
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 type OfferGridProps = {
     offers: PublicOfferRow[];
@@ -173,7 +174,7 @@ export default function OfferGrid({ offers, query }: OfferGridProps) {
                                                     [key]: !isFollowing,
                                                 }));
                                             } catch {
-                                                window.alert(
+                                                toast.error(
                                                     x(
                                                         'Could not update follow status right now.',
                                                         'Kon de volgstatus nu niet bijwerken.',

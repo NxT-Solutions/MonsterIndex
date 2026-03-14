@@ -61,7 +61,7 @@ export default function BestPricesIndex({
     const { locale, x } = useLocale();
     const [query, setQuery] = useState("");
     const normalizedQuery = query.trim().toLowerCase();
-    const copy = LANDING_COPY[locale];
+    const copy = LANDING_COPY[locale as 'en' | 'nl'] ?? LANDING_COPY.en;
     const canonicalUrl = route("home");
     const pageTitle = x(
         "MonsterIndex | Live Monster Energy Deal Tracker",
