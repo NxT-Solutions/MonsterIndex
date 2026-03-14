@@ -16,6 +16,7 @@ RUN apk add --no-cache \
     nodejs \
     oniguruma-dev \
     sqlite \
+    su-exec \
     unzip
 
 RUN curl -fsSL https://bun.sh/install | bash \
