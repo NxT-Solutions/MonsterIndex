@@ -1,6 +1,7 @@
 import BarMeter from '@/Components/admin/BarMeter';
 import KpiCard from '@/Components/admin/KpiCard';
 import Modal from '@/Components/Modal';
+import { useAppDialogs } from '@/Components/providers/AppDialogProvider';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
@@ -9,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, type FormEvent, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 const OTHER_STORE_ID = -1;
 
@@ -77,6 +79,7 @@ export default function MonitorsIndex({
     sites: SiteOption[];
 }) {
     const { locale, x } = useLocale();
+    const { prompt } = useAppDialogs();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
 
     const form = useForm({
@@ -239,18 +242,37 @@ export default function MonitorsIndex({
 
         try {
             await axios.post(route('api.admin.monitors.run-now', monitor.id));
+            toast.success(
+                x(
+                    'Scrape run queued successfully.',
+                    'Scrape-run succesvol ingepland.',
+                ),
+            );
+        } catch {
+            toast.error(
+                x(
+                    'Could not queue this scrape run. Please retry.',
+                    'Kon deze scrape-run niet inplannen. Probeer opnieuw.',
+                ),
+            );
         } finally {
             setLoadingRun(null);
         }
     };
 
     const openSelectorBrowser = async (monitor: MonitorRow) => {
-        const targetUrl = window
-            .prompt(
-                x('Open selector for URL', 'Open selector voor URL'),
-                monitor.product_url,
-            )
-            ?.trim();
+        const targetUrl = await prompt({
+            title: x('Open selector for URL', 'Open selector voor URL'),
+            description: x(
+                'Choose the exact product URL you want to configure selectors against.',
+                'Kies de exacte product-URL waarvoor je selectors wilt configureren.',
+            ),
+            label: x('Product URL', 'Product-URL'),
+            defaultValue: monitor.product_url,
+            placeholder: 'https://example.com/product-url',
+            required: true,
+            confirmLabel: x('Open selector', 'Selector openen'),
+        });
         if (!targetUrl) {
             return;
         }
@@ -277,7 +299,7 @@ export default function MonitorsIndex({
                 'noopener,noreferrer',
             );
         } catch {
-            window.alert(
+            toast.error(
                 x(
                     'Could not create a selector session. Reload and try again.',
                     'Kon geen selectorsessie maken. Herlaad en probeer opnieuw.',

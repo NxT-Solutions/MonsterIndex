@@ -15,13 +15,119 @@
       : 'en';
   const x = (english, dutch) => (language === 'nl' ? dutch : english);
 
+  const showOverlayDialog = ({
+    title,
+    description,
+    confirmLabel,
+    cancelLabel,
+    destructive = false,
+  }) =>
+    new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.setAttribute('data-monsterindex-ignore', 'true');
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.zIndex = '2147483647';
+      overlay.style.display = 'flex';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.padding = '20px';
+      overlay.style.background = 'rgba(2, 6, 5, 0.72)';
+      overlay.style.backdropFilter = 'blur(12px)';
+
+      const dialog = document.createElement('div');
+      dialog.setAttribute('data-monsterindex-ignore', 'true');
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('aria-modal', 'true');
+      dialog.setAttribute('aria-label', title);
+      dialog.style.width = 'min(460px, calc(100vw - 32px))';
+      dialog.style.borderRadius = '22px';
+      dialog.style.border = '1px solid rgba(196, 255, 45, 0.2)';
+      dialog.style.background =
+        'linear-gradient(180deg, rgba(12, 19, 22, 0.98), rgba(6, 13, 14, 0.98))';
+      dialog.style.boxShadow =
+        '0 30px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05)';
+      dialog.style.color = '#f5fee7';
+      dialog.style.fontFamily = 'Rajdhani, ui-sans-serif, system-ui, -apple-system, sans-serif';
+      dialog.innerHTML = `
+        <div style="padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
+          <div style="font-size:11px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(196,255,45,0.78)">${x(
+            'MonsterIndex',
+            'MonsterIndex',
+          )}</div>
+          <div style="margin-top:8px;font-size:24px;line-height:1;font-weight:700">${title}</div>
+          <div style="margin-top:10px;font-size:15px;line-height:1.45;color:rgba(232,244,235,0.8)">${
+            description || ''
+          }</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;padding:18px 20px 20px">
+          ${
+            cancelLabel
+              ? `<button type="button" data-monsterindex-action="cancel" style="border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.04);color:#f5fee7;border-radius:999px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer">${cancelLabel}</button>`
+              : ''
+          }
+          <button type="button" data-monsterindex-action="confirm" style="border:1px solid ${
+            destructive ? 'rgba(255, 123, 123, 0.3)' : 'rgba(196,255,45,0.16)'
+          };background:${
+            destructive
+              ? 'linear-gradient(135deg, rgba(255, 99, 99, 0.95), rgba(224, 58, 95, 0.95))'
+              : 'linear-gradient(135deg, rgba(196,255,45,0.98), rgba(64,230,181,0.98))'
+          };color:${destructive ? '#fff8f8' : '#071207'};border-radius:999px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer">${
+            confirmLabel
+          }</button>
+        </div>
+      `;
+
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
+
+      const confirmButton = dialog.querySelector('[data-monsterindex-action="confirm"]');
+      const cancelButton = dialog.querySelector('[data-monsterindex-action="cancel"]');
+      const activeElement = document.activeElement;
+
+      const cleanup = (value) => {
+        document.removeEventListener('keydown', onKeyDown, true);
+        overlay.remove();
+        if (activeElement instanceof HTMLElement) {
+          activeElement.focus();
+        }
+        resolve(value);
+      };
+
+      const onKeyDown = (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          cleanup(false);
+        }
+      };
+
+      document.addEventListener('keydown', onKeyDown, true);
+
+      overlay.addEventListener('click', (event) => {
+        if (event.target === overlay && cancelButton instanceof HTMLButtonElement) {
+          cleanup(false);
+        }
+      });
+
+      if (confirmButton instanceof HTMLButtonElement) {
+        confirmButton.addEventListener('click', () => cleanup(true));
+        window.setTimeout(() => confirmButton.focus(), 10);
+      }
+
+      if (cancelButton instanceof HTMLButtonElement) {
+        cancelButton.addEventListener('click', () => cleanup(false));
+      }
+    });
+
   if (!token) {
-    alert(
-      x(
-        'MonsterIndex selector token missing. Regenerate the selector session.',
-        'MonsterIndex selectortoken ontbreekt. Genereer de selectorsessie opnieuw.',
+    void showOverlayDialog({
+      title: x('Selector session missing', 'Selectorsessie ontbreekt'),
+      description: x(
+        'The MonsterIndex selector token is missing. Regenerate the selector session and open it again from the app.',
+        'Het MonsterIndex selectortoken ontbreekt. Genereer de selectorsessie opnieuw en open deze opnieuw vanuit de app.',
       ),
-    );
+      confirmLabel: x('Close', 'Sluiten'),
+    });
     return;
   }
 
@@ -935,16 +1041,24 @@
   }
 
   if (backBtn instanceof HTMLButtonElement) {
-    backBtn.addEventListener('click', () => {
-      if (
-        window.__monsterindex_selector_unsaved &&
-        !window.confirm(
-          x(
+    backBtn.addEventListener('click', async () => {
+      const shouldLeave =
+        !window.__monsterindex_selector_unsaved ||
+        (await showOverlayDialog({
+          title: x(
+            'Leave selector without saving?',
+            'Selector verlaten zonder op te slaan?',
+          ),
+          description: x(
             'You still have unsaved selector changes. Leave anyway?',
             'Je hebt nog niet-opgeslagen selectorwijzigingen. Toch verlaten?',
           ),
-        )
-      ) {
+          confirmLabel: x('Leave page', 'Pagina verlaten'),
+          cancelLabel: x('Stay here', 'Hier blijven'),
+          destructive: true,
+        }));
+
+      if (!shouldLeave) {
         return;
       }
 

@@ -1,6 +1,7 @@
 import BarMeter from '@/Components/admin/BarMeter';
 import KpiCard from '@/Components/admin/KpiCard';
 import Modal from '@/Components/Modal';
+import { useAppDialogs } from '@/Components/providers/AppDialogProvider';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
@@ -9,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { toast } from 'sonner';
 
 type MonsterDetail = {
     id: number;
@@ -60,6 +62,7 @@ type RunsEventPayload = {
 
 export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
     const { locale, x } = useLocale();
+    const { confirm } = useAppDialogs();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
 
     const form = useForm({
@@ -227,7 +230,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
             selectorBrowserUrl.searchParams.set('lang', locale);
             window.location.assign(selectorBrowserUrl.toString());
         } catch {
-            window.alert(
+            toast.error(
                 x(
                     'Could not open selector browser. Try reloading this page.',
                     'Kon de selectorbrowser niet openen. Probeer deze pagina opnieuw te laden.',
@@ -254,11 +257,17 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
 
         try {
             await axios.post(route('api.admin.monitors.run-now', record.id));
+            toast.success(
+                x(
+                    'Scrape run queued successfully.',
+                    'Scrape-run succesvol ingepland.',
+                ),
+            );
         } catch {
             setRunningMonitorIds((currentRunning) =>
                 currentRunning.filter((monitorId) => monitorId !== record.id),
             );
-            window.alert(
+            toast.error(
                 x(
                     'Could not queue this scrape run. Please retry.',
                     'Kon deze scrape-run niet inplannen. Probeer opnieuw.',
@@ -302,6 +311,27 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
             onSuccess: () => {
                 setEditingMonitor(null);
             },
+        });
+    };
+
+    const deleteMonitor = async (record: MonitorRecord) => {
+        const confirmed = await confirm({
+            title: x('Delete this website record?', 'Dit website-record verwijderen?'),
+            description: x(
+                'This permanently removes the monitor and its selector configuration.',
+                'Dit verwijdert de monitor en de selectorconfiguratie permanent.',
+            ),
+            confirmLabel: x('Delete record', 'Record verwijderen'),
+            cancelLabel: x('Cancel', 'Annuleren'),
+            destructive: true,
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        router.delete(route('admin.monitors.destroy', record.id), {
+            preserveScroll: true,
         });
     };
 
@@ -597,14 +627,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                         }),
                                                         'border border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20',
                                                     )}
-                                                    onClick={() =>
-                                                        router.delete(
-                                                            route(
-                                                                'admin.monitors.destroy',
-                                                                record.id,
-                                                            ),
-                                                        )
-                                                    }
+                                                    onClick={() => void deleteMonitor(record)}
                                                 >
                                                     {x(
                                                         'Delete',

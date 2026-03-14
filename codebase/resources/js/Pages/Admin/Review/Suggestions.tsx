@@ -1,3 +1,4 @@
+import { useAppDialogs } from '@/Components/providers/AppDialogProvider';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
@@ -24,13 +25,25 @@ export default function SuggestionReviewIndex({
     pendingSuggestions: PendingSuggestion[];
 }) {
     const { locale, x } = useLocale();
+    const { prompt } = useAppDialogs();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
 
-    const approve = (suggestion: PendingSuggestion) => {
-        const reviewNote = window.prompt(
-            x('Optional approval note', 'Optionele goedkeuringsnotitie'),
-            '',
-        );
+    const approve = async (suggestion: PendingSuggestion) => {
+        const reviewNote = await prompt({
+            title: x(
+                'Approve and create monster',
+                'Goedkeuren en monster maken',
+            ),
+            description: x(
+                'Optionally leave a note explaining the approval or any follow-up.',
+                'Laat eventueel een notitie achter met uitleg over de goedkeuring of eventuele opvolging.',
+            ),
+            label: x('Optional approval note', 'Optionele goedkeuringsnotitie'),
+            confirmLabel: x(
+                'Approve suggestion',
+                'Suggestie goedkeuren',
+            ),
+        });
         if (reviewNote === null) {
             return;
         }
@@ -44,11 +57,16 @@ export default function SuggestionReviewIndex({
         );
     };
 
-    const reject = (suggestion: PendingSuggestion) => {
-        const reviewNote = window.prompt(
-            x('Optional rejection note', 'Optionele afwijsnotitie'),
-            '',
-        );
+    const reject = async (suggestion: PendingSuggestion) => {
+        const reviewNote = await prompt({
+            title: x('Reject suggestion', 'Suggestie afwijzen'),
+            description: x(
+                'Optionally explain why this suggestion is being rejected.',
+                'Leg optioneel uit waarom deze suggestie wordt afgewezen.',
+            ),
+            label: x('Optional rejection note', 'Optionele afwijsnotitie'),
+            confirmLabel: x('Reject suggestion', 'Suggestie afwijzen'),
+        });
         if (reviewNote === null) {
             return;
         }

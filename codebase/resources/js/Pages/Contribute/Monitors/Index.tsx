@@ -1,3 +1,4 @@
+import { useAppDialogs } from '@/Components/providers/AppDialogProvider';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
@@ -6,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { FormEvent, useState } from 'react';
+import { toast } from 'sonner';
 
 const OTHER_STORE_ID = -1;
 
@@ -71,6 +73,7 @@ export default function ContributionMonitorsIndex({
     sites: SiteOption[];
 }) {
     const { locale, x } = useLocale();
+    const { confirm } = useAppDialogs();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
 
     const form = useForm({
@@ -117,7 +120,7 @@ export default function ContributionMonitorsIndex({
             url.searchParams.set('lang', locale);
             window.location.assign(url.toString());
         } catch {
-            window.alert(
+            toast.error(
                 x(
                     'Could not open selector browser. Reload and try again.',
                     'Kon selectorbrowser niet openen. Herlaad en probeer opnieuw.',
@@ -175,17 +178,24 @@ export default function ContributionMonitorsIndex({
         });
     };
 
-    const deleteOrWithdraw = (monitor: MonitorRow) => {
+    const deleteOrWithdraw = async (monitor: MonitorRow) => {
         if (monitor.submission_status === 'approved') {
             return;
         }
 
-        const confirmed = window.confirm(
-            x(
+        const confirmed = await confirm({
+            title: x(
                 'Delete this monitor draft/proposal?',
                 'Deze monitor draft/voorstel verwijderen?',
             ),
-        );
+            description: x(
+                'This removes the draft or pending proposal from your queue.',
+                'Deze actie verwijdert het concept of het wachtende voorstel uit je wachtrij.',
+            ),
+            confirmLabel: x('Delete', 'Verwijderen'),
+            cancelLabel: x('Cancel', 'Annuleren'),
+            destructive: true,
+        });
 
         if (!confirmed) {
             return;
@@ -203,9 +213,9 @@ export default function ContributionMonitorsIndex({
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
                         {x('Community', 'Community')}
                     </p>
-                    <h2 className="mt-1 font-display text-2xl font-semibold text-white">
+                    <h1 className="mt-1 font-display text-2xl font-semibold text-white">
                         {x('My Monitor Proposals', 'Mijn Monitorvoorstellen')}
-                    </h2>
+                    </h1>
                 </div>
             }
         >
@@ -222,10 +232,14 @@ export default function ContributionMonitorsIndex({
                         <CardContent>
                             <form className="grid gap-3 md:grid-cols-12" onSubmit={submitCreate}>
                                 <div className="md:col-span-4">
-                                    <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                    <label
+                                        htmlFor="contribute-monitor-monster"
+                                        className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
+                                    >
                                         {x('Monster', 'Monster')}
                                     </label>
                                     <select
+                                        id="contribute-monitor-monster"
                                         className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
                                         value={form.data.monster_id}
                                         onChange={(event) => form.setData('monster_id', Number(event.target.value))}
@@ -239,10 +253,14 @@ export default function ContributionMonitorsIndex({
                                 </div>
 
                                 <div className="md:col-span-4">
-                                    <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                    <label
+                                        htmlFor="contribute-monitor-store"
+                                        className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
+                                    >
                                         {x('Store', 'Winkel')}
                                     </label>
                                     <select
+                                        id="contribute-monitor-store"
                                         className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white"
                                         value={form.data.site_id}
                                         onChange={(event) => form.setData('site_id', Number(event.target.value))}
@@ -259,10 +277,14 @@ export default function ContributionMonitorsIndex({
                                 </div>
 
                                 <div className="md:col-span-4">
-                                    <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                    <label
+                                        htmlFor="contribute-monitor-currency"
+                                        className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
+                                    >
                                         {x('Currency', 'Valuta')}
                                     </label>
                                     <input
+                                        id="contribute-monitor-currency"
                                         className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
                                         value="EUR"
                                         disabled
@@ -271,10 +293,14 @@ export default function ContributionMonitorsIndex({
 
                                 {isOtherStore && (
                                     <div className="md:col-span-12">
-                                        <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                        <label
+                                            htmlFor="contribute-monitor-site-name"
+                                            className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
+                                        >
                                             {x('Store Name (Optional)', 'Winkelnaam (optioneel)')}
                                         </label>
                                         <input
+                                            id="contribute-monitor-site-name"
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
                                             value={form.data.site_name}
                                             placeholder={x('Example: Energy Shop', 'Voorbeeld: Energy Shop')}
@@ -284,10 +310,14 @@ export default function ContributionMonitorsIndex({
                                 )}
 
                                 <div className="md:col-span-9">
-                                    <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                    <label
+                                        htmlFor="contribute-monitor-product-url"
+                                        className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
+                                    >
                                         {x('Product URL', 'Product-URL')}
                                     </label>
                                     <input
+                                        id="contribute-monitor-product-url"
                                         className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
                                         value={form.data.product_url}
                                         placeholder="https://example.com/product/monster"
@@ -485,10 +515,14 @@ export default function ContributionMonitorsIndex({
 
                         <form className="space-y-4" onSubmit={submitEditMonitor}>
                             <div>
-                                <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
+                                <label
+                                    htmlFor="contribute-monitor-edit-product-url"
+                                    className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
+                                >
                                     {x('Product URL', 'Product-URL')}
                                 </label>
                                 <input
+                                    id="contribute-monitor-edit-product-url"
                                     className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
                                     value={editForm.data.product_url}
                                     placeholder="https://example.com/product/monster"

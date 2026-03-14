@@ -1,5 +1,6 @@
 import BarMeter from '@/Components/admin/BarMeter';
 import KpiCard from '@/Components/admin/KpiCard';
+import { useAppDialogs } from '@/Components/providers/AppDialogProvider';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
@@ -18,6 +19,7 @@ type Store = {
 
 export default function StoresIndex({ stores }: { stores: Store[] }) {
     const { x } = useLocale();
+    const { confirm, prompt } = useAppDialogs();
 
     const form = useForm({
         name: '',
@@ -64,12 +66,34 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
         });
     };
 
-    const editStore = (store: Store) => {
-        const name = window.prompt(x('Store name', 'Winkelnaam'), store.name);
-        if (!name) return;
+    const editStore = async (store: Store) => {
+        const name = await prompt({
+            title: x('Edit store', 'Winkel bewerken'),
+            description: x(
+                'Update the visible store name.',
+                'Werk de zichtbare winkelnaam bij.',
+            ),
+            label: x('Store name', 'Winkelnaam'),
+            defaultValue: store.name,
+            required: true,
+            confirmLabel: x('Continue', 'Doorgaan'),
+        });
+        if (!name) {
+            return;
+        }
 
         const domain =
-            window.prompt(x('Domain', 'Domein'), store.domain) ?? store.domain;
+            (await prompt({
+                title: x('Edit domain', 'Domein bewerken'),
+                description: x(
+                    'Use a bare domain or full URL for matching and admin display.',
+                    'Gebruik een kaal domein of volledige URL voor matching en admin-weergave.',
+                ),
+                label: x('Domain', 'Domein'),
+                defaultValue: store.domain,
+                required: true,
+                confirmLabel: x('Save changes', 'Wijzigingen opslaan'),
+            })) ?? store.domain;
 
         router.put(route('admin.stores.update', store.id), {
             name,
@@ -86,8 +110,25 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
         });
     };
 
-    const deleteStore = (store: Store) => {
-        router.delete(route('admin.stores.destroy', store.id));
+    const deleteStore = async (store: Store) => {
+        const confirmed = await confirm({
+            title: x('Delete this store?', 'Deze winkel verwijderen?'),
+            description: x(
+                'Only remove stores that are no longer needed. Existing monitor links may be affected.',
+                'Verwijder alleen winkels die niet meer nodig zijn. Bestaande monitorlinks kunnen hierdoor beïnvloed worden.',
+            ),
+            confirmLabel: x('Delete store', 'Winkel verwijderen'),
+            cancelLabel: x('Cancel', 'Annuleren'),
+            destructive: true,
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        router.delete(route('admin.stores.destroy', store.id), {
+            preserveScroll: true,
+        });
     };
 
     return (

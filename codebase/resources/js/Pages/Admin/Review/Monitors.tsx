@@ -1,3 +1,4 @@
+import { useAppDialogs } from '@/Components/providers/AppDialogProvider';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
@@ -39,19 +40,27 @@ export default function MonitorReviewIndex({
     pendingMonitors: PendingMonitor[];
 }) {
     const { locale, x } = useLocale();
+    const { confirm, prompt } = useAppDialogs();
     const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
 
     const approve = (monitor: PendingMonitor) => {
         router.post(route('admin.review.monitors.approve', monitor.id), {}, { preserveScroll: true });
     };
 
-    const forceApprove = (monitor: PendingMonitor) => {
-        const confirmed = window.confirm(
-            x(
+    const forceApprove = async (monitor: PendingMonitor) => {
+        const confirmed = await confirm({
+            title: x(
                 'Force-approve this monitor even though validation failed?',
                 'Deze monitor force-goedkeuren ook al is validatie mislukt?',
             ),
-        );
+            description: x(
+                'Use this only when you have manually verified the selectors and pricing output.',
+                'Gebruik dit alleen als je de selectors en prijsoutput handmatig hebt gecontroleerd.',
+            ),
+            confirmLabel: x('Force approve', 'Force goedkeuren'),
+            cancelLabel: x('Cancel', 'Annuleren'),
+            destructive: true,
+        });
         if (!confirmed) {
             return;
         }
@@ -63,11 +72,17 @@ export default function MonitorReviewIndex({
         );
     };
 
-    const reject = (monitor: PendingMonitor) => {
-        const note = window.prompt(
-            x('Optional rejection note', 'Optionele afwijsnotitie'),
-            monitor.review_note ?? '',
-        );
+    const reject = async (monitor: PendingMonitor) => {
+        const note = await prompt({
+            title: x('Reject monitor proposal', 'Monitorvoorstel afwijzen'),
+            description: x(
+                'Add an optional note to help the contributor understand what to change.',
+                'Voeg optioneel een notitie toe om de bijdrager te helpen begrijpen wat er moet veranderen.',
+            ),
+            label: x('Optional rejection note', 'Optionele afwijsnotitie'),
+            defaultValue: monitor.review_note ?? '',
+            confirmLabel: x('Reject monitor', 'Monitor afwijzen'),
+        });
         if (note === null) {
             return;
         }

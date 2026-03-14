@@ -1,5 +1,6 @@
 import BarMeter from '@/Components/admin/BarMeter';
 import KpiCard from '@/Components/admin/KpiCard';
+import { useAppDialogs } from '@/Components/providers/AppDialogProvider';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
@@ -19,6 +20,7 @@ interface Monster {
 
 export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
     const { x } = useLocale();
+    const { prompt } = useAppDialogs();
 
     const form = useForm({
         name: '',
@@ -61,19 +63,44 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
         });
     };
 
-    const editMonster = (monster: Monster) => {
-        const name = window.prompt(
-            x('Monster name', 'Monster naam'),
-            monster.name,
-        );
-        if (!name) return;
+    const editMonster = async (monster: Monster) => {
+        const name = await prompt({
+            title: x('Edit monster', 'Monster bewerken'),
+            description: x(
+                'Update the display name for this monster.',
+                'Werk de zichtbare naam van dit monster bij.',
+            ),
+            label: x('Monster name', 'Monster naam'),
+            defaultValue: monster.name,
+            required: true,
+            confirmLabel: x('Continue', 'Doorgaan'),
+        });
+        if (!name) {
+            return;
+        }
 
-        const slug = window.prompt(x('Slug', 'Slug'), monster.slug) ?? monster.slug;
+        const slug =
+            (await prompt({
+                title: x('Edit slug', 'Slug bewerken'),
+                description: x(
+                    'Adjust the slug if you want a different URL path.',
+                    'Pas de slug aan als je een ander URL-pad wilt.',
+                ),
+                label: x('Slug', 'Slug'),
+                defaultValue: monster.slug,
+                confirmLabel: x('Continue', 'Doorgaan'),
+            })) ?? monster.slug;
         const sizeLabel =
-            window.prompt(
-                x('Size label', 'Formaatlabel'),
-                monster.size_label ?? '',
-            ) ?? '';
+            (await prompt({
+                title: x('Edit size label', 'Formaatlabel bewerken'),
+                description: x(
+                    'Add or update the optional size label shown next to the monster name.',
+                    'Voeg het optionele formaatlabel naast de monsternaam toe of werk het bij.',
+                ),
+                label: x('Size label', 'Formaatlabel'),
+                defaultValue: monster.size_label ?? '',
+                confirmLabel: x('Save changes', 'Wijzigingen opslaan'),
+            })) ?? '';
 
         router.put(route('admin.monsters.update', monster.slug), {
             name,
