@@ -211,6 +211,32 @@
   font-family: 'Rajdhani', var(--font-sans);
 }
 
+.auth-theme {
+  --background: var(--auth-background);
+  --foreground: var(--auth-foreground);
+  --card: var(--auth-card);
+  --card-foreground: var(--auth-card-foreground);
+  --popover: var(--auth-card);
+  --popover-foreground: var(--auth-card-foreground);
+  --secondary: var(--auth-secondary);
+  --secondary-foreground: var(--auth-secondary-foreground);
+  --muted: var(--auth-secondary);
+  --muted-foreground: var(--auth-muted-foreground);
+  --accent: var(--auth-accent);
+  --accent-foreground: var(--auth-accent-foreground);
+  --border: var(--auth-border);
+  --input: var(--auth-border);
+  --ring: var(--primary);
+}
+
+.auth-root {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 14% 2%, var(--auth-glow-lime), transparent 34%),
+    radial-gradient(circle at 86% 10%, var(--auth-glow-cyan), transparent 28%),
+    linear-gradient(160deg, var(--auth-gradient-start) 0%, var(--auth-gradient-mid) 54%, var(--auth-gradient-end) 100%);
+}
+
 .landing-root {
   background-image:
     radial-gradient(circle at 15% -10%, var(--landing-accent-glow), transparent 38%),
