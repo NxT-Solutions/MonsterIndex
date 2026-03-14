@@ -21,7 +21,7 @@ The core model is public:
 
 - `codebase/` Laravel app
 - `.docker/local/` local Docker stack
-- `.docker/production/` production image and runtime stack
+- `.docker/production/` production image build assets
 - `.github/workflows/production-deploy.yml` production CI/CD pipeline
 
 ## Quick Start (Docker)
@@ -76,7 +76,7 @@ GitHub Actions workflow:
 - `.github/workflows/production-deploy.yml`
 - Trigger: pull requests build the image for validation, and pushes to `main` build, push, and deploy.
 - Builds and pushes a single GHCR image for MonsterIndex.
-- Deploys the runtime files in `.docker/production/` to your VPS over SSH and rolls the stack forward.
+- SSHes into the VPS and triggers the deploy from the ops repo runtime stack.
 
 Required GitHub repository secrets:
 - `PRODUCTION_HOST`
@@ -89,11 +89,12 @@ Required GitHub repository secrets:
 - `GHCR_PAT`
 
 Required GitHub repository variables:
-- `PRODUCTION_PATH` (example: `/opt/monsterindex`)
+- `OPS_REPO_DIR` (example: `/opt/OPS__MicroSaasFree`)
+- `OPS_REPO_REF` (optional, defaults to `main`)
 - `GOOGLE_CLIENT_ID`
 - `WEBPUSH_VAPID_PUBLIC_KEY`
 
 Runtime notes:
 - No server-side application `.env` file is needed.
 - The workflow bakes `codebase/.env.production` plus GitHub secrets into the image at build time.
-- The runtime stack joins the shared `web` and `internal` networks so Caddy from your ops repo can route `monster.cheapest.promo` to `monster-index:8080`.
+- The runtime stack itself lives in the ops repo, where Caddy and the shared Docker networks are already managed.

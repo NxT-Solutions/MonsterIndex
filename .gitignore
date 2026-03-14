@@ -1,7 +1,5 @@
 .docker/local/.env
 .docker/local/.env~
-.docker/production/storage/
-
 .DS_Store
 .idea
 .cursor

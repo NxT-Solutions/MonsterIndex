@@ -116,57 +116,37 @@ jobs:
     name: Deploy To Production
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.PRODUCTION_PATH != '' && secrets.PRODUCTION_HOST != '' && secrets.PRODUCTION_USER != '' && secrets.PRODUCTION_SSH_KEY != ''
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.OPS_REPO_DIR != '' && secrets.PRODUCTION_HOST != '' && secrets.PRODUCTION_USER != '' && secrets.PRODUCTION_SSH_KEY != ''
     environment:
       name: production
       url: https://monster.cheapest.promo
 
     steps:
-      - name: Ensure Production Directory Exists
-        uses: appleboy/ssh-action@v1.2.0
-        env:
-          PRODUCTION_PATH: ${{ vars.PRODUCTION_PATH }}
-        with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
-          envs: PRODUCTION_PATH
-          script: |
-            set -euo pipefail
-            mkdir -p "${PRODUCTION_PATH}/.docker/production"
-
-      - name: Upload Production Runtime Files
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
-          source: ".docker/production/compose.yaml,.docker/production/deploy.sh"
-          target: ${{ vars.PRODUCTION_PATH }}
-          strip_components: 0
-
       - name: Deploy Production On VPS
         uses: appleboy/ssh-action@v1.2.0
         env:
           MONSTER_INDEX_IMAGE: ${{ needs.build.outputs.image_name }}:latest
-          PRODUCTION_PATH: ${{ vars.PRODUCTION_PATH }}
+          OPS_REPO_DIR: ${{ vars.OPS_REPO_DIR }}
+          OPS_REPO_REF: ${{ vars.OPS_REPO_REF }}
           GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
         with:
           host: ${{ secrets.PRODUCTION_HOST }}
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
-          envs: GHCR_PAT,GHCR_USERNAME,MONSTER_INDEX_IMAGE,PRODUCTION_PATH
+          envs: GHCR_PAT,GHCR_USERNAME,MONSTER_INDEX_IMAGE,OPS_REPO_DIR,OPS_REPO_REF
           script: |
             set -euo pipefail
 
-            mkdir -p "${PRODUCTION_PATH}/.docker/production"
-            chmod +x "${PRODUCTION_PATH}/.docker/production/deploy.sh"
+            cd "${OPS_REPO_DIR}"
+            git fetch origin
+            git checkout "${OPS_REPO_REF:-main}"
+            git pull --ff-only origin "${OPS_REPO_REF:-main}"
 
             if [ -n "${GHCR_USERNAME:-}" ] && [ -n "${GHCR_PAT:-}" ]; then
               echo "${GHCR_PAT}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
             fi
 
-            cd "${PRODUCTION_PATH}/.docker/production"
             export MONSTER_INDEX_IMAGE
+            cd monster-index
             ./deploy.sh
