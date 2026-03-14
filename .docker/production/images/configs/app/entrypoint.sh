@@ -3,6 +3,17 @@ set -euo pipefail
 
 cd /var/www/html
 
+app_user="${APP_RUNTIME_USER:-www-data}"
+app_group="${APP_RUNTIME_GROUP:-www-data}"
+
+run_as_app() {
+  if [ "$(id -u)" -eq 0 ]; then
+    exec su-exec "${app_user}:${app_group}" "$@"
+  fi
+
+  exec "$@"
+}
+
 if [ -f .env.production ]; then
   cp .env.production .env
 fi
