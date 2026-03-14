@@ -4,7 +4,6 @@ import {
     CardContent,
     CardDescription,
     CardHeader,
-    CardTitle,
 } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
 import { cn } from '@/lib/utils';
@@ -28,9 +27,9 @@ export default function Login() {
 
             <Card className="border-[color:var(--border)] bg-[color:var(--card)] shadow-[0_24px_80px_var(--auth-shadow)] backdrop-blur-xl">
                 <CardHeader className="space-y-2">
-                    <CardTitle className="font-display text-2xl text-[color:var(--card-foreground)]">
+                    <h1 className="font-display text-2xl font-semibold text-[color:var(--card-foreground)]">
                         {x('Sign in to MonsterIndex', 'Meld je aan bij MonsterIndex')}
-                    </CardTitle>
+                    </h1>
                     <CardDescription className="font-body text-sm leading-6 text-[color:var(--muted-foreground)]">
                         {x(
                             'OAuth-only authentication is enabled. Continue with your Google account.',

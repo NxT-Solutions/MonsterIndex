@@ -249,7 +249,7 @@ export default function AuthenticatedLayout({
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
-                                        'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                        'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors',
                                         item.active
                                             ? 'bg-[color:var(--landing-accent)] text-[#0b1201]'
                                             : 'text-white/70 hover:bg-white/10 hover:text-white',
@@ -271,7 +271,7 @@ export default function AuthenticatedLayout({
 
                             {adminNavItems.length > 0 && (
                                 <details className="group relative [&_summary::-webkit-details-marker]:hidden">
-                                    <summary className="inline-flex list-none cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm font-medium text-white/85 transition-colors hover:bg-white/10">
+                                    <summary className="inline-flex list-none cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm font-medium whitespace-nowrap text-white/85 transition-colors hover:bg-white/10">
                                         <span>{x('Admin Tools', 'Admin Tools')}</span>
                                         <svg
                                             viewBox="0 0 20 20"
@@ -287,16 +287,16 @@ export default function AuthenticatedLayout({
                                             />
                                         </svg>
                                     </summary>
-                                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-60 rounded-xl border border-white/15 bg-[color:var(--landing-surface)] p-2 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-60 rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--popover)] p-2 shadow-[var(--shadow-dialog)]">
                                         {adminNavItems.map((item) => (
                                             <Link
                                                 key={item.href}
                                                 href={item.href}
                                                 className={cn(
-                                                    'flex items-center rounded-md px-3 py-2 text-sm transition-colors',
+                                                    'flex items-center rounded-md px-3 py-2 text-sm whitespace-nowrap transition-colors',
                                                     item.active
                                                         ? 'bg-[color:var(--landing-accent)] text-[#0b1201]'
-                                                        : 'text-white/80 hover:bg-white/10 hover:text-white',
+                                                        : 'text-[color:var(--popover-foreground)] hover:bg-[color:var(--surface-3)] hover:text-[color:var(--foreground)]',
                                                 )}
                                             >
                                                 {item.label}
@@ -308,13 +308,13 @@ export default function AuthenticatedLayout({
                         </div>
 
                         {reviewNavItems.length > 0 && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex min-w-fit shrink-0 items-center gap-2">
                                 {reviewNavItems.map((item) => (
                                     <Link
                                         key={item.href}
                                         href={item.href}
                                         className={cn(
-                                            'inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors',
+                                            'inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors',
                                             item.active
                                                 ? 'border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-accent)] text-[#0b1201]'
                                                 : 'border-white/15 bg-white/5 text-white/85 hover:bg-white/10',
