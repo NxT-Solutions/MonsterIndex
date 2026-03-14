@@ -1,4 +1,4 @@
-import { buttonVariants } from '@/Components/ui/button';
+import { Button } from '@/Components/ui/button';
 import { useLocale } from '@/lib/locale';
 import { useTheme } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -23,17 +23,12 @@ export default function ThemeToggle({
         : x('Switch to dark mode', 'Schakel naar donkere modus');
 
     return (
-        <button
+        <Button
             type="button"
             onClick={toggleTheme}
-            className={cn(
-                buttonVariants({ variant: 'outline', size: compact ? 'sm' : 'default' }),
-                inverse
-                    ? 'border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white'
-                    : 'border-[color:var(--border)] bg-[color:var(--card)] text-[color:var(--foreground)]',
-                'gap-2',
-                className,
-            )}
+            variant={inverse ? 'glass' : 'outline'}
+            size={compact ? 'sm' : 'default'}
+            className={cn('gap-2', className)}
             aria-label={label}
             title={label}
         >
@@ -41,6 +36,6 @@ export default function ThemeToggle({
             <span className={cn(compact && 'sr-only')}>
                 {isDark ? x('Light', 'Licht') : x('Dark', 'Donker')}
             </span>
-        </button>
+        </Button>
     );
 }

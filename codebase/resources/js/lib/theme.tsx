@@ -32,6 +32,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
             const root = document.documentElement;
             root.classList.toggle('dark', theme === 'dark');
             root.style.colorScheme = theme;
+            root.dataset.theme = theme;
         }
     }, [theme]);
 

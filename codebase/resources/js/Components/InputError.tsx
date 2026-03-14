@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { HTMLAttributes } from 'react';
 
 export default function InputError({
@@ -8,7 +9,10 @@ export default function InputError({
     return message ? (
         <p
             {...props}
-            className={'text-sm text-red-600 ' + className}
+            className={cn(
+                'text-sm text-[color:var(--destructive-foreground)]',
+                className,
+            )}
         >
             {message}
         </p>

@@ -1,3 +1,4 @@
+import { Checkbox as UiCheckbox } from '@/Components/ui/checkbox';
 import { InputHTMLAttributes } from 'react';
 
 export default function Checkbox({
@@ -5,13 +6,9 @@ export default function Checkbox({
     ...props
 }: InputHTMLAttributes<HTMLInputElement>) {
     return (
-        <input
+        <UiCheckbox
             {...props}
-            type="checkbox"
-            className={
-                'rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 ' +
-                className
-            }
+            className={className}
         />
     );
 }
