@@ -1,6 +1,7 @@
 <?php
 
 it('does not expose password or registration routes', function () {
+    $this->post('/login')->assertStatus(405);
     $this->get('/register')->assertNotFound();
     $this->post('/register')->assertNotFound();
     $this->get('/forgot-password')->assertNotFound();
