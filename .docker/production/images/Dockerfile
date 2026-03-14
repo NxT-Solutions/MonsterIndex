@@ -58,9 +58,9 @@ COPY --from=build /var/www/html/public/build /var/www/html/public/build
 RUN bun install --frozen-lockfile --production
 
 RUN --mount=type=secret,id=runtime_env,target=/run/secrets/runtime_env \
-    install -m 0600 /run/secrets/runtime_env /var/www/html/.env.production \
+    install -m 0644 /run/secrets/runtime_env /var/www/html/.env.production \
     && cp /var/www/html/.env.production /var/www/html/.env \
-    && chmod 0600 /var/www/html/.env
+    && chmod 0644 /var/www/html/.env
 
 COPY .docker/production/images/configs/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY .docker/production/images/configs/php/app.ini /usr/local/etc/php/conf.d/zz-app.ini

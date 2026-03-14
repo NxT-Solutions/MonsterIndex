@@ -14,7 +14,7 @@ run_as_app() {
   exec "$@"
 }
 
-if [ -f .env.production ]; then
+if [ -f .env.production ] && [ "$(id -u)" -eq 0 ]; then
   cp .env.production .env
 fi
 

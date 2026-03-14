@@ -6,7 +6,7 @@ cd /var/www/html
 app_user="${APP_RUNTIME_USER:-www-data}"
 app_group="${APP_RUNTIME_GROUP:-www-data}"
 
-if [ -f .env.production ]; then
+if [ -f .env.production ] && [ "$(id -u)" -eq 0 ]; then
   cp .env.production .env
 fi
 
