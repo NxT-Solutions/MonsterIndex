@@ -2,20 +2,21 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @php
-            $seoTitle = 'MonsterIndex - Compare Monster Energy Deals';
-            $seoDescription = 'Compare live Monster Energy prices across stores, track best offers, and find the strongest per-can value with public snapshots.';
+            $seoTitle = __('MonsterIndex - Compare Monster Energy Deals');
+            $seoDescription = __('Compare live Monster Energy prices across stores, track best offers, and find the strongest per-can value with public snapshots.');
             $baseUrl = rtrim(config('app.url', 'https://monsterindex.app'), '/');
-            $canonical = $baseUrl !== '' ? $baseUrl.'/' : '/';
+            $siteUrl = $baseUrl !== '' ? $baseUrl.'/' : '/';
+            $canonical = request()->url();
             $ogImage = $baseUrl !== '' ? $baseUrl.'/brand/monsterindex-og.png' : '/brand/monsterindex-og.png';
             $websiteSchema = [
                 '@context' => 'https://schema.org',
                 '@type' => 'WebSite',
                 'name' => 'MonsterIndex',
-                'url' => $canonical,
+                'url' => $siteUrl,
                 'description' => $seoDescription,
                 'potentialAction' => [
                     '@type' => 'SearchAction',
-                    'target' => $canonical.'?q={search_term_string}',
+                    'target' => $siteUrl.'?q={search_term_string}',
                     'query-input' => 'required name=search_term_string',
                 ],
             ];
@@ -24,7 +25,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="{{ $seoDescription }}">
-        <meta name="keywords" content="Monster Energy, price tracker, energy drink deals, compare prices, per can price, Monster offers">
+        <meta name="keywords" content="{{ __('Monster Energy, price tracker, energy drink deals, compare prices, per can price, Monster offers') }}">
         <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
         <meta name="author" content="MonsterIndex">
         <meta name="theme-color" content="#8CEB00">
@@ -74,10 +75,6 @@
         <script type="application/ld+json">
             {!! json_encode($websiteSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
         </script>
-
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @routes

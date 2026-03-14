@@ -1,0 +1,109 @@
+name: Frontend Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: codebase
+
+jobs:
+  php-tests:
+    name: PHP Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Out Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, sqlite3, curl, dom, fileinfo, json, openssl
+          coverage: none
+
+      - name: Set Up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.2.17'
+
+      - name: Prepare CI Environment
+        run: |
+          cp .env.ci .env
+          mkdir -p database
+          touch database/database.sqlite
+
+      - name: Install PHP Dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run Application Tests
+        run: php artisan test
+
+  frontend-quality:
+    name: Browser, Axe, And Lighthouse
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Out Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, sqlite3, curl, dom, fileinfo, json, openssl
+          coverage: none
+
+      - name: Set Up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.2.17'
+
+      - name: Prepare CI Environment
+        run: |
+          cp .env.ci .env
+          mkdir -p database
+          touch database/database.sqlite
+
+      - name: Install PHP Dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install Frontend Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Prepare Application
+        run: |
+          rm -f public/hot
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
+          php artisan migrate:fresh --seed --force
+
+      - name: Type Check
+        run: bun x tsc --noEmit
+
+      - name: Build Frontend
+        run: bun run build
+
+      - name: Install Playwright Browser
+        run: bun x playwright install --with-deps chromium
+
+      - name: Run Browser Quality Gates
+        run: bun run quality:smoke
+
+      - name: Upload Browser Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-quality-artifacts
+          path: |
+            codebase/output/playwright
+            codebase/.lighthouseci
