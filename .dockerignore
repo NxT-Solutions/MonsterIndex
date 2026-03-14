@@ -15,5 +15,4 @@ codebase/storage/framework/views/**
 codebase/storage/logs/*.log
 
 .docker/local/.env
-.docker/staging/.env
-.docker/production/.env
+.docker/production/storage

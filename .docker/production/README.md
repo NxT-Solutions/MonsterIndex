@@ -1,23 +1,18 @@
 # Production Docker Setup
 
-This folder contains the production runtime for deployment on a VPS.
+This folder contains the production image build and runtime stack for MonsterIndex.
 
 ## Files
 
-- `compose.yaml`: runtime services (`app`, `queue`, `scheduler`, `web`, `redis`)
-- `.env.example`: environment template for server-side secrets and image names
-- `images/Dockerfile`: multi-target build (`app`, `web`) used by GitHub Actions
+- `compose.yaml`: runtime services for `monster-index`, `monster-index-queue`, and `monster-index-scheduler`
+- `deploy.sh`: server-side rollout helper used by GitHub Actions
+- `images/Dockerfile`: single production image build used by GitHub Actions
+- `images/configs/app/entrypoint.sh`: runtime role switcher for web, queue, and scheduler containers
+- `images/configs/app/post-deploy.sh`: Laravel deploy actions run after the new web container starts
 
-## Run on Server
+## Runtime Model
 
-```bash
-cp .docker/production/.env.example .docker/production/.env
-docker compose --env-file .docker/production/.env -f .docker/production/compose.yaml pull
-docker compose --env-file .docker/production/.env -f .docker/production/compose.yaml up -d --remove-orphans
-```
-
-After startup:
-
-```bash
-docker compose --env-file .docker/production/.env -f .docker/production/compose.yaml exec -T app php artisan migrate --force
-```
+- No server-side app `.env` file is required.
+- GitHub Actions takes `codebase/.env.production`, injects GitHub secrets into it, and bakes the result into the image as `.env.production` and `.env`.
+- The runtime stack joins the shared `web` and `internal` Docker networks so Caddy from the ops repo can reverse proxy `monster.cheapest.promo` to `monster-index:8080`.
+- SQLite, queue state, sessions, and logs live in `.docker/production/storage` on the server.

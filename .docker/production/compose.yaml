@@ -1,75 +1,51 @@
 ---
+name: monsterindex-production
+
 services:
-  app:
-    image: ${APP_IMAGE}:${IMAGE_TAG}
+  monster-index:
+    image: ${MONSTER_INDEX_IMAGE:?MONSTER_INDEX_IMAGE is required}
+    pull_policy: always
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
-      CONTAINER_ROLE: app
-    depends_on:
-      redis:
-        condition: service_healthy
+      APP_RUNTIME_ROLE: web
+    expose:
+      - "8080"
     volumes:
-      - app_storage:/var/www/html/storage
+      - ./storage:/var/www/html/storage
+    networks:
+      web:
+        aliases:
+          - monster-index
+      internal:
 
-  queue:
-    image: ${APP_IMAGE}:${IMAGE_TAG}
+  monster-index-queue:
+    image: ${MONSTER_INDEX_IMAGE:?MONSTER_INDEX_IMAGE is required}
+    pull_policy: always
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
-      CONTAINER_ROLE: queue
+      APP_RUNTIME_ROLE: queue
     depends_on:
-      app:
-        condition: service_started
-      redis:
-        condition: service_healthy
+      - monster-index
     volumes:
-      - app_storage:/var/www/html/storage
+      - ./storage:/var/www/html/storage
+    networks:
+      - internal
 
-  scheduler:
-    image: ${APP_IMAGE}:${IMAGE_TAG}
+  monster-index-scheduler:
+    image: ${MONSTER_INDEX_IMAGE:?MONSTER_INDEX_IMAGE is required}
+    pull_policy: always
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
-      CONTAINER_ROLE: scheduler
+      APP_RUNTIME_ROLE: scheduler
     depends_on:
-      app:
-        condition: service_started
-      redis:
-        condition: service_healthy
+      - monster-index
     volumes:
-      - app_storage:/var/www/html/storage
+      - ./storage:/var/www/html/storage
+    networks:
+      - internal
 
+networks:
   web:
-    image: ${WEB_IMAGE}:${IMAGE_TAG}
-    restart: unless-stopped
-    depends_on:
-      app:
-        condition: service_started
-    ports:
-      - ${APP_EXPOSED_PORT:-8080}:80
-
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    command:
-      - redis-server
-      - --appendonly
-      - "yes"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test:
-        - CMD
-        - redis-cli
-        - ping
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  app_storage:
-  redis_data:
+    external: true
+  internal:
+    external: true

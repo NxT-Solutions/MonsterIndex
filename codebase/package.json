@@ -8,6 +8,9 @@
         "dev": "vite",
         "dev:docker": "vite --host 0.0.0.0 --port 5173"
     },
+    "dependencies": {
+        "playwright-core": "^1.51.0"
+    },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",
         "@inertiajs/react": "^2.0.0",
@@ -25,7 +28,6 @@
         "laravel-vite-plugin": "^2.0.0",
         "lucide-react": "^0.552.0",
         "postcss": "^8.4.31",
-        "playwright-core": "^1.51.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "tailwind-merge": "^3.3.1",
