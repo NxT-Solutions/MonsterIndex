@@ -15,7 +15,7 @@ export default function LanguageSwitcher({
 
     return (
         <div className={cn('inline-flex items-center gap-1.5', className)}>
-            <span className="text-xs uppercase tracking-[0.12em] text-slate-500">
+            <span className="text-xs uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
                 {x('Language', 'Taal')}
             </span>
             <button
@@ -23,7 +23,8 @@ export default function LanguageSwitcher({
                 onClick={() => setLocale('en')}
                 className={cn(
                     buttonVariants({ variant: 'outline', size: compact ? 'sm' : 'default' }),
-                    locale === 'en' && 'bg-slate-900 text-white hover:bg-slate-900',
+                    locale === 'en' &&
+                        'border-transparent bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:brightness-95 hover:text-[color:var(--primary-foreground)]',
                 )}
                 aria-pressed={locale === 'en'}
             >
@@ -34,7 +35,8 @@ export default function LanguageSwitcher({
                 onClick={() => setLocale('nl')}
                 className={cn(
                     buttonVariants({ variant: 'outline', size: compact ? 'sm' : 'default' }),
-                    locale === 'nl' && 'bg-slate-900 text-white hover:bg-slate-900',
+                    locale === 'nl' &&
+                        'border-transparent bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:brightness-95 hover:text-[color:var(--primary-foreground)]',
                 )}
                 aria-pressed={locale === 'nl'}
             >
