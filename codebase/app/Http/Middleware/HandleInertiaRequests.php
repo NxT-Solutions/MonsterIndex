@@ -122,6 +122,20 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $userPayload,
             ],
+            'locale' => [
+                'current' => app()->getLocale(),
+                'fallback' => (string) config('locales.fallback', 'en'),
+                'cookie_name' => (string) config('locales.cookie_name', 'monsterindex_locale'),
+                'supported' => collect(config('locales.supported', []))
+                    ->map(fn (array $config, string $code) => [
+                        'code' => $code,
+                        'name' => $config['name'] ?? $code,
+                        'native_name' => $config['native_name'] ?? ($config['name'] ?? $code),
+                        'dir' => $config['dir'] ?? 'ltr',
+                    ])
+                    ->values()
+                    ->all(),
+            ],
             'adminReview' => $adminReview,
             'contributorAlerts' => $contributorAlerts,
             'push' => $pushSettings,

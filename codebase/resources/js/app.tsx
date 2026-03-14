@@ -1,9 +1,12 @@
 import '../css/app.css';
 import './bootstrap';
 
+import { AppDialogProvider } from '@/Components/providers/AppDialogProvider';
+import AppToaster from '@/Components/ui/toaster';
 import { LocaleProvider } from '@/lib/locale';
 import { registerServiceWorker } from '@/lib/push';
 import { ThemeProvider } from '@/lib/theme';
+import type { PageProps } from '@/types';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
@@ -23,11 +26,22 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);
+        const initialPage = props.initialPage as {
+            props: PageProps;
+        };
 
         root.render(
             <ThemeProvider>
-                <LocaleProvider>
-                    <App {...props} />
+                <LocaleProvider
+                    initialLocale={initialPage.props.locale.current}
+                    fallbackLocale={initialPage.props.locale.fallback}
+                    cookieName={initialPage.props.locale.cookie_name}
+                    supportedLocales={initialPage.props.locale.supported}
+                >
+                    <AppDialogProvider>
+                        <App {...props} />
+                        <AppToaster />
+                    </AppDialogProvider>
                 </LocaleProvider>
             </ThemeProvider>,
         );

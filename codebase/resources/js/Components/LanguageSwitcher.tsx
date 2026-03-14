@@ -1,6 +1,17 @@
-import { buttonVariants } from '@/Components/ui/button';
+import { Button } from '@/Components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/Components/ui/dropdown-menu';
 import { useLocale } from '@/lib/locale';
 import { cn } from '@/lib/utils';
+import { Check, Languages } from 'lucide-react';
 
 type LanguageSwitcherProps = {
     className?: string;
@@ -11,37 +22,83 @@ export default function LanguageSwitcher({
     className,
     compact = false,
 }: LanguageSwitcherProps) {
-    const { locale, setLocale, x } = useLocale();
+    const { locale, locales, setLocale, x } = useLocale();
+    const activeLocale =
+        locales.find((entry) => entry.code === locale) ?? locales[0];
 
     return (
-        <div className={cn('inline-flex items-center gap-1.5', className)}>
-            <span className="text-xs uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
-                {x('Language', 'Taal')}
-            </span>
-            <button
-                type="button"
-                onClick={() => setLocale('en')}
-                className={cn(
-                    buttonVariants({ variant: 'outline', size: compact ? 'sm' : 'default' }),
-                    locale === 'en' &&
-                        'border-transparent bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:brightness-95 hover:text-[color:var(--primary-foreground)]',
-                )}
-                aria-pressed={locale === 'en'}
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    type="button"
+                    variant="glass"
+                    size={compact ? 'sm' : 'default'}
+                    className={cn(
+                        'min-w-0 justify-between gap-2',
+                        compact ? 'px-3' : 'min-w-[11rem]',
+                        className,
+                    )}
+                    aria-label={x('Language', 'Taal')}
+                >
+                    <span className="flex min-w-0 items-center gap-2">
+                        <Languages className="h-4 w-4 text-[color:var(--primary)]" />
+                        <span className={cn(compact ? 'sr-only' : 'truncate')}>
+                            {x('Language', 'Taal')}
+                        </span>
+                    </span>
+                    <span className="truncate font-semibold uppercase tracking-[0.12em]">
+                        {compact
+                            ? activeLocale?.code ?? locale
+                            : activeLocale?.nativeName ?? locale}
+                    </span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+                align="end"
+                className="min-w-[14rem]"
             >
-                EN
-            </button>
-            <button
-                type="button"
-                onClick={() => setLocale('nl')}
-                className={cn(
-                    buttonVariants({ variant: 'outline', size: compact ? 'sm' : 'default' }),
-                    locale === 'nl' &&
-                        'border-transparent bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:brightness-95 hover:text-[color:var(--primary-foreground)]',
+                <DropdownMenuLabel>
+                    {x('Language', 'Taal')}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup
+                    value={locale}
+                    onValueChange={setLocale}
+                >
+                    {locales.map((entry) => (
+                        <DropdownMenuRadioItem
+                            key={entry.code}
+                            value={entry.code}
+                            className="items-start"
+                        >
+                            <div className="flex w-full items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                    <p className="truncate font-medium text-[color:var(--foreground)]">
+                                        {entry.nativeName}
+                                    </p>
+                                    <p className="truncate text-xs text-[color:var(--foreground-soft)]">
+                                        {entry.name}
+                                    </p>
+                                </div>
+                                {entry.code === locale && (
+                                    <Check className="mt-0.5 h-4 w-4 text-[color:var(--primary)]" />
+                                )}
+                            </div>
+                        </DropdownMenuRadioItem>
+                    ))}
+                </DropdownMenuRadioGroup>
+                {!compact && locales.length > 2 && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-xs text-[color:var(--foreground-soft)]">
+                            {x(
+                                'More languages can be added from the locale registry.',
+                                'Meer talen kunnen worden toegevoegd via het locale-register.',
+                            )}
+                        </DropdownMenuItem>
+                    </>
                 )}
-                aria-pressed={locale === 'nl'}
-            >
-                NL
-            </button>
-        </div>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }
