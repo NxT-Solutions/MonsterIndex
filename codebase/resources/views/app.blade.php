@@ -29,6 +29,10 @@
         <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
         <meta name="author" content="MonsterIndex">
         <meta name="theme-color" content="#8CEB00">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="MonsterIndex">
 
         <title inertia>{{ config('app.name', 'MonsterIndex') }}</title>
 
