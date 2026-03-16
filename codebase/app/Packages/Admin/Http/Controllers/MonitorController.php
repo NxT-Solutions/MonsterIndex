@@ -57,7 +57,7 @@ class MonitorController extends Controller
         $canonicalProductUrl = UrlCanonicalizer::canonicalize($validated['product_url']);
         if (! $canonicalProductUrl) {
             throw ValidationException::withMessages([
-                'product_url' => 'Could not normalize the product URL.',
+                'product_url' => __('Could not normalize the product URL.'),
             ]);
         }
 
@@ -88,7 +88,7 @@ class MonitorController extends Controller
             $this->queueImmediateRun($monitor, 'admin-create');
         }
 
-        return back()->with('success', 'Monitor created.');
+        return back()->with('success', __('Monitor created.'));
     }
 
     public function update(Request $request, Monitor $monitor): RedirectResponse
@@ -101,7 +101,7 @@ class MonitorController extends Controller
         $canonicalProductUrl = UrlCanonicalizer::canonicalize($validated['product_url']);
         if (! $canonicalProductUrl) {
             throw ValidationException::withMessages([
-                'product_url' => 'Could not normalize the product URL.',
+                'product_url' => __('Could not normalize the product URL.'),
             ]);
         }
 
@@ -132,7 +132,7 @@ class MonitorController extends Controller
             $this->queueImmediateRun($monitor, 'admin-update-activated');
         }
 
-        return back()->with('success', 'Monitor updated.');
+        return back()->with('success', __('Monitor updated.'));
     }
 
     public function destroy(Monitor $monitor): RedirectResponse
@@ -146,7 +146,7 @@ class MonitorController extends Controller
             $this->bestPriceProjector->recomputeForMonsterCurrency($monsterId, $currency);
         }
 
-        return back()->with('success', 'Monitor deleted.');
+        return back()->with('success', __('Monitor deleted.'));
     }
 
     public function runNow(Monitor $monitor): JsonResponse
@@ -154,7 +154,7 @@ class MonitorController extends Controller
         if (! $monitor->canRunScheduledChecks()) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Only approved and active monitors can be executed.',
+                'message' => __('Only approved and active monitors can be executed.'),
             ], 422);
         }
 
@@ -162,7 +162,7 @@ class MonitorController extends Controller
         if ($existingRun) {
             return response()->json([
                 'ok' => true,
-                'message' => 'Monitor run already queued.',
+                'message' => __('Monitor run already queued.'),
                 'monitor_run_id' => $existingRun->id,
             ]);
         }
@@ -178,7 +178,7 @@ class MonitorController extends Controller
 
         return response()->json([
             'ok' => true,
-            'message' => 'Monitor run queued.',
+            'message' => __('Monitor run queued.'),
             'monitor_run_id' => $run->id,
         ]);
     }
@@ -252,7 +252,7 @@ class MonitorController extends Controller
         $createSite = (bool) ($validated['create_site'] ?? false);
         if (! $createSite && ! isset($validated['site_id'])) {
             throw ValidationException::withMessages([
-                'site_id' => 'Please select a store or choose Other.',
+                'site_id' => __('Please select a store or choose Other.'),
             ]);
         }
 
@@ -285,7 +285,7 @@ class MonitorController extends Controller
         $domain = strtolower((string) parse_url((string) $validated['product_url'], PHP_URL_HOST));
         if ($domain === '') {
             throw ValidationException::withMessages([
-                'product_url' => 'Could not resolve a domain from the provided product URL.',
+                'product_url' => __('Could not resolve a domain from the provided product URL.'),
             ]);
         }
 

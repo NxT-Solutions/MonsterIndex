@@ -50,7 +50,7 @@ class MonsterSuggestionController extends Controller
             ->exists();
         if ($duplicateSuggestionExists) {
             throw ValidationException::withMessages([
-                'name' => 'This monster already has a pending or approved suggestion.',
+                'name' => __('This monster already has a pending or approved suggestion.'),
             ]);
         }
 
@@ -59,7 +59,7 @@ class MonsterSuggestionController extends Controller
             ->exists();
         if ($existingMonsterExists) {
             throw ValidationException::withMessages([
-                'name' => 'This monster already exists in the catalog.',
+                'name' => __('This monster already exists in the catalog.'),
             ]);
         }
 
@@ -74,7 +74,7 @@ class MonsterSuggestionController extends Controller
             'status' => MonsterSuggestion::STATUS_PENDING,
         ]);
 
-        return back()->with('success', 'Monster suggestion submitted for review.');
+        return back()->with('success', __('Monster suggestion submitted for review.'));
     }
 
     private function normalizeName(string $name): string

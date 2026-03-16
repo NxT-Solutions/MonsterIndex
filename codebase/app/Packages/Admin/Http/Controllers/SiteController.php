@@ -47,7 +47,7 @@ class SiteController extends Controller
             'active' => $validated['active'] ?? true,
         ]);
 
-        return back()->with('success', 'Store created.');
+        return back()->with('success', __('Store created.'));
     }
 
     public function update(Request $request, Site $site): RedirectResponse
@@ -74,20 +74,20 @@ class SiteController extends Controller
             'active' => $validated['active'],
         ]);
 
-        return back()->with('success', 'Store updated.');
+        return back()->with('success', __('Store updated.'));
     }
 
     public function destroy(Site $site): RedirectResponse
     {
         if ($site->monitors()->exists()) {
             throw ValidationException::withMessages([
-                'site' => 'Cannot delete a store that still has monitors.',
+                'site' => __('Cannot delete a store that still has monitors.'),
             ]);
         }
 
         $site->delete();
 
-        return back()->with('success', 'Store deleted.');
+        return back()->with('success', __('Store deleted.'));
     }
 
     private function normalizeDomain(string $value): string

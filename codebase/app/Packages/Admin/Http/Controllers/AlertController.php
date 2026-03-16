@@ -135,8 +135,8 @@ class AlertController extends Controller
                     'id' => $monitor->id,
                     'label' => sprintf(
                         '%s @ %s',
-                        (string) ($monitor->monster?->name ?: 'Unknown monster'),
-                        (string) ($monitor->site?->name ?: 'Unknown store'),
+                        (string) ($monitor->monster?->name ?: __('Unknown monster')),
+                        (string) ($monitor->site?->name ?: __('Unknown store')),
                     ),
                 ])
                 ->values(),
@@ -149,7 +149,7 @@ class AlertController extends Controller
             'read_at' => now(),
         ]);
 
-        return back()->with('success', 'Alert marked as read.');
+        return back()->with('success', __('Alert marked as read.'));
     }
 
     public function triggerTest(Request $request): RedirectResponse
@@ -180,27 +180,26 @@ class AlertController extends Controller
 
         if (! $monitor) {
             return back()->withErrors([
-                'monitor_id' => 'No approved active monitor available for test alert.',
+                'monitor_id' => __('No approved active monitor available for test alert.'),
             ]);
         }
 
-        $monsterName = (string) ($monitor->monster?->name ?: 'Monster');
-        $storeName = (string) ($monitor->site?->name ?: 'Store');
+        $monsterName = (string) ($monitor->monster?->name ?: __('Monster'));
+        $storeName = (string) ($monitor->site?->name ?: __('Store'));
 
         Alert::query()->create([
             'monster_id' => $monitor->monster_id,
             'monitor_id' => $monitor->id,
             'type' => 'manual_test',
-            'title' => $validated['title'] ?? sprintf('Manual test alert for %s', $monsterName),
-            'body' => $validated['body'] ?? sprintf(
-                'Manual test: %s at %s. Triggered by %s.',
-                $monsterName,
-                $storeName,
-                (string) ($request->user()?->email ?: 'admin'),
-            ),
+            'title' => $validated['title'] ?? __('Manual test alert for :monster', ['monster' => $monsterName]),
+            'body' => $validated['body'] ?? __('Manual test: :monster at :store. Triggered by :actor.', [
+                'monster' => $monsterName,
+                'store' => $storeName,
+                'actor' => (string) ($request->user()?->email ?: __('admin')),
+            ]),
         ]);
 
-        return back()->with('success', 'Test alert created and push dispatch queued.');
+        return back()->with('success', __('Test alert created and push dispatch queued.'));
     }
 
     /**

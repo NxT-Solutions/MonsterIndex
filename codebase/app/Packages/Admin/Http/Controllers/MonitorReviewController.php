@@ -41,13 +41,13 @@ class MonitorReviewController extends Controller
 
         if ($monitor->validation_status !== Monitor::VALIDATION_SUCCESS) {
             return back()->withErrors([
-                'monitor' => 'Validation has not succeeded. Use force-approve if this monitor should still be accepted.',
+                'monitor' => __('Validation has not succeeded. Use force-approve if this monitor should still be accepted.'),
             ]);
         }
 
         $this->transitionToApproved($request, $monitor, forced: false);
 
-        return back()->with('success', 'Monitor proposal approved.');
+        return back()->with('success', __('Monitor proposal approved.'));
     }
 
     public function forceApprove(Request $request, Monitor $monitor): RedirectResponse
@@ -56,7 +56,7 @@ class MonitorReviewController extends Controller
 
         $this->transitionToApproved($request, $monitor, forced: true);
 
-        return back()->with('success', 'Monitor proposal force-approved.');
+        return back()->with('success', __('Monitor proposal force-approved.'));
     }
 
     public function reject(Request $request, Monitor $monitor): RedirectResponse
@@ -75,7 +75,7 @@ class MonitorReviewController extends Controller
             'next_check_at' => null,
             'rejected_by_user_id' => $request->user()?->id,
             'rejected_at' => now(),
-            'review_note' => $validated['review_note'] ?? 'Rejected during moderation.',
+            'review_note' => $validated['review_note'] ?? __('Rejected during moderation.'),
         ])->save();
 
         if ($wasApproved) {
@@ -85,7 +85,7 @@ class MonitorReviewController extends Controller
             );
         }
 
-        return back()->with('success', 'Monitor proposal rejected.');
+        return back()->with('success', __('Monitor proposal rejected.'));
     }
 
     private function transitionToApproved(Request $request, Monitor $monitor, bool $forced): void

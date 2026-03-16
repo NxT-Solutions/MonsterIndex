@@ -29,7 +29,7 @@ class GoogleAuthController extends Controller
 
         if (! $email) {
             return redirect()->route('login')->withErrors([
-                'google' => 'Google did not return an email address for this account.',
+                'google' => __('Google did not return an email address for this account.'),
             ]);
         }
 
@@ -39,7 +39,7 @@ class GoogleAuthController extends Controller
             ->first();
 
         $attributes = [
-            'name' => $googleUser->getName() ?: $googleUser->getNickname() ?: 'Google User',
+            'name' => $googleUser->getName() ?: $googleUser->getNickname() ?: __('Google User'),
             'email' => $email,
             'google_id' => $googleUser->getId(),
             'avatar_url' => $googleUser->getAvatar(),
