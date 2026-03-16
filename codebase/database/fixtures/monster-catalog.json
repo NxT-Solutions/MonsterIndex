@@ -1,0 +1,482 @@
+[
+  {
+    "name": "Monster Energy",
+    "slug": "monster-energy",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Monster Lo-Carb",
+    "slug": "monster-lo-carb",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Blue",
+    "slug": "monster-ultra-blue",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Violet",
+    "slug": "monster-ultra-violet",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Citron",
+    "slug": "monster-ultra-citron",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Sunrise",
+    "slug": "monster-ultra-sunrise",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Black",
+    "slug": "monster-ultra-black",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Paradise",
+    "slug": "monster-ultra-paradise",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Fiesta",
+    "slug": "monster-ultra-fiesta",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Rosa",
+    "slug": "monster-ultra-rosa",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Red",
+    "slug": "monster-ultra-red",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra White",
+    "slug": "monster-ultra-white",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Peachy Keen",
+    "slug": "monster-ultra-peachy-keen",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Watermelon",
+    "slug": "monster-ultra-watermelon",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Gold",
+    "slug": "monster-ultra-gold",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Strawberry Dreams",
+    "slug": "monster-ultra-strawberry-dreams",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Fantasy Ruby Red",
+    "slug": "monster-ultra-fantasy-ruby-red",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Vice Guava",
+    "slug": "monster-ultra-vice-guava",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Ultra Wild Passion",
+    "slug": "monster-ultra-wild-passion",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Java Mean Bean",
+    "slug": "monster-java-mean-bean",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Java Loca Moca",
+    "slug": "monster-java-loca-moca",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Java Lo-Ball",
+    "slug": "monster-java-lo-ball",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Java Nut-Up",
+    "slug": "monster-java-nut-up",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Java Big Black",
+    "slug": "monster-java-big-black",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Java Chai Hai",
+    "slug": "monster-java-chai-hai",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Java Russian",
+    "slug": "monster-java-russian",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Java Toffee",
+    "slug": "monster-java-toffee",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Java Irish Blend",
+    "slug": "monster-java-irish-blend",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Java Vanilla Light",
+    "slug": "monster-java-vanilla-light",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Java Kona Blend",
+    "slug": "monster-java-kona-blend",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Java Cappuccino",
+    "slug": "monster-java-cappuccino",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Juiced Mango Loco",
+    "slug": "monster-juiced-mango-loco",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Monarch",
+    "slug": "monster-juiced-monarch",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Khaotic",
+    "slug": "monster-juiced-khaotic",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Tropical Thunder",
+    "slug": "monster-juiced-tropical-thunder",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Bad Apple",
+    "slug": "monster-juiced-bad-apple",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Aussie Lemonade",
+    "slug": "monster-juiced-aussie-lemonade",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Ripper",
+    "slug": "monster-juiced-ripper",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Pipeline Punch",
+    "slug": "monster-juiced-pipeline-punch",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Rio Punch",
+    "slug": "monster-juiced-rio-punch",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Pacific Punch",
+    "slug": "monster-juiced-pacific-punch",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Fury Punch",
+    "slug": "monster-juiced-fury-punch",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Fruit Punch",
+    "slug": "monster-juiced-fruit-punch",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Juiced Mixxd Punch",
+    "slug": "monster-juiced-mixxd-punch",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Rehab Lemonade Tea",
+    "slug": "monster-rehab-lemonade-tea",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Rehab Peach Tea",
+    "slug": "monster-rehab-peach-tea",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Rehab Green Tea",
+    "slug": "monster-rehab-green-tea",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Rehab Strawberry",
+    "slug": "monster-rehab-strawberry",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Rehab Watermelon",
+    "slug": "monster-rehab-watermelon",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Rehab Wild Berry Tea",
+    "slug": "monster-rehab-wild-berry-tea",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Rehab Orangeade",
+    "slug": "monster-rehab-orangeade",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Rehab Protean",
+    "slug": "monster-rehab-protean",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Rehab Lemonade",
+    "slug": "monster-rehab-lemonade",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Rehab Rojo Tea",
+    "slug": "monster-rehab-rojo-tea",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Dragon Tea Green Tea",
+    "slug": "monster-dragon-tea-green-tea",
+    "size_label": "458ml"
+  },
+  {
+    "name": "Dragon Tea Yerba Tea",
+    "slug": "monster-dragon-tea-yerba-tea",
+    "size_label": "458ml"
+  },
+  {
+    "name": "Dragon Tea White Tea",
+    "slug": "monster-dragon-tea-white-tea",
+    "size_label": "458ml"
+  },
+  {
+    "name": "Dragon Tea Ice Tea Lemon",
+    "slug": "monster-dragon-tea-ice-tea-lemon",
+    "size_label": "458ml"
+  },
+  {
+    "name": "Muscle Shake Coffee",
+    "slug": "monster-muscle-shake-coffee",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Muscle Shake Strawberry",
+    "slug": "monster-muscle-shake-strawberry",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Muscle Shake Chocolate",
+    "slug": "monster-muscle-shake-chocolate",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Muscle Shake Vanilla",
+    "slug": "monster-muscle-shake-vanilla",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Muscle Shake Vanilla Bottle",
+    "slug": "monster-muscle-shake-vanilla-bottle",
+    "size_label": "444ml"
+  },
+  {
+    "name": "Nitro Super Dry",
+    "slug": "monster-nitro-super-dry",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Nitro Cosmic Peach",
+    "slug": "monster-nitro-cosmic-peach",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Maxx Super Dry",
+    "slug": "monster-maxx-super-dry",
+    "size_label": "355ml"
+  },
+  {
+    "name": "Maxx Eclipse",
+    "slug": "monster-maxx-eclipse",
+    "size_label": "355ml"
+  },
+  {
+    "name": "Maxx Solaris",
+    "slug": "monster-maxx-solaris",
+    "size_label": "355ml"
+  },
+  {
+    "name": "Maxx Zero Sugar",
+    "slug": "monster-maxx-zero-sugar",
+    "size_label": "355ml"
+  },
+  {
+    "name": "Maxx Zero Sugar Rad Red",
+    "slug": "monster-maxx-zero-sugar-rad-red",
+    "size_label": "355ml"
+  },
+  {
+    "name": "Extra Strength Super Dry",
+    "slug": "monster-extra-strength-super-dry",
+    "size_label": "355ml"
+  },
+  {
+    "name": "Extra Strength Anti Gravity",
+    "slug": "monster-extra-strength-anti-gravity",
+    "size_label": "355ml"
+  },
+  {
+    "name": "Extra Strength Black Ice",
+    "slug": "monster-extra-strength-black-ice",
+    "size_label": "355ml"
+  },
+  {
+    "name": "Extra Strength Killer-B",
+    "slug": "monster-extra-strength-killer-b",
+    "size_label": "355ml"
+  },
+  {
+    "name": "Nitrous Super Dry",
+    "slug": "monster-nitrous-super-dry",
+    "size_label": "355ml"
+  },
+  {
+    "name": "Nitrous Killer-B",
+    "slug": "monster-nitrous-killer-b",
+    "size_label": "355ml"
+  },
+  {
+    "name": "Hydro Tropical Thunder",
+    "slug": "monster-hydro-tropical-thunder",
+    "size_label": "550ml"
+  },
+  {
+    "name": "Hydro Manic Melon",
+    "slug": "monster-hydro-manic-melon",
+    "size_label": "550ml"
+  },
+  {
+    "name": "Hydro Blue Ice",
+    "slug": "monster-hydro-blue-ice",
+    "size_label": "550ml"
+  },
+  {
+    "name": "Hydro Purple Passion",
+    "slug": "monster-hydro-purple-passion",
+    "size_label": "550ml"
+  },
+  {
+    "name": "Hydro Zero Sugar",
+    "slug": "monster-hydro-zero-sugar",
+    "size_label": "550ml"
+  },
+  {
+    "name": "Super Fuel Red Dawg",
+    "slug": "monster-super-fuel-red-dawg",
+    "size_label": "550ml"
+  },
+  {
+    "name": "Super Fuel Blue Streak",
+    "slug": "monster-super-fuel-blue-streak",
+    "size_label": "550ml"
+  },
+  {
+    "name": "Mutant Original Green",
+    "slug": "monster-mutant-original-green",
+    "size_label": "591ml"
+  },
+  {
+    "name": "Mutant Red Dawn",
+    "slug": "monster-mutant-red-dawn",
+    "size_label": "591ml"
+  },
+  {
+    "name": "Mutant White Lightning",
+    "slug": "monster-mutant-white-lightning",
+    "size_label": "591ml"
+  },
+  {
+    "name": "Beast Unleashed Mean Green",
+    "slug": "monster-beast-unleashed-mean-green",
+    "size_label": "473ml"
+  },
+  {
+    "name": "Beast Unleashed White Haze",
+    "slug": "monster-beast-unleashed-white-haze",
+    "size_label": "473ml"
+  },
+  {
+    "name": "Beast Unleashed Peach Perfect",
+    "slug": "monster-beast-unleashed-peach-perfect",
+    "size_label": "473ml"
+  },
+  {
+    "name": "Beast Unleashed Scary Berries",
+    "slug": "monster-beast-unleashed-scary-berries",
+    "size_label": "473ml"
+  },
+  {
+    "name": "Beast Unleashed Killer Sunrise",
+    "slug": "monster-beast-unleashed-killer-sunrise",
+    "size_label": "473ml"
+  },
+  {
+    "name": "Beast Unleashed Gnarly Grape",
+    "slug": "monster-beast-unleashed-gnarly-grape",
+    "size_label": "473ml"
+  },
+  {
+    "name": "Beast Unleashed Pink Poison",
+    "slug": "monster-beast-unleashed-pink-poison",
+    "size_label": "473ml"
+  },
+  {
+    "name": "Monster Absolute Zero",
+    "slug": "monster-absolute-zero",
+    "size_label": "500ml"
+  },
+  {
+    "name": "Monster M-80",
+    "slug": "monster-m-80",
+    "size_label": "473ml"
+  },
+  {
+    "name": "Monster Cuba-Lima",
+    "slug": "monster-cuba-lima",
+    "size_label": "500ml"
+  }
+]
