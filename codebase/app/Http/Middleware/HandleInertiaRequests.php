@@ -6,6 +6,7 @@ use App\Models\ContributorAlert;
 use App\Models\Monitor;
 use App\Models\MonsterSuggestion;
 use App\Models\PushSubscription;
+use App\Support\Locales\LocaleRegistry;
 use App\Models\User;
 use App\Support\Authorization\PermissionBootstrapper;
 use Illuminate\Http\Request;
@@ -124,14 +125,15 @@ class HandleInertiaRequests extends Middleware
             ],
             'locale' => [
                 'current' => app()->getLocale(),
-                'fallback' => (string) config('locales.fallback', 'en'),
-                'cookie_name' => (string) config('locales.cookie_name', 'monsterindex_locale'),
-                'supported' => collect(config('locales.supported', []))
+                'fallback' => LocaleRegistry::fallback(),
+                'cookie_name' => LocaleRegistry::cookieName(),
+                'supported' => collect(LocaleRegistry::supported())
                     ->map(fn (array $config, string $code) => [
                         'code' => $code,
                         'name' => $config['name'] ?? $code,
                         'native_name' => $config['native_name'] ?? ($config['name'] ?? $code),
                         'dir' => $config['dir'] ?? 'ltr',
+                        'bcp47' => $config['bcp47'] ?? $code,
                     ])
                     ->values()
                     ->all(),

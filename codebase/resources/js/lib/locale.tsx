@@ -1,6 +1,5 @@
 import { PageProps } from '@/types';
-import enMessages from '@/locales/en.json';
-import nlMessages from '@/locales/nl.json';
+import { router } from '@inertiajs/react';
 import {
     createContext,
     PropsWithChildren,
@@ -17,6 +16,7 @@ export type LocaleDefinition = {
     name: string;
     nativeName: string;
     dir: LocaleDirection;
+    bcp47: string;
 };
 
 type TranslationValues = Record<
@@ -35,24 +35,29 @@ type LocaleContextValue = {
     locale: Locale;
     fallbackLocale: Locale;
     locales: LocaleDefinition[];
+    localeTag: string;
     setLocale: (locale: Locale) => void;
     t: (
         key: string,
         values?: TranslationValues,
         fallback?: string,
     ) => string;
-    x: (
-        english: string,
-        dutch?: string,
-        values?: TranslationValues,
-    ) => string;
     isRtl: boolean;
 };
 
-const BUILTIN_MESSAGES: Record<string, Record<string, string>> = {
-    en: enMessages,
-    nl: nlMessages,
-};
+const rawCatalogs = import.meta.glob('../../../lang/*.json', {
+    eager: true,
+    import: 'default',
+}) as Record<string, Record<string, string>>;
+
+const BUILTIN_MESSAGES = Object.fromEntries(
+    Object.entries(rawCatalogs).map(([filePath, messages]) => {
+        const match = filePath.match(/\/([^/]+)\.json$/);
+        const locale = match?.[1] ?? filePath;
+
+        return [locale, messages];
+    }),
+) satisfies Record<string, Record<string, string>>;
 
 const LocaleContext = createContext<LocaleContextValue | undefined>(undefined);
 
@@ -69,30 +74,24 @@ export function LocaleProvider({
             name: locale.name,
             nativeName: locale.native_name,
             dir: locale.dir,
+            bcp47: locale.bcp47,
         }));
     }, [supportedLocales]);
 
     const [locale, setLocaleState] = useState<Locale>(() =>
-        resolveInitialLocale({
-            initialLocale,
-            fallbackLocale,
-            cookieName,
-            supportedLocales: localeRegistry,
-        }),
+        resolveInitialLocale(initialLocale, fallbackLocale, localeRegistry),
     );
 
     useEffect(() => {
-        if (typeof document === 'undefined') {
-            return;
-        }
-
         const currentLocale =
             localeRegistry.find((entry) => entry.code === locale) ??
             localeRegistry.find((entry) => entry.code === fallbackLocale);
 
-        document.documentElement.lang = currentLocale?.code ?? fallbackLocale;
-        document.documentElement.dir = currentLocale?.dir ?? 'ltr';
-        document.cookie = `${cookieName}=${encodeURIComponent(locale)}; Path=/; Max-Age=31536000; SameSite=Lax`;
+        applyLocaleToDocument(
+            currentLocale?.code ?? fallbackLocale,
+            currentLocale?.dir ?? 'ltr',
+        );
+        persistLocale(cookieName, locale);
     }, [cookieName, fallbackLocale, locale, localeRegistry]);
 
     const value = useMemo<LocaleContextValue>(() => {
@@ -106,7 +105,7 @@ export function LocaleProvider({
             values?: TranslationValues,
             fallback?: string,
         ): string => {
-            const localized = lookupMessage(locale, key)
+            const localized = lookupMessage(activeLocale?.code ?? locale, key)
                 ?? lookupMessage(fallbackLocale, key)
                 ?? fallback
                 ?? key;
@@ -118,25 +117,28 @@ export function LocaleProvider({
             locale: activeLocale?.code ?? fallbackLocale,
             fallbackLocale,
             locales: localeRegistry,
+            localeTag: activeLocale?.bcp47 ?? fallbackLocale,
             setLocale: (nextLocale: Locale) => {
-                if (localeRegistry.some((entry) => entry.code === nextLocale)) {
-                    setLocaleState(nextLocale);
+                const nextDefinition = localeRegistry.find(
+                    (entry) => entry.code === nextLocale,
+                );
+
+                if (nextDefinition && nextLocale !== locale) {
+                    applyLocaleToDocument(nextDefinition.code, nextDefinition.dir);
+                    persistLocale(cookieName, nextDefinition.code);
+                    setLocaleState(nextDefinition.code);
+                    router.visit(window.location.href, {
+                        method: 'get',
+                        preserveScroll: true,
+                        preserveState: true,
+                        replace: true,
+                    });
                 }
             },
             t,
-            x: (english: string, dutch?: string, values?: TranslationValues) => {
-                if (locale === 'nl' && dutch) {
-                    return interpolate(
-                        lookupMessage('nl', english) ?? dutch,
-                        values,
-                    );
-                }
-
-                return t(english, values, english);
-            },
             isRtl: activeLocale?.dir === 'rtl',
         };
-    }, [fallbackLocale, locale, localeRegistry]);
+    }, [cookieName, fallbackLocale, locale, localeRegistry]);
 
     return (
         <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
@@ -172,48 +174,42 @@ function interpolate(
     });
 }
 
-function resolveInitialLocale({
-    initialLocale,
-    fallbackLocale,
-    cookieName,
-    supportedLocales,
-}: {
-    initialLocale: string;
-    fallbackLocale: string;
-    cookieName: string;
-    supportedLocales: LocaleDefinition[];
-}): Locale {
+export function resolveLocaleTag(
+    locale: Locale,
+    supportedLocales?: LocaleDefinition[],
+): string {
+    return (
+        supportedLocales?.find((entry) => entry.code === locale)?.bcp47 ?? locale
+    );
+}
+
+function resolveInitialLocale(
+    initialLocale: string,
+    fallbackLocale: string,
+    supportedLocales: LocaleDefinition[],
+): Locale {
     const supportedCodes = supportedLocales.map((locale) => locale.code);
 
     if (supportedCodes.includes(initialLocale)) {
         return initialLocale;
     }
 
-    if (typeof document !== 'undefined') {
-        const cookieLocale = getCookie(cookieName);
-        if (cookieLocale && supportedCodes.includes(cookieLocale)) {
-            return cookieLocale;
-        }
-    }
-
-    if (typeof navigator !== 'undefined') {
-        const browserLanguage = navigator.language.toLowerCase().slice(0, 2);
-        if (supportedCodes.includes(browserLanguage)) {
-            return browserLanguage;
-        }
-    }
-
     return fallbackLocale;
 }
 
-function getCookie(name: string): string | null {
+function persistLocale(name: string, value: string): void {
     if (typeof document === 'undefined') {
-        return null;
+        return;
     }
 
-    const match = document.cookie
-        .split('; ')
-        .find((cookie) => cookie.startsWith(`${name}=`));
+    document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; Max-Age=31536000; SameSite=Lax`;
+}
 
-    return match ? decodeURIComponent(match.split('=').slice(1).join('=')) : null;
+function applyLocaleToDocument(locale: string, dir: LocaleDirection): void {
+    if (typeof document === 'undefined') {
+        return;
+    }
+
+    document.documentElement.lang = locale;
+    document.documentElement.dir = dir;
 }

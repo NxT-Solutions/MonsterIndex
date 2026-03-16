@@ -7,6 +7,7 @@
         "build": "tsc && vite build",
         "dev": "vite",
         "dev:docker": "vite --host 0.0.0.0 --port 5173",
+        "i18n:sync": "node ./scripts/sync-locales.mjs",
         "serve:test": "php artisan serve --host=127.0.0.1 --port=8000",
         "test:browser": "playwright test",
         "test:lighthouse": "lhci autorun --config=./lighthouserc.json",

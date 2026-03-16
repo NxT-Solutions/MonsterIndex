@@ -37,6 +37,7 @@ export type PageProps<
             name: string;
             native_name: string;
             dir: 'ltr' | 'rtl';
+            bcp47: string;
         }>;
     };
     adminReview?: {

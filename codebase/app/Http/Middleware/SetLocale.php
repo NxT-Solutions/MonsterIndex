@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Locales\LocaleRegistry;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -14,11 +15,15 @@ class SetLocale
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $supported = array_keys(config('locales.supported', []));
-        $fallback = (string) config('locales.fallback', 'en');
-        $cookieName = (string) config('locales.cookie_name', 'monsterindex_locale');
+        $supported = LocaleRegistry::supportedCodes();
+        $fallback = LocaleRegistry::fallback();
+        $cookieName = LocaleRegistry::cookieName();
 
-        $locale = $request->cookie($cookieName);
+        $locale = $request->query('lang');
+
+        if (! in_array($locale, $supported, true)) {
+            $locale = $request->cookie($cookieName);
+        }
 
         if (! in_array($locale, $supported, true)) {
             $locale = $this->resolveFromAcceptLanguage(
