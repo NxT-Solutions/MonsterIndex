@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const SERVICE_WORKER_PATH = '/sw.js';
 
+export type PushPermissionState = NotificationPermission | 'unsupported';
+
 type PushSubscribeResponse = {
     ok: boolean;
     id: number;
@@ -17,7 +19,18 @@ export function isPushSupported(): boolean {
         return false;
     }
 
-    return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    return window.isSecureContext
+        && 'serviceWorker' in navigator
+        && 'PushManager' in window
+        && 'Notification' in window;
+}
+
+export function getPushPermissionState(): PushPermissionState {
+    if (!isPushSupported()) {
+        return 'unsupported';
+    }
+
+    return Notification.permission;
 }
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
@@ -27,11 +40,17 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 
     try {
         const existing = await navigator.serviceWorker.getRegistration('/');
-        if (existing) {
+        if (existing?.active) {
             return existing;
         }
 
-        return await navigator.serviceWorker.register(SERVICE_WORKER_PATH, { scope: '/' });
+        if (existing) {
+            return await navigator.serviceWorker.ready;
+        }
+
+        await navigator.serviceWorker.register(SERVICE_WORKER_PATH, { scope: '/' });
+
+        return await navigator.serviceWorker.ready;
     } catch {
         return null;
     }
@@ -40,7 +59,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 export async function enablePushNotifications(): Promise<{
     ok: boolean;
     endpoint: string | null;
-    permission: NotificationPermission | 'unsupported';
+    permission: PushPermissionState;
 }> {
     if (!isPushSupported()) {
         return {
@@ -55,7 +74,7 @@ export async function enablePushNotifications(): Promise<{
         return {
             ok: false,
             endpoint: null,
-            permission: Notification.permission,
+            permission: getPushPermissionState(),
         };
     }
 
@@ -91,7 +110,7 @@ export async function enablePushNotifications(): Promise<{
 
 export async function disablePushNotifications(): Promise<{
     ok: boolean;
-    permission: NotificationPermission | 'unsupported';
+    permission: PushPermissionState;
     browserPermissionRevoked: boolean;
 }> {
     if (!isPushSupported()) {
@@ -114,8 +133,6 @@ export async function disablePushNotifications(): Promise<{
         });
         await subscription.unsubscribe();
     }
-
-    await Promise.all(registrations.map((item) => item.unregister()));
 
     const permission = Notification.permission;
 
