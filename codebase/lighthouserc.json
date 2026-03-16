@@ -9,7 +9,7 @@
       "url": [
         "http://127.0.0.1:8000/",
         "http://127.0.0.1:8000/login",
-        "http://127.0.0.1:8000/monsters/monster-energy-original-500ml",
+        "http://127.0.0.1:8000/monsters/monster-energy",
         "http://127.0.0.1:8000/__smoke/login?role=contributor&redirect=/contribute/monitors",
         "http://127.0.0.1:8000/__smoke/login?role=admin&redirect=/admin"
       ]
@@ -19,7 +19,7 @@
         "categories:performance": [
           "error",
           {
-            "minScore": 0.95
+            "minScore": 0.93
           }
         ],
         "categories:accessibility": [

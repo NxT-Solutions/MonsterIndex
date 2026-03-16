@@ -32,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (app()->environment('testing')) {
+            Vite::useHotFile(storage_path('framework/vite.testing.hot'));
+        }
+
         Vite::prefetch(concurrency: 3);
         Gate::policy(Monitor::class, MonitorPolicy::class);
         Gate::policy(MonsterSuggestion::class, MonsterSuggestionPolicy::class);

@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
-const MONSTER_SLUG = 'monster-energy-original-500ml';
+const MONSTER_SLUG = 'monster-energy';
 
 async function expectNoAccessibilityViolations(page: Page) {
     const results = await new AxeBuilder({ page })
@@ -75,7 +75,7 @@ test('public monster detail page is accessible', async ({ page }) => {
     await page.goto(`/monsters/${MONSTER_SLUG}`, { waitUntil: 'networkidle' });
 
     await expect(
-        page.getByRole('heading', { name: /Monster Energy Original 500ml/i }),
+        page.getByRole('heading', { name: /Monster Energy \(500ml\)/i }),
     ).toBeVisible();
 
     await expectNoAccessibilityViolations(page);
