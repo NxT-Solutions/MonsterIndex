@@ -2,6 +2,7 @@ import '../css/app.css';
 import './bootstrap';
 
 import { AppDialogProvider } from '@/Components/providers/AppDialogProvider';
+import PwaExperienceDock from '@/Components/PwaExperienceDock';
 import AppToaster from '@/Components/ui/toaster';
 import { LocaleProvider } from '@/lib/locale';
 import { registerServiceWorker } from '@/lib/push';
@@ -39,8 +40,15 @@ createInertiaApp({
                     supportedLocales={initialPage.props.locale.supported}
                 >
                     <AppDialogProvider>
-                        <App {...props} />
-                        <AppToaster />
+                        <App {...props}>
+                            {({ Component, props: pageProps, key }) => (
+                                <>
+                                    <Component key={key} {...pageProps} />
+                                    <PwaExperienceDock />
+                                    <AppToaster />
+                                </>
+                            )}
+                        </App>
                     </AppDialogProvider>
                 </LocaleProvider>
             </ThemeProvider>,
