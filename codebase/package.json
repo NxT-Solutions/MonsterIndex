@@ -11,7 +11,7 @@
         "serve:test": "php artisan serve --host=127.0.0.1 --port=8000",
         "test:browser": "playwright test",
         "test:lighthouse": "lhci autorun --config=./lighthouserc.json",
-        "quality:smoke": "rm -f public/hot && start-server-and-test serve:test http://127.0.0.1:8000 \"bun run test:browser && bun run test:lighthouse\""
+        "quality:smoke": "MONSTERINDEX_ISOLATE_VITE_HOT=1 start-server-and-test serve:test http://127.0.0.1:8000 \"bun run test:browser && bun run test:lighthouse\""
     },
     "dependencies": {
         "@axe-core/playwright": "^4.11.1",
