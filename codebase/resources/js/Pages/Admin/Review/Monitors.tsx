@@ -39,9 +39,9 @@ export default function MonitorReviewIndex({
 }: {
     pendingMonitors: PendingMonitor[];
 }) {
-    const { locale, x } = useLocale();
+    const { localeTag, t } = useLocale();
     const { confirm, prompt } = useAppDialogs();
-    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const dateLocale = localeTag;
 
     const approve = (monitor: PendingMonitor) => {
         router.post(route('admin.review.monitors.approve', monitor.id), {}, { preserveScroll: true });
@@ -49,16 +49,10 @@ export default function MonitorReviewIndex({
 
     const forceApprove = async (monitor: PendingMonitor) => {
         const confirmed = await confirm({
-            title: x(
-                'Force-approve this monitor even though validation failed?',
-                'Deze monitor force-goedkeuren ook al is validatie mislukt?',
-            ),
-            description: x(
-                'Use this only when you have manually verified the selectors and pricing output.',
-                'Gebruik dit alleen als je de selectors en prijsoutput handmatig hebt gecontroleerd.',
-            ),
-            confirmLabel: x('Force approve', 'Force goedkeuren'),
-            cancelLabel: x('Cancel', 'Annuleren'),
+            title: t('Force-approve this monitor even though validation failed?'),
+            description: t('Use this only when you have manually verified the selectors and pricing output.'),
+            confirmLabel: t('Force approve'),
+            cancelLabel: t('Cancel'),
             destructive: true,
         });
         if (!confirmed) {
@@ -74,14 +68,11 @@ export default function MonitorReviewIndex({
 
     const reject = async (monitor: PendingMonitor) => {
         const note = await prompt({
-            title: x('Reject monitor proposal', 'Monitorvoorstel afwijzen'),
-            description: x(
-                'Add an optional note to help the contributor understand what to change.',
-                'Voeg optioneel een notitie toe om de bijdrager te helpen begrijpen wat er moet veranderen.',
-            ),
-            label: x('Optional rejection note', 'Optionele afwijsnotitie'),
+            title: t('Reject monitor proposal'),
+            description: t('Add an optional note to help the contributor understand what to change.'),
+            label: t('Optional rejection note'),
             defaultValue: monitor.review_note ?? '',
-            confirmLabel: x('Reject monitor', 'Monitor afwijzen'),
+            confirmLabel: t('Reject monitor'),
         });
         if (note === null) {
             return;
@@ -99,31 +90,28 @@ export default function MonitorReviewIndex({
             header={
                 <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                        {x('Admin Review', 'Admin Review')}
+                        {t('Admin Review')}
                     </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold text-white">
-                        {x('Monitor Moderation Queue', 'Monitor Moderatiewachtrij')}
+                        {t('Monitor Moderation Queue')}
                     </h2>
                 </div>
             }
         >
-            <Head title={x('Monitor Moderation', 'Monitor Moderatie')} />
+            <Head title={t('Monitor Moderation')} />
 
             <div className="py-8">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader>
                             <CardTitle className="font-display text-lg text-white">
-                                {x('Pending Review', 'Wacht op Review')} ({pendingMonitors.length})
+                                {t('Pending Review')} ({pendingMonitors.length})
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {pendingMonitors.length === 0 ? (
                                 <p className="text-sm text-white/70">
-                                    {x(
-                                        'No pending monitor proposals at the moment.',
-                                        'Momenteel geen monitorvoorstellen in behandeling.',
-                                    )}
+                                    {t('No pending monitor proposals at the moment.')}
                                 </p>
                             ) : (
                                 pendingMonitors.map((monitor) => (
@@ -147,19 +135,19 @@ export default function MonitorReviewIndex({
 
                                         <div className="mt-2 space-y-1 text-sm text-white/75">
                                             <p>
-                                                <strong className="text-white">{x('Contributor', 'Bijdrager')}:</strong>{' '}
+                                                <strong className="text-white">{t('Contributor')}:</strong>{' '}
                                                 {monitor.creator ? `${monitor.creator.name} (${monitor.creator.email})` : '-'}
                                             </p>
                                             <p>
-                                                <strong className="text-white">{x('Product URL', 'Product-URL')}:</strong>{' '}
+                                                <strong className="text-white">{t('Product URL')}:</strong>{' '}
                                                 {monitor.product_url}
                                             </p>
                                             <p>
-                                                <strong className="text-white">{x('Pricing', 'Prijsbasis')}:</strong>{' '}
-                                                {x('EUR only', 'Enkel EUR')}
+                                                <strong className="text-white">{t('Pricing')}:</strong>{' '}
+                                                {t('EUR only')}
                                             </p>
                                             <p>
-                                                <strong className="text-white">{x('Updated', 'Bijgewerkt')}:</strong>{' '}
+                                                <strong className="text-white">{t('Updated')}:</strong>{' '}
                                                 {new Date(monitor.updated_at).toLocaleString(dateLocale)}
                                             </p>
                                         </div>
@@ -173,7 +161,7 @@ export default function MonitorReviewIndex({
                                                     'bg-[color:var(--landing-accent)] text-[#0b1201]',
                                                 )}
                                             >
-                                                {x('Approve', 'Goedkeuren')}
+                                                {t('Approve')}
                                             </button>
 
                                             <button
@@ -184,7 +172,7 @@ export default function MonitorReviewIndex({
                                                     'border border-orange-400/40 bg-orange-500/10 text-orange-100 hover:bg-orange-500/20',
                                                 )}
                                             >
-                                                {x('Force Approve', 'Force Goedkeuren')}
+                                                {t('Force Approve')}
                                             </button>
 
                                             <button
@@ -195,7 +183,7 @@ export default function MonitorReviewIndex({
                                                     'border border-red-400/40 bg-red-500/10 text-red-100 hover:bg-red-500/20',
                                                 )}
                                             >
-                                                {x('Reject', 'Afwijzen')}
+                                                {t('Reject')}
                                             </button>
                                         </div>
                                     </div>

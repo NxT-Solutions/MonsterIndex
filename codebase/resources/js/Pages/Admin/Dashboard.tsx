@@ -72,12 +72,12 @@ export default function AdminDashboard({
     recentRuns: RecentRun[];
     pushTestUsers: PushTestUser[];
 }) {
-    const { locale, x } = useLocale();
-    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const { localeTag, t } = useLocale();
+    const dateLocale = localeTag;
     const pushTestForm = useForm({
         user_id: pushTestUsers[0]?.id ?? 0,
-        title: x('Test notification', 'Testmelding'),
-        body: x('This is a push test from admin.', 'Dit is een push test van admin.'),
+        title: t('Test notification'),
+        body: t('This is a push test from admin.'),
         url: '/dashboard',
     });
 
@@ -86,21 +86,18 @@ export default function AdminDashboard({
             header={
                 <div className="max-w-4xl">
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                        {x('Admin Operations', 'Admin Operaties')}
+                        {t('Admin Operations')}
                     </p>
                     <h1 className="mt-1 font-display text-2xl font-semibold leading-tight text-white sm:text-3xl">
-                        {x('Control Center', 'Control Center')}
+                        {t('Control Center')}
                     </h1>
                     <p className="mt-1 min-h-5 max-w-3xl font-body text-sm leading-5 text-white/65">
-                        {x(
-                            'Track monitor health, selector coverage, and scraping volume in one place.',
-                            'Volg monitorgezondheid, selector-dekking en scrapevolume op één plek.',
-                        )}
+                        {t('Track monitor health, selector coverage, and scraping volume in one place.')}
                     </p>
                 </div>
             }
         >
-            <Head title={x('Admin Dashboard', 'Admin Dashboard')} />
+            <Head title={t('Admin Dashboard')} />
 
             <div className="pb-10 pt-6">
                 <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
@@ -112,7 +109,7 @@ export default function AdminDashboard({
                                 'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                             )}
                         >
-                            {x('Manage Monsters', 'Beheer Monsters')}
+                            {t('Manage Monsters')}
                         </Link>
                         <Link
                             href={route('admin.monitors.index')}
@@ -121,7 +118,7 @@ export default function AdminDashboard({
                                 'border border-white/10 bg-white/5 text-white hover:bg-white/10',
                             )}
                         >
-                            {x('Open Monitors', 'Open Monitoren')}
+                            {t('Open Monitors')}
                         </Link>
                         <Link
                             href={route('admin.stores.index')}
@@ -130,7 +127,7 @@ export default function AdminDashboard({
                                 'border border-white/10 bg-white/5 text-white hover:bg-white/10',
                             )}
                         >
-                            {x('Manage Stores', 'Beheer Winkels')}
+                            {t('Manage Stores')}
                         </Link>
                         <Link
                             href={route('admin.alerts.index')}
@@ -139,7 +136,7 @@ export default function AdminDashboard({
                                 'border-white/20 bg-transparent text-white hover:bg-white/10',
                             )}
                         >
-                            {x('Review Alerts', 'Bekijk Meldingen')}
+                            {t('Review Alerts')}
                         </Link>
                         <Link
                             href={route('admin.review.monitors.index')}
@@ -148,7 +145,7 @@ export default function AdminDashboard({
                                 'border border-white/10 bg-white/5 text-white hover:bg-white/10',
                             )}
                         >
-                            {x('Review Monitor Queue', 'Review Monitorwachtrij')}
+                            {t('Review Monitor Queue')}
                         </Link>
                         <Link
                             href={route('admin.review.suggestions.index')}
@@ -157,45 +154,45 @@ export default function AdminDashboard({
                                 'border border-white/10 bg-white/5 text-white hover:bg-white/10',
                             )}
                         >
-                            {x('Review Suggestions', 'Review Suggesties')}
+                            {t('Review Suggestions')}
                         </Link>
                     </section>
 
                     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
                         <KpiCard
-                            label={x('Tracked Monsters', 'Gevolgde Monsters')}
+                            label={t('Tracked Monsters')}
                             value={stats.monsters_total}
-                            hint={x('Catalog entries', 'Catalogusitems')}
+                            hint={t('Catalog entries')}
                             accent="lime"
                         />
                         <KpiCard
-                            label={x('Active Monitors', 'Actieve Monitoren')}
+                            label={t('Active Monitors')}
                             value={`${stats.monitors_active}/${stats.monitors_total}`}
-                            hint={x('Currently running', 'Momenteel actief')}
+                            hint={t('Currently running')}
                             accent="cyan"
                         />
                         <KpiCard
-                            label={x('Selector Coverage', 'Selector Dekking')}
+                            label={t('Selector Coverage')}
                             value={`${stats.selector_coverage_percent}%`}
-                            hint={`${stats.monitors_with_selector} ${x('configured', 'geconfigureerd')}`}
+                            hint={`${stats.monitors_with_selector} ${t('configured')}`}
                             accent="emerald"
                         />
                         <KpiCard
-                            label={x('Unread Alerts', 'Ongelezen Meldingen')}
+                            label={t('Unread Alerts')}
                             value={stats.alerts_unread}
-                            hint={`${stats.running_runs} ${x('runs in progress', 'runs bezig')}`}
+                            hint={`${stats.running_runs} ${t('runs in progress')}`}
                             accent="orange"
                         />
                         <KpiCard
-                            label={x('Pending Monitors', 'Wachtende Monitoren')}
+                            label={t('Pending Monitors')}
                             value={stats.monitors_pending_review}
-                            hint={x('Awaiting moderation', 'Wachten op moderatie')}
+                            hint={t('Awaiting moderation')}
                             accent="orange"
                         />
                         <KpiCard
-                            label={x('Pending Suggestions', 'Wachtende Suggesties')}
+                            label={t('Pending Suggestions')}
                             value={stats.monster_suggestions_pending}
-                            hint={x('Community backlog', 'Community backlog')}
+                            hint={t('Community backlog')}
                             accent="cyan"
                         />
                     </section>
@@ -204,7 +201,7 @@ export default function AdminDashboard({
                         <Card className="min-h-[14rem] border-white/10 bg-[color:var(--landing-surface)] shadow-[0_12px_30px_rgba(0,0,0,.24)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Push Test Sender', 'Push Testzender')}
+                                    {t('Push Test Sender')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -222,7 +219,7 @@ export default function AdminDashboard({
                                             htmlFor="admin-push-test-user"
                                             className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Target User', 'Doelgebruiker')}
+                                            {t('Target User')}
                                         </label>
                                         <select
                                             id="admin-push-test-user"
@@ -251,7 +248,7 @@ export default function AdminDashboard({
                                             htmlFor="admin-push-test-title"
                                             className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Title', 'Titel')}
+                                            {t('Title')}
                                         </label>
                                         <input
                                             id="admin-push-test-title"
@@ -268,7 +265,7 @@ export default function AdminDashboard({
                                             htmlFor="admin-push-test-body"
                                             className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Body', 'Inhoud')}
+                                            {t('Body')}
                                         </label>
                                         <input
                                             id="admin-push-test-body"
@@ -310,17 +307,14 @@ export default function AdminDashboard({
                                             }
                                         >
                                             {pushTestForm.processing
-                                                ? x('Sending...', 'Versturen...')
-                                                : x('Send Push Test', 'Verstuur Push Test')}
+                                                ? t('Sending...')
+                                                : t('Send Push Test')}
                                         </button>
                                     </div>
                                 </form>
                                 {pushTestUsers.length === 0 && (
                                     <p className="mt-2 text-xs text-white/55">
-                                        {x(
-                                            'No users available to target yet.',
-                                            'Nog geen gebruikers beschikbaar als doel.',
-                                        )}
+                                        {t('No users available to target yet.')}
                                     </p>
                                 )}
                             </CardContent>
@@ -331,33 +325,30 @@ export default function AdminDashboard({
                         <Card className="border-white/10 bg-[color:var(--landing-surface)] shadow-[0_12px_30px_rgba(0,0,0,.24)]">
                             <CardHeader className="pb-3">
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x(
-                                        'Snapshot Throughput (14 days)',
-                                        'Snapshot Doorvoer (14 dagen)',
-                                    )}
+                                    {t('Snapshot Throughput (14 days)')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
                                 <TrendLineChart
                                     points={charts.snapshots_daily}
-                                    primaryLabel={x('Snapshots', 'Snapshots')}
-                                    secondaryLabel={x('Failures', 'Mislukkingen')}
+                                    primaryLabel={t('Snapshots')}
+                                    secondaryLabel={t('Failures')}
                                 />
                                 <div className="grid gap-2 font-body text-xs text-white/70 sm:grid-cols-3">
                                     <p>
-                                        {x('Last 24h total:', 'Totaal laatste 24u:')}{' '}
+                                        {t('Last 24h total:')}{' '}
                                         <span className="font-semibold text-white">
                                             {stats.snapshots_24h}
                                         </span>
                                     </p>
                                     <p>
-                                        {x('Failed:', 'Mislukt:')}{' '}
+                                        {t('Failed:')}{' '}
                                         <span className="font-semibold text-orange-300">
                                             {stats.snapshots_failed_24h}
                                         </span>
                                     </p>
                                     <p>
-                                        {x('Success rate:', 'Succesratio:')}{' '}
+                                        {t('Success rate:')}{' '}
                                         <span className="font-semibold text-[color:var(--landing-accent)]">
                                             {stats.snapshot_success_percent_24h}%
                                         </span>
@@ -369,13 +360,13 @@ export default function AdminDashboard({
                         <Card className="border-white/10 bg-[color:var(--landing-surface)] shadow-[0_12px_30px_rgba(0,0,0,.24)]">
                             <CardHeader className="pb-3">
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Alert Activity (14 days)', 'Meldingsactiviteit (14 dagen)')}
+                                    {t('Alert Activity (14 days)')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <TrendLineChart
                                     points={charts.alerts_daily}
-                                    primaryLabel={x('Alerts', 'Meldingen')}
+                                    primaryLabel={t('Alerts')}
                                 />
                                 <BarMeter
                                     rows={charts.top_domains.map((domain) => ({
@@ -384,10 +375,7 @@ export default function AdminDashboard({
                                         value: domain.monitors_count,
                                         hint: domain.domain,
                                     }))}
-                                    emptyLabel={x(
-                                        'No domain usage yet.',
-                                        'Nog geen domeingebruik.',
-                                    )}
+                                    emptyLabel={t('No domain usage yet.')}
                                 />
                             </CardContent>
                         </Card>
@@ -397,16 +385,13 @@ export default function AdminDashboard({
                         <Card className="border-white/10 bg-[color:var(--landing-surface)] shadow-[0_12px_30px_rgba(0,0,0,.24)]">
                             <CardHeader className="pb-3">
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Recent Monitor Runs', 'Recente Monitorruns')}
+                                    {t('Recent Monitor Runs')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
                                 {recentRuns.length === 0 && (
                                     <p className="font-body text-sm text-white/65">
-                                        {x(
-                                            'No run history yet. Trigger a monitor to start collecting operational telemetry.',
-                                            'Nog geen runhistorie. Start een monitor om operationele telemetrie te verzamelen.',
-                                        )}
+                                        {t('No run history yet. Trigger a monitor to start collecting operational telemetry.')}
                                     </p>
                                 )}
 
@@ -417,8 +402,8 @@ export default function AdminDashboard({
                                     >
                                         <div className="flex flex-wrap items-center justify-between gap-2">
                                             <p className="font-body text-sm font-semibold text-white">
-                                                {run.monitor.monster ?? x('Unknown monster', 'Onbekende monster')} @{' '}
-                                                {run.monitor.site ?? x('Unknown site', 'Onbekende site')}
+                                                {run.monitor.monster ?? t('Unknown monster')} @{' '}
+                                                {run.monitor.site ?? t('Unknown site')}
                                             </p>
                                             <span
                                                 className={cn(
@@ -433,15 +418,15 @@ export default function AdminDashboard({
                                             {run.monitor.domain ?? 'n/a'}
                                         </p>
                                         <p className="mt-2 font-body text-xs text-white/65">
-                                            {x('Started', 'Gestart')}:{' '}
+                                            {t('Started')}:{' '}
                                             {run.started_at
                                                 ? new Date(run.started_at).toLocaleString(dateLocale)
-                                                : x('N/A', 'N/B')}
+                                                : t('N/A')}
                                             {' • '}
-                                            {x('Finished', 'Afgerond')}:{' '}
+                                            {t('Finished')}:{' '}
                                             {run.finished_at
                                                 ? new Date(run.finished_at).toLocaleString(dateLocale)
-                                                : x('N/A', 'N/B')}
+                                                : t('N/A')}
                                         </p>
                                     </div>
                                 ))}

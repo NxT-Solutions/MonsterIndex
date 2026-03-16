@@ -8,12 +8,16 @@
   const token = scriptUrl.searchParams.get('token');
   const sourceUrl = scriptUrl.searchParams.get('source_url') || window.location.href;
   const returnUrl = scriptUrl.searchParams.get('return_url') || '/admin/monsters';
-  const language =
-    scriptUrl.searchParams.get('lang') === 'nl' ||
-    new URLSearchParams(window.location.search).get('lang') === 'nl'
-      ? 'nl'
-      : 'en';
-  const x = (english, dutch) => (language === 'nl' ? dutch : english);
+  const messages =
+    typeof __monsterindexLocaleMessages === 'object' && __monsterindexLocaleMessages !== null
+      ? __monsterindexLocaleMessages
+      : {};
+  const interpolate = (template, values = {}) =>
+    String(template || '').replace(/\{(\w+)\}/g, (_, key) => {
+      const value = values[key];
+      return value === null || value === undefined ? '' : String(value);
+    });
+  const t = (key, values) => interpolate(messages[key] || key, values);
 
   const showOverlayDialog = ({
     title,
@@ -51,10 +55,7 @@
       dialog.style.fontFamily = 'Rajdhani, ui-sans-serif, system-ui, -apple-system, sans-serif';
       dialog.innerHTML = `
         <div style="padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
-          <div style="font-size:11px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(196,255,45,0.78)">${x(
-            'MonsterIndex',
-            'MonsterIndex',
-          )}</div>
+          <div style="font-size:11px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(196,255,45,0.78)">${t('MonsterIndex')}</div>
           <div style="margin-top:8px;font-size:24px;line-height:1;font-weight:700">${title}</div>
           <div style="margin-top:10px;font-size:15px;line-height:1.45;color:rgba(232,244,235,0.8)">${
             description || ''
@@ -121,12 +122,9 @@
 
   if (!token) {
     void showOverlayDialog({
-      title: x('Selector session missing', 'Selectorsessie ontbreekt'),
-      description: x(
-        'The MonsterIndex selector token is missing. Regenerate the selector session and open it again from the app.',
-        'Het MonsterIndex selectortoken ontbreekt. Genereer de selectorsessie opnieuw en open deze opnieuw vanuit de app.',
-      ),
-      confirmLabel: x('Close', 'Sluiten'),
+      title: t('Selector session missing'),
+      description: t('The MonsterIndex selector token is missing. Regenerate the selector session and open it again from the app.'),
+      confirmLabel: t('Close'),
     });
     return;
   }
@@ -165,99 +163,45 @@
 
   panel.innerHTML = `
     <div style="padding:14px 14px 10px;border-bottom:1px solid #e2e8f0;background:linear-gradient(180deg,#fff,#f8fafc)">
-      <div style="font-size:14px;font-weight:700">${x('Guided Price Selector', 'Geleide Prijsselector')}</div>
-      <div style="font-size:12px;color:#475569;margin-top:4px">${x(
-        'Click values on the page. If a value is split (example 32 and 99), use "Add Part".',
-        'Klik waarden op de pagina. Als een waarde opgesplitst is (bijvoorbeeld 32 en 99), gebruik dan "Deel toevoegen".',
-      )}</div>
+      <div style="font-size:14px;font-weight:700">${t('Guided Price Selector')}</div>
+      <div style="font-size:12px;color:#475569;margin-top:4px">${t('Click values on the page. If a value is split (example 32 and 99), use "Add Part".')}</div>
     </div>
     <div style="padding:12px 14px;display:grid;gap:10px">
       <div id="mi-instruction" style="font-size:13px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:10px"></div>
       <div style="display:grid;gap:8px">
-        <div style="font-size:12px"><strong>${x('Price:', 'Prijs:')}</strong> <span id="mi-price-value" style="color:#475569">${x(
-          'Not selected',
-          'Niet geselecteerd',
-        )}</span></div>
-        <div style="font-size:12px"><strong>${x('Shipping:', 'Verzending:')}</strong> <span id="mi-shipping-value" style="color:#475569">${x(
-          'Not selected (optional)',
-          'Niet geselecteerd (optioneel)',
-        )}</span></div>
-        <div style="font-size:12px"><strong>${x('Can count:', 'Blik-aantal:')}</strong> <span id="mi-quantity-value" style="color:#475569">${x(
-          'Not selected (optional)',
-          'Niet geselecteerd (optioneel)',
-        )}</span></div>
+        <div style="font-size:12px"><strong>${t('Price:')}</strong> <span id="mi-price-value" style="color:#475569">${t('Not selected')}</span></div>
+        <div style="font-size:12px"><strong>${t('Shipping:')}</strong> <span id="mi-shipping-value" style="color:#475569">${t('Not selected (optional)')}</span></div>
+        <div style="font-size:12px"><strong>${t('Can count:')}</strong> <span id="mi-quantity-value" style="color:#475569">${t('Not selected (optional)')}</span></div>
       </div>
       <div id="mi-status" style="font-size:12px;border-radius:8px;padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;color:#334155"></div>
       <div style="display:grid;gap:6px">
-        <div style="font-size:11px;font-weight:600;color:#64748b">${x('Price setup', 'Prijsinstelling')}</div>
+        <div style="font-size:11px;font-weight:600;color:#64748b">${t('Price setup')}</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px">
-          <button id="mi-select-price-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
-            'Select Price',
-            'Selecteer Prijs',
-          )}</button>
-          <button id="mi-add-price-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
-            'Add Price Part',
-            'Voeg Prijsdeel Toe',
-          )}</button>
+          <button id="mi-select-price-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${t('Select Price')}</button>
+          <button id="mi-add-price-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${t('Add Price Part')}</button>
         </div>
       </div>
       <div style="display:grid;gap:6px">
-        <div style="font-size:11px;font-weight:600;color:#64748b">${x(
-          'Shipping setup (optional)',
-          'Verzendinstelling (optioneel)',
-        )}</div>
+        <div style="font-size:11px;font-weight:600;color:#64748b">${t('Shipping setup (optional)')}</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px">
-          <button id="mi-select-shipping-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
-            'Select Shipping',
-            'Selecteer Verzending',
-          )}</button>
-          <button id="mi-add-shipping-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
-            'Add Shipping Part',
-            'Voeg Verzendingdeel Toe',
-          )}</button>
-          <button id="mi-skip-shipping" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
-            'Skip Shipping',
-            'Sla Verzending Over',
-          )}</button>
+          <button id="mi-select-shipping-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${t('Select Shipping')}</button>
+          <button id="mi-add-shipping-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${t('Add Shipping Part')}</button>
+          <button id="mi-skip-shipping" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${t('Skip Shipping')}</button>
         </div>
-        <input id="mi-shipping-manual" type="text" inputmode="decimal" placeholder="${x(
-          'Or type shipping manually (example: 4.99)',
-          'Of vul verzendkosten handmatig in (voorbeeld: 4,99)',
-        )}" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;color:#0f172a" />
+        <input id="mi-shipping-manual" type="text" inputmode="decimal" placeholder="${t('Or type shipping manually (example: 4.99)')}" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;color:#0f172a" />
       </div>
       <div style="display:grid;gap:6px">
-        <div style="font-size:11px;font-weight:600;color:#64748b">${x(
-          'Quantity setup (optional, for price per can)',
-          'Aantalinstelling (optioneel, voor prijs per blik)',
-        )}</div>
+        <div style="font-size:11px;font-weight:600;color:#64748b">${t('Quantity setup (optional, for price per can)')}</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px">
-          <button id="mi-select-quantity-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
-            'Select Can Count',
-            'Selecteer Blik-aantal',
-          )}</button>
-          <button id="mi-add-quantity-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
-            'Add Count Part',
-            'Voeg Aantaldeel Toe',
-          )}</button>
+          <button id="mi-select-quantity-main" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${t('Select Can Count')}</button>
+          <button id="mi-add-quantity-part" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${t('Add Count Part')}</button>
         </div>
-        <input id="mi-quantity-manual" type="number" min="1" step="1" placeholder="${x(
-          'Or type can count manually (example: 12)',
-          'Of vul aantal blikjes handmatig in (voorbeeld: 12)',
-        )}" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;color:#0f172a" />
+        <input id="mi-quantity-manual" type="number" min="1" step="1" placeholder="${t('Or type can count manually (example: 12)')}" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;color:#0f172a" />
       </div>
       <div style="display:flex;gap:8px">
-        <button id="mi-reset" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${x(
-          'Restart',
-          'Herstart',
-        )}</button>
-        <button id="mi-save" type="button" style="flex:1;border:1px solid #0f172a;background:#0f172a;color:#ffffff;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;cursor:pointer">${x(
-          'Save and Validate',
-          'Opslaan en Valideren',
-        )}</button>
-        <button id="mi-back" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:10px 12px;font-size:12px;cursor:pointer">${x(
-          'Back',
-          'Terug',
-        )}</button>
+        <button id="mi-reset" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer">${t('Restart')}</button>
+        <button id="mi-save" type="button" style="flex:1;border:1px solid #0f172a;background:#0f172a;color:#ffffff;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;cursor:pointer">${t('Save and Validate')}</button>
+        <button id="mi-back" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:8px;padding:10px 12px;font-size:12px;cursor:pointer">${t('Back')}</button>
       </div>
     </div>
   `;
@@ -618,10 +562,15 @@
       return text;
     }
 
-    return x(
-      `Selected ${parts.length} part${parts.length > 1 ? 's' : ''}`,
-      `Geselecteerd: ${parts.length} deel${parts.length > 1 ? 'en' : ''}`,
-    );
+    if (parts.length > 1) {
+      return t('Selected {count} parts', {
+        count: parts.length,
+      });
+    }
+
+    return t('Selected {count} part', {
+      count: parts.length,
+    });
   };
 
   const updateInstruction = () => {
@@ -630,80 +579,56 @@
     }
 
     if (state.mode === 'select-price-main') {
-      instructionEl.textContent = x(
-        'Click the main price value on the page.',
-        'Klik de hoofdprijs op de pagina.',
-      );
+      instructionEl.textContent = t('Click the main price value on the page.');
       return;
     }
 
     if (state.mode === 'select-price-extra') {
-      instructionEl.textContent = x(
-        'Click the extra price part (for example cents).',
-        'Klik het extra prijsdeel (bijvoorbeeld centen).',
-      );
+      instructionEl.textContent = t('Click the extra price part (for example cents).');
       return;
     }
 
     if (state.mode === 'select-shipping-main') {
-      instructionEl.textContent = x(
-        'Click the main shipping amount.',
-        'Klik het hoofdverzendbedrag.',
-      );
+      instructionEl.textContent = t('Click the main shipping amount.');
       return;
     }
 
     if (state.mode === 'select-shipping-extra') {
-      instructionEl.textContent = x(
-        'Click the extra shipping part (optional).',
-        'Klik het extra verzenddeel (optioneel).',
-      );
+      instructionEl.textContent = t('Click the extra shipping part (optional).');
       return;
     }
 
     if (state.mode === 'select-quantity-main') {
-      instructionEl.textContent = x(
-        'Click the can count (example: 12 pack).',
-        'Klik het aantal blikjes (voorbeeld: 12-pack).',
-      );
+      instructionEl.textContent = t('Click the can count (example: 12 pack).');
       return;
     }
 
     if (state.mode === 'select-quantity-extra') {
-      instructionEl.textContent = x(
-        'Click extra can-count part if the count is split.',
-        'Klik een extra deel van het blik-aantal als het opgesplitst is.',
-      );
+      instructionEl.textContent = t('Click extra can-count part if the count is split.');
       return;
     }
 
     if (state.mode === 'done') {
-      instructionEl.textContent = x(
-        'Setup saved. You can now go back.',
-        'Instelling opgeslagen. Je kunt nu teruggaan.',
-      );
+      instructionEl.textContent = t('Setup saved. You can now go back.');
       return;
     }
 
-    instructionEl.textContent = x(
-      'Use the buttons to select values, then click Save and Validate.',
-      'Gebruik de knoppen om waarden te selecteren en klik daarna op Opslaan en Valideren.',
-    );
+    instructionEl.textContent = t('Use the buttons to select values, then click Save and Validate.');
   };
 
   const updateUi = () => {
     if (priceValueEl instanceof HTMLElement) {
-      priceValueEl.textContent = previewParts(state.priceParts, x('Not selected', 'Niet geselecteerd'));
+      priceValueEl.textContent = previewParts(state.priceParts, t('Not selected'));
       priceValueEl.style.color = state.priceParts.length > 0 ? '#0f766e' : '#475569';
     }
 
     if (shippingValueEl instanceof HTMLElement) {
       const manualShipping = cleanText(state.shippingManualValue);
       shippingValueEl.textContent = state.shippingSkipped
-        ? x('Skipped', 'Overgeslagen')
+        ? t('Skipped')
         : manualShipping !== ''
-        ? x(`Manual: ${manualShipping}`, `Handmatig: ${manualShipping}`)
-        : previewParts(state.shippingParts, x('Not selected (optional)', 'Niet geselecteerd (optioneel)'));
+        ? t('Manual: {value}', { value: manualShipping })
+        : previewParts(state.shippingParts, t('Not selected (optional)'));
       shippingValueEl.style.color =
         state.shippingParts.length > 0 || manualShipping !== '' || state.shippingSkipped
           ? '#0f766e'
@@ -714,8 +639,8 @@
       const manualCount = cleanText(state.quantityManualValue);
       quantityValueEl.textContent =
         manualCount !== ''
-          ? x(`Manual: ${manualCount}`, `Handmatig: ${manualCount}`)
-          : previewParts(state.quantityParts, x('Not selected (optional)', 'Niet geselecteerd (optioneel)'));
+          ? t('Manual: {value}', { value: manualCount })
+          : previewParts(state.quantityParts, t('Not selected (optional)'));
       quantityValueEl.style.color =
         state.quantityParts.length > 0 || manualCount !== '' ? '#0f766e' : '#475569';
     }
@@ -763,10 +688,10 @@
     if (saveBtn instanceof HTMLButtonElement) {
       saveBtn.disabled = state.priceParts.length === 0 || state.submitting || state.done;
       saveBtn.textContent = state.submitting
-        ? x('Saving...', 'Opslaan...')
+        ? t('Saving...')
         : state.done
-        ? x('Saved', 'Opgeslagen')
-        : x('Save and Validate', 'Opslaan en Valideren');
+        ? t('Saved')
+        : t('Save and Validate');
     }
 
     updateInstruction();
@@ -795,10 +720,7 @@
     state.mode = 'idle';
     updateUi();
     setStatus(
-      x(
-        'Saving selectors and validating with a quick scrape...',
-        'Selectors opslaan en valideren met een snelle scrape...',
-      ),
+      t('Saving selectors and validating with a quick scrape...'),
       'info',
     );
 
@@ -841,10 +763,7 @@
       if (!response.ok || !data.ok) {
         throw new Error(
           data.message ||
-            x(
-              'Could not validate these selectors yet. Try selecting clearer values.',
-              'Kon deze selectors nog niet valideren. Probeer duidelijkere waarden te selecteren.',
-            ),
+            t('Could not validate these selectors yet. Try selecting clearer values.'),
         );
       }
 
@@ -855,31 +774,27 @@
       const parsedPrice =
         typeof data.price_cents === 'number'
           ? `${data.currency} ${(data.price_cents / 100).toFixed(2)}`
-          : x('Unknown', 'Onbekend');
+          : t('Unknown');
 
       const perCanText =
         typeof data.price_per_can_cents === 'number'
-          ? x(
-              ` • Per can: ${data.currency} ${(data.price_per_can_cents / 100).toFixed(2)}`,
-              ` • Per blik: ${data.currency} ${(data.price_per_can_cents / 100).toFixed(2)}`,
-            )
+          ? t(' • Per can: {value}', {
+                value: `${data.currency} ${(data.price_per_can_cents / 100).toFixed(2)}`,
+              })
           : '';
 
       setStatus(
-        x(
-          `Saved successfully. Detected price: ${parsedPrice}${perCanText}.`,
-          `Succesvol opgeslagen. Gedetecteerde prijs: ${parsedPrice}${perCanText}.`,
-        ),
+        t('Saved successfully. Detected price: {price}{per_can}.', {
+            price: parsedPrice,
+            per_can: perCanText,
+          }),
         'success',
       );
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : x(
-              'Save failed. Please retry with another selection.',
-              'Opslaan mislukt. Probeer opnieuw met een andere selectie.',
-            );
+          : t('Save failed. Please retry with another selection.');
       setStatus(message, 'error');
     } finally {
       state.submitting = false;
@@ -891,7 +806,7 @@
     selectPriceMainBtn.addEventListener('click', () => {
       startSelection(
         'select-price-main',
-        x('Click the main price value.', 'Klik de hoofdprijs.'),
+        t('Click the main price value.'),
       );
     });
   }
@@ -900,10 +815,7 @@
     addPricePartBtn.addEventListener('click', () => {
       startSelection(
         'select-price-extra',
-        x(
-          'Click the extra price part (for example cents).',
-          'Klik het extra prijsdeel (bijvoorbeeld centen).',
-        ),
+        t('Click the extra price part (for example cents).'),
       );
     });
   }
@@ -912,7 +824,7 @@
     selectShippingMainBtn.addEventListener('click', () => {
       startSelection(
         'select-shipping-main',
-        x('Click the main shipping amount.', 'Klik het hoofdverzendbedrag.'),
+        t('Click the main shipping amount.'),
       );
     });
   }
@@ -921,7 +833,7 @@
     addShippingPartBtn.addEventListener('click', () => {
       startSelection(
         'select-shipping-extra',
-        x('Click the extra shipping part.', 'Klik het extra verzenddeel.'),
+        t('Click the extra shipping part.'),
       );
     });
   }
@@ -930,10 +842,7 @@
     skipShippingBtn.addEventListener('click', () => {
       if (state.priceParts.length === 0) {
         setStatus(
-          x(
-            'Select a price before skipping shipping.',
-            'Selecteer eerst een prijs voordat je verzending overslaat.',
-          ),
+          t('Select a price before skipping shipping.'),
           'error',
         );
         return;
@@ -947,7 +856,7 @@
       state.shippingSkipped = true;
       state.mode = 'idle';
       setStatus(
-        x('Shipping skipped. You can save now.', 'Verzending overgeslagen. Je kunt nu opslaan.'),
+        t('Shipping skipped. You can save now.'),
         'info',
       );
       updateUi();
@@ -975,10 +884,7 @@
     selectQuantityMainBtn.addEventListener('click', () => {
       startSelection(
         'select-quantity-main',
-        x(
-          'Click the can count (for example 12 pack).',
-          'Klik het aantal blikjes (bijvoorbeeld 12-pack).',
-        ),
+        t('Click the can count (for example 12 pack).'),
       );
     });
   }
@@ -987,10 +893,7 @@
     addQuantityPartBtn.addEventListener('click', () => {
       startSelection(
         'select-quantity-extra',
-        x(
-          'Click the extra count part if needed.',
-          'Klik indien nodig het extra aantaldeel.',
-        ),
+        t('Click the extra count part if needed.'),
       );
     });
   }
@@ -1026,10 +929,7 @@
       state.mode = 'select-price-main';
       window.__monsterindex_selector_unsaved = true;
       setStatus(
-        x(
-          'Restarted. Click the main price value to begin.',
-          'Herstart. Klik de hoofdprijs om te beginnen.',
-        ),
+        t('Restarted. Click the main price value to begin.'),
         'info',
       );
       updateUi();
@@ -1045,16 +945,10 @@
       const shouldLeave =
         !window.__monsterindex_selector_unsaved ||
         (await showOverlayDialog({
-          title: x(
-            'Leave selector without saving?',
-            'Selector verlaten zonder op te slaan?',
-          ),
-          description: x(
-            'You still have unsaved selector changes. Leave anyway?',
-            'Je hebt nog niet-opgeslagen selectorwijzigingen. Toch verlaten?',
-          ),
-          confirmLabel: x('Leave page', 'Pagina verlaten'),
-          cancelLabel: x('Stay here', 'Hier blijven'),
+          title: t('Leave selector without saving?'),
+          description: t('You still have unsaved selector changes. Leave anyway?'),
+          confirmLabel: t('Leave page'),
+          cancelLabel: t('Stay here'),
           destructive: true,
         }));
 
@@ -1108,10 +1002,7 @@
       state.shippingSkipped = false;
       state.mode = 'idle';
       setStatus(
-        x(
-          'Main price selected. Add another part if needed.',
-          'Hoofdprijs geselecteerd. Voeg indien nodig een extra deel toe.',
-        ),
+        t('Main price selected. Add another part if needed.'),
         'success',
       );
       updateUi();
@@ -1121,7 +1012,7 @@
     if (state.mode === 'select-price-extra') {
       state.priceParts.push(selector);
       state.mode = 'idle';
-      setStatus(x('Extra price part added.', 'Extra prijsdeel toegevoegd.'), 'success');
+      setStatus(t('Extra price part added.'), 'success');
       updateUi();
       return;
     }
@@ -1134,7 +1025,7 @@
       }
       state.shippingSkipped = false;
       state.mode = 'idle';
-      setStatus(x('Main shipping selected.', 'Hoofdverzending geselecteerd.'), 'success');
+      setStatus(t('Main shipping selected.'), 'success');
       updateUi();
       return;
     }
@@ -1144,7 +1035,7 @@
       state.shippingSkipped = false;
       state.mode = 'idle';
       setStatus(
-        x('Extra shipping part added.', 'Extra verzenddeel toegevoegd.'),
+        t('Extra shipping part added.'),
         'success',
       );
       updateUi();
@@ -1158,7 +1049,7 @@
         quantityManualInput.value = '';
       }
       state.mode = 'idle';
-      setStatus(x('Can count selected.', 'Blik-aantal geselecteerd.'), 'success');
+      setStatus(t('Can count selected.'), 'success');
       updateUi();
       return;
     }
@@ -1167,7 +1058,7 @@
       state.quantityParts.push(selector);
       state.mode = 'idle';
       setStatus(
-        x('Extra can-count part added.', 'Extra blik-aantaldeel toegevoegd.'),
+        t('Extra can-count part added.'),
         'success',
       );
       updateUi();
@@ -1188,7 +1079,7 @@
   window.addEventListener('beforeunload', onBeforeUnload);
 
   setStatus(
-    x('Step 1: click the main price value.', 'Stap 1: klik de hoofdprijs.'),
+    t('Step 1: click the main price value.'),
     'info',
   );
   updateUi();

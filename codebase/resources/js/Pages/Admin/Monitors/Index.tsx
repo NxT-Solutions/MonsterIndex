@@ -78,9 +78,9 @@ export default function MonitorsIndex({
     monsters: Option[];
     sites: SiteOption[];
 }) {
-    const { locale, x } = useLocale();
+    const { locale, localeTag, t } = useLocale();
     const { prompt } = useAppDialogs();
-    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const dateLocale = localeTag;
 
     const form = useForm({
         monster_id: monsters[0]?.id ?? 0,
@@ -131,26 +131,26 @@ export default function MonitorsIndex({
         return [
             {
                 id: 'configured',
-                label: x('Selector configured', 'Selector geconfigureerd'),
+                label: t('Selector configured'),
                 value: stats.configured,
             },
             {
                 id: 'active',
-                label: x('Active monitors', 'Actieve monitoren'),
+                label: t('Active monitors'),
                 value: stats.active,
             },
             {
                 id: 'failed',
-                label: x('Last run failed', 'Laatste run mislukt'),
+                label: t('Last run failed'),
                 value: stats.failedLast,
             },
             {
                 id: 'running',
-                label: x('Running now', 'Nu bezig'),
+                label: t('Running now'),
                 value: runningMonitorIds.length,
             },
         ];
-    }, [runningMonitorIds.length, stats, x]);
+    }, [runningMonitorIds.length, stats, t]);
 
     useEffect(() => {
         setRunningMonitorIds(initialRunningMonitorIds(monitors));
@@ -243,17 +243,11 @@ export default function MonitorsIndex({
         try {
             await axios.post(route('api.admin.monitors.run-now', monitor.id));
             toast.success(
-                x(
-                    'Scrape run queued successfully.',
-                    'Scrape-run succesvol ingepland.',
-                ),
+                t('Scrape run queued successfully.'),
             );
         } catch {
             toast.error(
-                x(
-                    'Could not queue this scrape run. Please retry.',
-                    'Kon deze scrape-run niet inplannen. Probeer opnieuw.',
-                ),
+                t('Could not queue this scrape run. Please retry.'),
             );
         } finally {
             setLoadingRun(null);
@@ -262,16 +256,13 @@ export default function MonitorsIndex({
 
     const openSelectorBrowser = async (monitor: MonitorRow) => {
         const targetUrl = await prompt({
-            title: x('Open selector for URL', 'Open selector voor URL'),
-            description: x(
-                'Choose the exact product URL you want to configure selectors against.',
-                'Kies de exacte product-URL waarvoor je selectors wilt configureren.',
-            ),
-            label: x('Product URL', 'Product-URL'),
+            title: t('Open selector for URL'),
+            description: t('Choose the exact product URL you want to configure selectors against.'),
+            label: t('Product URL'),
             defaultValue: monitor.product_url,
             placeholder: 'https://example.com/product-url',
             required: true,
-            confirmLabel: x('Open selector', 'Selector openen'),
+            confirmLabel: t('Open selector'),
         });
         if (!targetUrl) {
             return;
@@ -300,10 +291,7 @@ export default function MonitorsIndex({
             );
         } catch {
             toast.error(
-                x(
-                    'Could not create a selector session. Reload and try again.',
-                    'Kon geen selectorsessie maken. Herlaad en probeer opnieuw.',
-                ),
+                t('Could not create a selector session. Reload and try again.'),
             );
         } finally {
             setLoadingSelector(null);
@@ -360,41 +348,41 @@ export default function MonitorsIndex({
             header={
                 <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                        {x('Automation', 'Automatisering')}
+                        {t('Automation')}
                     </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold text-white">
-                        {x('Monitors', 'Monitoren')}
+                        {t('Monitors')}
                     </h2>
                 </div>
             }
         >
-            <Head title={x('Admin Monitors', 'Admin Monitoren')} />
+            <Head title={t('Admin Monitors')} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                         <KpiCard
-                            label={x('Total Monitors', 'Totaal Monitoren')}
+                            label={t('Total Monitors')}
                             value={stats.total}
                             accent="lime"
                         />
                         <KpiCard
-                            label={x('Active', 'Actief')}
+                            label={t('Active')}
                             value={stats.active}
                             accent="emerald"
                         />
                         <KpiCard
-                            label={x('Inactive', 'Inactief')}
+                            label={t('Inactive')}
                             value={stats.inactive}
                             accent="orange"
                         />
                         <KpiCard
-                            label={x('Selector Ready', 'Selector Klaar')}
+                            label={t('Selector Ready')}
                             value={stats.configured}
                             accent="cyan"
                         />
                         <KpiCard
-                            label={x('Failed Last Run', 'Mislukte Laatste Run')}
+                            label={t('Failed Last Run')}
                             value={stats.failedLast}
                             accent="orange"
                         />
@@ -404,7 +392,7 @@ export default function MonitorsIndex({
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Create Monitor', 'Monitor Maken')}
+                                    {t('Create Monitor')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -417,7 +405,7 @@ export default function MonitorsIndex({
                                             htmlFor="create-monitor-monster"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Monster', 'Monster')}
+                                            {t('Monster')}
                                         </label>
                                         <select
                                             id="create-monitor-monster"
@@ -447,7 +435,7 @@ export default function MonitorsIndex({
                                             htmlFor="create-monitor-store"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Store', 'Winkel')}
+                                            {t('Store')}
                                         </label>
                                         <select
                                             id="create-monitor-store"
@@ -466,10 +454,7 @@ export default function MonitorsIndex({
                                                 </option>
                                             ))}
                                             <option value={OTHER_STORE_ID} className="text-black">
-                                                {x(
-                                                    'Other (create from URL)',
-                                                    'Andere (maak aan via URL)',
-                                                )}
+                                                {t('Other (create from URL)')}
                                             </option>
                                         </select>
                                     </div>
@@ -479,7 +464,7 @@ export default function MonitorsIndex({
                                             htmlFor="create-monitor-currency"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Currency', 'Valuta')}
+                                            {t('Currency')}
                                         </label>
                                         <input
                                             id="create-monitor-currency"
@@ -495,18 +480,12 @@ export default function MonitorsIndex({
                                                 htmlFor="create-monitor-site-name"
                                                 className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                             >
-                                                {x(
-                                                    'Store name (optional)',
-                                                    'Winkelnaam (optioneel)',
-                                                )}
+                                                {t('Store name (optional)')}
                                             </label>
                                             <input
                                                 id="create-monitor-site-name"
                                                 className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                                placeholder={x(
-                                                    'Example: Small Energy Shop',
-                                                    'Voorbeeld: Kleine Energy Shop',
-                                                )}
+                                                placeholder={t('Example: Small Energy Shop')}
                                                 value={form.data.site_name}
                                                 onChange={(event) =>
                                                     form.setData(
@@ -523,12 +502,12 @@ export default function MonitorsIndex({
                                             htmlFor="create-monitor-product-url"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Product URL', 'Product-URL')}
+                                            {t('Product URL')}
                                         </label>
                                         <input
                                             id="create-monitor-product-url"
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                            placeholder={x('Product URL', 'Product-URL')}
+                                            placeholder={t('Product URL')}
                                             value={form.data.product_url}
                                             onChange={(event) =>
                                                 form.setData(
@@ -545,17 +524,14 @@ export default function MonitorsIndex({
                                             htmlFor="create-monitor-interval"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Interval (minutes)', 'Interval (minuten)')}
+                                            {t('Interval (minutes)')}
                                         </label>
                                         <input
                                             id="create-monitor-interval"
                                             type="number"
                                             min={15}
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                            placeholder={x(
-                                                'Interval minutes',
-                                                'Interval minuten',
-                                            )}
+                                            placeholder={t('Interval minutes')}
                                             value={form.data.check_interval_minutes}
                                             onChange={(event) =>
                                                 form.setData(
@@ -578,7 +554,7 @@ export default function MonitorsIndex({
                                             )}
                                             disabled={form.processing}
                                         >
-                                            {x('Create', 'Maken')}
+                                            {t('Create')}
                                         </button>
                                     </div>
                                 </form>
@@ -588,16 +564,13 @@ export default function MonitorsIndex({
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Monitor Health', 'Monitorgezondheid')}
+                                    {t('Monitor Health')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <BarMeter
                                     rows={barRows}
-                                    emptyLabel={x(
-                                        'No monitor stats yet.',
-                                        'Nog geen monitorstatistieken.',
-                                    )}
+                                    emptyLabel={t('No monitor stats yet.')}
                                 />
                             </CardContent>
                         </Card>
@@ -606,13 +579,13 @@ export default function MonitorsIndex({
                     <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader>
                             <CardTitle className="font-display text-lg text-white">
-                                {x('Monitor List', 'Monitorlijst')}
+                                {t('Monitor List')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {monitors.length === 0 && (
                                 <p className="text-sm text-white/65">
-                                    {x('No monitors yet.', 'Nog geen monitoren.')}
+                                    {t('No monitors yet.')}
                                 </p>
                             )}
 
@@ -632,30 +605,30 @@ export default function MonitorsIndex({
                                                 </p>
                                                 <p className="break-all text-white/65">{monitor.product_url}</p>
                                                 <p>
-                                                    {x('Interval:', 'Interval:')}{' '}
+                                                    {t('Interval:')}{' '}
                                                     {monitor.check_interval_minutes}m •{' '}
-                                                    {x('Currency:', 'Valuta:')} EUR •{' '}
-                                                    {x('Active:', 'Actief:')}{' '}
+                                                    {t('Currency:')} EUR •{' '}
+                                                    {t('Active:')}{' '}
                                                     {monitor.active
-                                                        ? x('Yes', 'Ja')
-                                                        : x('No', 'Nee')}
+                                                        ? t('Yes')
+                                                        : t('No')}
                                                 </p>
                                                 <p>
-                                                    {x('Next check:', 'Volgende check:')}{' '}
+                                                    {t('Next check:')}{' '}
                                                     {monitor.next_check_at
                                                         ? new Date(
                                                               monitor.next_check_at,
                                                           ).toLocaleString(dateLocale)
-                                                        : x('N/A', 'N/B')}
+                                                        : t('N/A')}
                                                 </p>
                                                 {monitor.latest_snapshot && (
                                                     <p>
-                                                        {x('Latest:', 'Laatste:')}{' '}
+                                                        {t('Latest:')}{' '}
                                                         {monitor.latest_snapshot
                                                             .effective_total_cents !==
                                                         null
                                                             ? `${monitor.latest_snapshot.currency} ${(monitor.latest_snapshot.effective_total_cents / 100).toFixed(2)}`
-                                                            : x('N/A', 'N/B')}
+                                                            : t('N/A')}
                                                         {' • '}
                                                         {
                                                             monitor.latest_snapshot
@@ -668,10 +641,7 @@ export default function MonitorsIndex({
                                                         <div className="max-w-xs space-y-1.5">
                                                             <div className="flex items-center gap-2 text-xs font-medium text-orange-200">
                                                                 <span className="h-3 w-3 animate-spin rounded-full border-2 border-orange-300 border-t-transparent" />
-                                                                {x(
-                                                                    'Scraping now...',
-                                                                    'Nu aan het scrapen...',
-                                                                )}
+                                                                {t('Scraping now...')}
                                                             </div>
                                                             <div className="mt-1.5 h-1.5 overflow-hidden rounded bg-orange-900/40">
                                                                 <div className="h-full w-1/2 animate-pulse rounded bg-orange-300" />
@@ -679,7 +649,7 @@ export default function MonitorsIndex({
                                                         </div>
                                                     ) : (
                                                         <span className="text-xs text-white/55">
-                                                            {x('Idle', 'Inactief')}
+                                                            {t('Idle')}
                                                         </span>
                                                     )}
                                                 </div>
@@ -697,7 +667,7 @@ export default function MonitorsIndex({
                                                 )}
                                                 onClick={() => openEditModal(monitor)}
                                             >
-                                                {x('Edit', 'Bewerken')}
+                                                {t('Edit')}
                                             </button>
                                             <button
                                                 type="button"
@@ -713,8 +683,8 @@ export default function MonitorsIndex({
                                                 }
                                             >
                                                 {monitor.active
-                                                    ? x('Disable', 'Uitschakelen')
-                                                    : x('Enable', 'Inschakelen')}
+                                                    ? t('Disable')
+                                                    : t('Enable')}
                                             </button>
                                             <button
                                                 type="button"
@@ -729,10 +699,10 @@ export default function MonitorsIndex({
                                                 onClick={() => runNow(monitor)}
                                             >
                                                 {isQueueing
-                                                    ? x('Queueing...', 'In wachtrij...')
+                                                    ? t('Queueing...')
                                                     : isRunning
-                                                      ? x('Running...', 'Draait...')
-                                                      : x('Run Now', 'Nu Draaien')}
+                                                      ? t('Running...')
+                                                      : t('Run Now')}
                                             </button>
                                             <button
                                                 type="button"
@@ -749,11 +719,8 @@ export default function MonitorsIndex({
                                                 }
                                             >
                                                 {loadingSelector === monitor.id
-                                                    ? x('Opening...', 'Openen...')
-                                                    : x(
-                                                          'Open Selector',
-                                                          'Open Selector',
-                                                      )}
+                                                    ? t('Opening...')
+                                                    : t('Open Selector')}
                                             </button>
                                             <button
                                                 type="button"
@@ -773,7 +740,7 @@ export default function MonitorsIndex({
                                                     )
                                                 }
                                             >
-                                                {x('Delete', 'Verwijderen')}
+                                                {t('Delete')}
                                             </button>
                                         </div>
                                     </div>
@@ -792,17 +759,17 @@ export default function MonitorsIndex({
                 >
                     <div>
                         <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--landing-accent)]">
-                            {x('Monitor', 'Monitor')}
+                            {t('Monitor')}
                         </p>
                         <h3 className="mt-1 font-display text-xl font-semibold">
-                            {x('Edit Monitor', 'Monitor Bewerken')}
+                            {t('Edit Monitor')}
                         </h3>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-1">
                             <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
-                                {x('Monster', 'Monster')}
+                                {t('Monster')}
                             </label>
                             <input
                                 value={editingMonitor?.monster.name ?? ''}
@@ -812,7 +779,7 @@ export default function MonitorsIndex({
                         </div>
                         <div className="space-y-1">
                             <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
-                                {x('Store', 'Winkel')}
+                                {t('Store')}
                             </label>
                             <input
                                 value={
@@ -831,7 +798,7 @@ export default function MonitorsIndex({
                             htmlFor="edit-monitor-product-url"
                             className="block text-xs uppercase tracking-[0.12em] text-white/60"
                         >
-                            {x('Product URL', 'Product-URL')}
+                            {t('Product URL')}
                         </label>
                         <input
                             id="edit-monitor-product-url"
@@ -854,7 +821,7 @@ export default function MonitorsIndex({
                                 htmlFor="edit-monitor-interval"
                                 className="block text-xs uppercase tracking-[0.12em] text-white/60"
                             >
-                                {x('Interval (minutes)', 'Interval (minuten)')}
+                                {t('Interval (minutes)')}
                             </label>
                             <input
                                 id="edit-monitor-interval"
@@ -887,7 +854,7 @@ export default function MonitorsIndex({
                                 }
                                 className="h-4 w-4 rounded border-white/40 bg-transparent text-[color:var(--landing-accent)] focus:ring-[color:var(--landing-accent)]"
                             />
-                            {x('Active', 'Actief')}
+                            {t('Active')}
                         </label>
                     </div>
 
@@ -901,7 +868,7 @@ export default function MonitorsIndex({
                             onClick={closeEditModal}
                             disabled={editForm.processing}
                         >
-                            {x('Cancel', 'Annuleren')}
+                            {t('Cancel')}
                         </button>
                         <button
                             type="submit"
@@ -912,8 +879,8 @@ export default function MonitorsIndex({
                             disabled={editForm.processing}
                         >
                             {editForm.processing
-                                ? x('Saving...', 'Opslaan...')
-                                : x('Save Changes', 'Wijzigingen Opslaan')}
+                                ? t('Saving...')
+                                : t('Save Changes')}
                         </button>
                     </div>
                 </form>

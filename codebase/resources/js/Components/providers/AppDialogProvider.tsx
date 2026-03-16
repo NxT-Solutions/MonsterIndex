@@ -62,7 +62,7 @@ type PromptState = (PromptOptions & {
 const DialogContext = createContext<DialogContextValue | undefined>(undefined);
 
 export function AppDialogProvider({ children }: PropsWithChildren) {
-    const { x } = useLocale();
+    const { t } = useLocale();
     const [confirmState, setConfirmState] = useState<ConfirmState>(null);
     const [promptState, setPromptState] = useState<PromptState>(null);
     const [promptValue, setPromptValue] = useState('');
@@ -116,10 +116,7 @@ export function AppDialogProvider({ children }: PropsWithChildren) {
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                             {confirmState?.description ??
-                                x(
-                                    'Please review this action before continuing.',
-                                    'Controleer deze actie voordat je verdergaat.',
-                                )}
+                                t('Please review this action before continuing.')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -134,7 +131,7 @@ export function AppDialogProvider({ children }: PropsWithChildren) {
                             }}
                         >
                             {confirmState?.cancelLabel ??
-                                x('Cancel', 'Annuleren')}
+                                t('Cancel')}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             className={
@@ -152,7 +149,7 @@ export function AppDialogProvider({ children }: PropsWithChildren) {
                             }}
                         >
                             {confirmState?.confirmLabel ??
-                                x('Continue', 'Doorgaan')}
+                                t('Continue')}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -172,10 +169,7 @@ export function AppDialogProvider({ children }: PropsWithChildren) {
                         <DialogTitle>{promptState?.title}</DialogTitle>
                         <DialogDescription>
                             {promptState?.description ??
-                                x(
-                                    'Please review this action before continuing.',
-                                    'Controleer deze actie voordat je verdergaat.',
-                                )}
+                                t('Please review this action before continuing.')}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -185,7 +179,7 @@ export function AppDialogProvider({ children }: PropsWithChildren) {
                             className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--foreground-soft)]"
                         >
                             {promptState?.label ??
-                                x('Optional note', 'Optionele notitie')}
+                                t('Optional note')}
                         </label>
                         <Input
                             id="app-dialog-input"
@@ -193,7 +187,7 @@ export function AppDialogProvider({ children }: PropsWithChildren) {
                             value={promptValue}
                             placeholder={
                                 promptState?.placeholder ??
-                                x('Enter a value', 'Voer een waarde in')
+                                t('Enter a value')
                             }
                             onChange={(event) => setPromptValue(event.target.value)}
                         />
@@ -212,7 +206,7 @@ export function AppDialogProvider({ children }: PropsWithChildren) {
                                 setPromptState(null);
                             }}
                         >
-                            {promptState?.cancelLabel ?? x('Cancel', 'Annuleren')}
+                            {promptState?.cancelLabel ?? t('Cancel')}
                         </Button>
                         <Button
                             type="button"
@@ -230,7 +224,7 @@ export function AppDialogProvider({ children }: PropsWithChildren) {
                                 setPromptState(null);
                             }}
                         >
-                            {promptState?.confirmLabel ?? x('Save', 'Opslaan')}
+                            {promptState?.confirmLabel ?? t('Save')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

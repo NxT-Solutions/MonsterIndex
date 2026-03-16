@@ -11,7 +11,7 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, usePage } from '@inertiajs/react';
 
 export default function Login() {
-    const { x } = useLocale();
+    const { t } = useLocale();
     const errors = usePage().props.errors as Record<string, string>;
     const googleRedirectUrl = route('auth.google.redirect');
 
@@ -23,18 +23,15 @@ export default function Login() {
 
     return (
         <GuestLayout>
-            <Head title={x('Login', 'Inloggen')} />
+            <Head title={t('Login')} />
 
             <Card className="border-[color:var(--border)] bg-[color:var(--card)] shadow-[0_24px_80px_var(--auth-shadow)] backdrop-blur-xl">
                 <CardHeader className="space-y-2">
                     <h1 className="font-display text-2xl font-semibold text-[color:var(--card-foreground)]">
-                        {x('Sign in to MonsterIndex', 'Meld je aan bij MonsterIndex')}
+                        {t('Sign in to MonsterIndex')}
                     </h1>
                     <CardDescription className="font-body text-sm leading-6 text-[color:var(--muted-foreground)]">
-                        {x(
-                            'OAuth-only authentication is enabled. Continue with your Google account.',
-                            'Alleen OAuth-authenticatie is actief. Ga verder met je Google-account.',
-                        )}
+                        {t('OAuth-only authentication is enabled. Continue with your Google account.')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -52,7 +49,7 @@ export default function Login() {
                         )}
                     >
                         <GoogleIcon className="size-4" />
-                        {x('Continue with Google', 'Doorgaan met Google')}
+                        {t('Continue with Google')}
                     </a>
                 </CardContent>
             </Card>

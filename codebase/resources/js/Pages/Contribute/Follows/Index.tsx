@@ -34,8 +34,8 @@ export default function FollowedMonstersIndex({
 }: {
     follows: FollowRow[];
 }) {
-    const { locale, x } = useLocale();
-    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const { localeTag, t } = useLocale();
+    const dateLocale = localeTag;
 
     const withBestOffer = follows.filter((follow) => follow.best_offer !== null).length;
     const withRecentAlert = follows.filter((follow) => follow.last_alerted_at !== null).length;
@@ -45,31 +45,31 @@ export default function FollowedMonstersIndex({
             header={
                 <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                        {x('Community', 'Community')}
+                        {t('Community')}
                     </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold text-white">
-                        {x('Following', 'Volgend')}
+                        {t('Following')}
                     </h2>
                 </div>
             }
         >
-            <Head title={x('Followed Monsters', 'Gevolgde Monsters')} />
+            <Head title={t('Followed Monsters')} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         <KpiCard
-                            label={x('Followed Monsters', 'Gevolgde Monsters')}
+                            label={t('Followed Monsters')}
                             value={follows.length}
                             accent="lime"
                         />
                         <KpiCard
-                            label={x('With Best Offer', 'Met Beste Deal')}
+                            label={t('With Best Offer')}
                             value={withBestOffer}
                             accent="cyan"
                         />
                         <KpiCard
-                            label={x('Alerted At Least Once', 'Minstens 1x Gemeld')}
+                            label={t('Alerted At Least Once')}
                             value={withRecentAlert}
                             accent="orange"
                         />
@@ -78,16 +78,13 @@ export default function FollowedMonstersIndex({
                     <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader>
                             <CardTitle className="font-display text-lg text-white">
-                                {x('Follow List', 'Volglijst')}
+                                {t('Follow List')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {follows.length === 0 ? (
                                 <p className="text-sm text-white/70">
-                                    {x(
-                                        'You are not following any monsters yet. Open the public board and tap Follow.',
-                                        'Je volgt nog geen monsters. Open het publieke bord en klik op Volgen.',
-                                    )}
+                                    {t('You are not following any monsters yet. Open the public board and tap Follow.')}
                                 </p>
                             ) : (
                                 follows.map((follow) => (
@@ -104,12 +101,12 @@ export default function FollowedMonstersIndex({
                                                         : ''}
                                                 </h3>
                                                 <p className="text-xs text-white/60">
-                                                    {x('Currency', 'Valuta')}: {follow.currency}
+                                                    {t('Currency')}: {follow.currency}
                                                 </p>
                                             </div>
                                             <span className="text-xs text-white/55">
                                                 {follow.created_at
-                                                    ? `${x('Followed', 'Gevolgd')}: ${new Date(follow.created_at).toLocaleString(dateLocale)}`
+                                                    ? `${t('Followed')}: ${new Date(follow.created_at).toLocaleString(dateLocale)}`
                                                     : ''}
                                             </span>
                                         </div>
@@ -118,29 +115,29 @@ export default function FollowedMonstersIndex({
                                             {follow.best_offer ? (
                                                 <>
                                                     <p>
-                                                        {x('Price per can', 'Prijs per blik')}:{' '}
+                                                        {t('Price per can')}:{' '}
                                                         {follow.best_offer.currency}{' '}
                                                         {(follow.best_offer.price_per_can_cents / 100).toFixed(2)}{' '}
-                                                        ({follow.best_offer.can_count}-{x('pack', 'pack')})
+                                                        ({follow.best_offer.can_count}-{t('pack')})
                                                         {follow.best_offer.assumed_single_can
-                                                            ? `, ${x('assumed', 'aangenomen')}`
+                                                            ? `, ${t('assumed')}`
                                                             : ''}
                                                     </p>
                                                     <p className="mt-1 text-xs text-white/65">
-                                                        {x('Total buy', 'Totale aankoop')}:{' '}
+                                                        {t('Total buy')}:{' '}
                                                         {follow.best_offer.currency}{' '}
                                                         {(follow.best_offer.effective_total_cents / 100).toFixed(2)}{' '}
-                                                        ({follow.best_offer.site ?? x('Unknown', 'Onbekend')})
+                                                        ({follow.best_offer.site ?? t('Unknown')})
                                                     </p>
                                                 </>
                                             ) : (
-                                                <p>{x('No best offer yet.', 'Nog geen beste deal.')}</p>
+                                                <p>{t('No best offer yet.')}</p>
                                             )}
                                             <p className="mt-1 text-xs text-white/60">
-                                                {x('Last alert', 'Laatste melding')}:{' '}
+                                                {t('Last alert')}:{' '}
                                                 {follow.last_alerted_at
                                                     ? new Date(follow.last_alerted_at).toLocaleString(dateLocale)
-                                                    : x('Never', 'Nooit')}
+                                                    : t('Never')}
                                             </p>
                                         </div>
 
@@ -155,7 +152,7 @@ export default function FollowedMonstersIndex({
                                                     'border-white/20 bg-transparent text-white hover:bg-white/10',
                                                 )}
                                             >
-                                                {x('Open Monster', 'Open Monster')}
+                                                {t('Open Monster')}
                                             </Link>
                                             <button
                                                 type="button"
@@ -179,7 +176,7 @@ export default function FollowedMonstersIndex({
                                                     'border border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20',
                                                 )}
                                             >
-                                                {x('Unfollow', 'Niet meer volgen')}
+                                                {t('Unfollow')}
                                             </button>
                                         </div>
                                     </article>

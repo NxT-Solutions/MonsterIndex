@@ -14,7 +14,7 @@ type LandingNavProps = {
 };
 
 export default function LandingNav({ auth, brandName }: LandingNavProps) {
-    const { x } = useLocale();
+    const { t } = useLocale();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mobileHidden, setMobileHidden] = useState(false);
     const lastScrollY = useRef(0);
@@ -72,7 +72,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                     <a
                         href="#top"
                         className="inline-flex items-center gap-3"
-                        aria-label={`${brandName} ${x('home', 'home')}`}
+                        aria-label={`${brandName} ${t('home')}`}
                     >
                         <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-md border border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-surface-2)]">
                             <img
@@ -86,7 +86,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                 {brandName}
                             </p>
                             <p className="text-[11px] uppercase tracking-[0.18em] text-white/50">
-                                {x('Deal Radar', 'Deal Radar')}
+                                {t('Deal Radar')}
                             </p>
                         </div>
                     </a>
@@ -99,7 +99,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                             className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/20 bg-white/5 text-white hover:bg-white/10"
                             aria-expanded={mobileOpen}
                             aria-controls="landing-mobile-nav"
-                            aria-label={x('Toggle menu', 'Menu wisselen')}
+                            aria-label={t('Toggle menu')}
                         >
                             {mobileOpen ? (
                                 <X className="h-5 w-5" />
@@ -129,7 +129,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                 'border border-white/10 bg-white/5 text-white hover:bg-white/10',
                             )}
                         >
-                            {x('Browse Deals', 'Bekijk Deals')}
+                            {t('Browse Deals')}
                         </a>
                         {auth.user ? (
                             <>
@@ -143,7 +143,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                         'border border-white/10 bg-white/5 text-white hover:bg-white/10',
                                     )}
                                 >
-                                    {x('Dashboard', 'Dashboard')}
+                                    {t('Dashboard')}
                                 </Link>
                                 {auth.user.can.monitor_submit && (
                                     <Link
@@ -156,7 +156,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                             'border border-white/10 bg-white/5 text-white hover:bg-white/10',
                                         )}
                                     >
-                                        {x('My Monitors', 'Mijn Monitoren')}
+                                        {t('My Monitors')}
                                     </Link>
                                 )}
                                 {auth.user.can.admin_access && (
@@ -170,7 +170,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                             'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                         )}
                                     >
-                                        {x('Admin', 'Admin')}
+                                        {t('Admin')}
                                     </Link>
                                 )}
                             </>
@@ -185,7 +185,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                     'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                 )}
                             >
-                                {x('Login', 'Inloggen')}
+                                {t('Login')}
                             </Link>
                         )}
                     </div>
@@ -211,7 +211,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                     'w-full justify-start border border-white/10 bg-white/5 text-white hover:bg-white/10',
                                 )}
                             >
-                                {x('Browse Deals', 'Bekijk Deals')}
+                                {t('Browse Deals')}
                             </a>
                             {auth.user ? (
                                 <>
@@ -226,7 +226,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                             'w-full justify-start border border-white/10 bg-white/5 text-white hover:bg-white/10',
                                         )}
                                     >
-                                        {x('Dashboard', 'Dashboard')}
+                                        {t('Dashboard')}
                                     </Link>
                                     {auth.user.can.monitor_submit && (
                                         <Link
@@ -240,7 +240,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                                 'w-full justify-start border border-white/10 bg-white/5 text-white hover:bg-white/10',
                                             )}
                                         >
-                                            {x('My Monitors', 'Mijn Monitoren')}
+                                            {t('My Monitors')}
                                         </Link>
                                     )}
                                     {auth.user.can.admin_access && (
@@ -255,7 +255,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                                 'w-full justify-start bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                             )}
                                         >
-                                            {x('Admin', 'Admin')}
+                                            {t('Admin')}
                                         </Link>
                                     )}
                                 </>
@@ -271,7 +271,7 @@ export default function LandingNav({ auth, brandName }: LandingNavProps) {
                                         'w-full justify-start bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                     )}
                                 >
-                                    {x('Login', 'Inloggen')}
+                                    {t('Login')}
                                 </Link>
                             )}
                         </div>

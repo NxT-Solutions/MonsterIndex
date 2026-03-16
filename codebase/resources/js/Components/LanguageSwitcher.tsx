@@ -22,7 +22,7 @@ export default function LanguageSwitcher({
     className,
     compact = false,
 }: LanguageSwitcherProps) {
-    const { locale, locales, setLocale, x } = useLocale();
+    const { locale, locales, setLocale, t } = useLocale();
     const activeLocale =
         locales.find((entry) => entry.code === locale) ?? locales[0];
 
@@ -38,12 +38,12 @@ export default function LanguageSwitcher({
                         compact ? 'px-3' : 'min-w-[11rem]',
                         className,
                     )}
-                    aria-label={x('Language', 'Taal')}
+                    aria-label={t('Language')}
                 >
                     <span className="flex min-w-0 items-center gap-2">
                         <Languages className="h-4 w-4 text-[color:var(--primary)]" />
                         <span className={cn(compact ? 'sr-only' : 'truncate')}>
-                            {x('Language', 'Taal')}
+                            {t('Language')}
                         </span>
                     </span>
                     <span className="truncate font-semibold uppercase tracking-[0.12em]">
@@ -58,7 +58,7 @@ export default function LanguageSwitcher({
                 className="min-w-[14rem]"
             >
                 <DropdownMenuLabel>
-                    {x('Language', 'Taal')}
+                    {t('Language')}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup
@@ -91,10 +91,7 @@ export default function LanguageSwitcher({
                     <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-xs text-[color:var(--foreground-soft)]">
-                            {x(
-                                'More languages can be added from the locale registry.',
-                                'Meer talen kunnen worden toegevoegd via het locale-register.',
-                            )}
+                            {t('More languages can be added from the locale registry.')}
                         </DropdownMenuItem>
                     </>
                 )}

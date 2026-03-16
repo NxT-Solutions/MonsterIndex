@@ -31,8 +31,8 @@ export default function SuggestionIndex({
 }: {
     suggestions: SuggestionRow[];
 }) {
-    const { locale, x } = useLocale();
-    const dateLocale = locale === "nl" ? "nl-BE" : "en-US";
+    const { localeTag, t } = useLocale();
+    const dateLocale = localeTag;
 
     const form = useForm({
         name: "",
@@ -54,25 +54,22 @@ export default function SuggestionIndex({
             header={
                 <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                        {x("Community", "Community")}
+                        {t("Community")}
                     </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold text-white">
-                        {x("Monster Suggestions", "Monstersuggesties")}
+                        {t("Monster Suggestions")}
                     </h2>
                 </div>
             }
         >
-            <Head title={x("Monster Suggestions", "Monstersuggesties")} />
+            <Head title={t("Monster Suggestions")} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader>
                             <CardTitle className="font-display text-lg text-white">
-                                {x(
-                                    "Suggest New Monster",
-                                    "Nieuw Monster Voorstellen",
-                                )}
+                                {t("Suggest New Monster")}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -82,7 +79,7 @@ export default function SuggestionIndex({
                             >
                                 <div className="md:col-span-5">
                                     <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
-                                        {x("Name", "Naam")}
+                                        {t("Name")}
                                     </label>
                                     <input
                                         className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
@@ -99,10 +96,7 @@ export default function SuggestionIndex({
 
                                 <div className="md:col-span-3">
                                     <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
-                                        {x(
-                                            "Size Label (Optional)",
-                                            "Maatlabel (optioneel)",
-                                        )}
+                                        {t("Size Label (Optional)")}
                                     </label>
                                     <input
                                         className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
@@ -119,10 +113,7 @@ export default function SuggestionIndex({
 
                                 <div className="md:col-span-4">
                                     <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
-                                        {x(
-                                            "Notes (Optional)",
-                                            "Notities (optioneel)",
-                                        )}
+                                        {t("Notes (Optional)")}
                                     </label>
                                     <input
                                         className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
@@ -133,10 +124,7 @@ export default function SuggestionIndex({
                                                 event.target.value,
                                             )
                                         }
-                                        placeholder={x(
-                                            "Why this should be tracked",
-                                            "Waarom dit gevolgd moet worden",
-                                        )}
+                                        placeholder={t("Why this should be tracked")}
                                     />
                                 </div>
 
@@ -149,10 +137,7 @@ export default function SuggestionIndex({
                                         )}
                                         disabled={form.processing}
                                     >
-                                        {x(
-                                            "Submit Suggestion",
-                                            "Suggestie Indienen",
-                                        )}
+                                        {t("Submit Suggestion")}
                                     </button>
                                 </div>
                             </form>
@@ -162,16 +147,13 @@ export default function SuggestionIndex({
                     <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader>
                             <CardTitle className="font-display text-lg text-white">
-                                {x("My Suggestions", "Mijn Suggesties")}
+                                {t("My Suggestions")}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {suggestions.length === 0 ? (
                                 <p className="text-sm text-white/70">
-                                    {x(
-                                        "No suggestions yet.",
-                                        "Nog geen suggesties.",
-                                    )}
+                                    {t("No suggestions yet.")}
                                 </p>
                             ) : (
                                 suggestions.map((suggestion) => (
@@ -195,7 +177,7 @@ export default function SuggestionIndex({
                                             {suggestion.notes && (
                                                 <p>
                                                     <strong className="text-white">
-                                                        {x("Notes", "Notities")}
+                                                        {t("Notes")}
                                                         :
                                                     </strong>{" "}
                                                     {suggestion.notes}
@@ -204,10 +186,7 @@ export default function SuggestionIndex({
                                             {suggestion.review_note && (
                                                 <p>
                                                     <strong className="text-white">
-                                                        {x(
-                                                            "Review note",
-                                                            "Reviewnotitie",
-                                                        )}
+                                                        {t("Review note")}
                                                         :
                                                     </strong>{" "}
                                                     {suggestion.review_note}
@@ -215,7 +194,7 @@ export default function SuggestionIndex({
                                             )}
                                             <p>
                                                 <strong className="text-white">
-                                                    {x("Created", "Aangemaakt")}
+                                                    {t("Created")}
                                                     :
                                                 </strong>{" "}
                                                 {new Date(
@@ -225,10 +204,7 @@ export default function SuggestionIndex({
                                             {suggestion.reviewed_at && (
                                                 <p>
                                                     <strong className="text-white">
-                                                        {x(
-                                                            "Reviewed",
-                                                            "Beoordeeld",
-                                                        )}
+                                                        {t("Reviewed")}
                                                         :
                                                     </strong>{" "}
                                                     {new Date(
@@ -241,10 +217,7 @@ export default function SuggestionIndex({
                                             {suggestion.monster && (
                                                 <p>
                                                     <strong className="text-white">
-                                                        {x(
-                                                            "Created monster",
-                                                            "Aangemaakt monster",
-                                                        )}
+                                                        {t("Created monster")}
                                                         :
                                                     </strong>{" "}
                                                     {suggestion.monster.name}

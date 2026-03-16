@@ -110,8 +110,8 @@ export default function AlertsIndex({
     followableMonsters: FollowableMonsterRow[];
     followedPriceDrops: FollowedPriceDropRow[];
 }) {
-    const { locale, x } = useLocale();
-    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const { localeTag, t } = useLocale();
+    const dateLocale = localeTag;
     const testForm = useForm({
         monitor_id: '',
         title: '',
@@ -192,36 +192,36 @@ export default function AlertsIndex({
             header={
                 <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                        {x('Signals', 'Signalen')}
+                        {t('Signals')}
                     </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold text-white">
-                        {x('Alerts', 'Meldingen')}
+                        {t('Alerts')}
                     </h2>
                 </div>
             }
         >
-            <Head title={x('Admin Alerts', 'Admin Meldingen')} />
+            <Head title={t('Admin Alerts')} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         <KpiCard
-                            label={x('Loaded Alerts', 'Geladen Meldingen')}
+                            label={t('Loaded Alerts')}
                             value={stats.total}
                             accent="lime"
                         />
                         <KpiCard
-                            label={x('Unread', 'Ongelezen')}
+                            label={t('Unread')}
                             value={stats.unread}
                             accent="orange"
                         />
                         <KpiCard
-                            label={x('Read', 'Gelezen')}
+                            label={t('Read')}
                             value={stats.read}
                             accent="emerald"
                         />
                         <KpiCard
-                            label={x('Last 24h', 'Laatste 24u')}
+                            label={t('Last 24h')}
                             value={stats.last24h}
                             accent="cyan"
                         />
@@ -231,15 +231,12 @@ export default function AlertsIndex({
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Trigger Test Alert', 'Trigger Testmelding')}
+                                    {t('Trigger Test Alert')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
                                 <p className="text-sm text-white/70">
-                                    {x(
-                                        'Create a manual admin alert from this page. It will also trigger the push pipeline.',
-                                        'Maak hier een handmatige adminmelding. Dit triggert ook de push-pipeline.',
-                                    )}
+                                    {t('Create a manual admin alert from this page. It will also trigger the push pipeline.')}
                                 </p>
                                 <form
                                     className="space-y-3"
@@ -260,7 +257,7 @@ export default function AlertsIndex({
                                 >
                                     <div>
                                         <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
-                                            {x('Monitor', 'Monitor')}
+                                            {t('Monitor')}
                                         </label>
                                         <select
                                             className="h-10 w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 text-sm text-white focus:border-[color:var(--landing-accent)] focus:outline-none"
@@ -278,10 +275,7 @@ export default function AlertsIndex({
                                         >
                                             {testMonitors.length === 0 ? (
                                                 <option value="">
-                                                    {x(
-                                                        'No approved monitors available',
-                                                        'Geen goedgekeurde monitoren beschikbaar',
-                                                    )}
+                                                    {t('No approved monitors available')}
                                                 </option>
                                             ) : (
                                                 testMonitors.map((monitor) => (
@@ -298,10 +292,7 @@ export default function AlertsIndex({
 
                                     <div>
                                         <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
-                                            {x(
-                                                'Title (Optional)',
-                                                'Titel (optioneel)',
-                                            )}
+                                            {t('Title (Optional)')}
                                         </label>
                                         <input
                                             className="h-10 w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none"
@@ -312,20 +303,14 @@ export default function AlertsIndex({
                                                     event.target.value,
                                                 )
                                             }
-                                            placeholder={x(
-                                                'Manual test alert',
-                                                'Handmatige testmelding',
-                                            )}
+                                            placeholder={t('Manual test alert')}
                                             disabled={testForm.processing}
                                         />
                                     </div>
 
                                     <div>
                                         <label className="mb-1 block text-xs uppercase tracking-[0.12em] text-white/60">
-                                            {x(
-                                                'Body (Optional)',
-                                                'Bericht (optioneel)',
-                                            )}
+                                            {t('Body (Optional)')}
                                         </label>
                                         <textarea
                                             className="min-h-24 w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none"
@@ -336,10 +321,7 @@ export default function AlertsIndex({
                                                     event.target.value,
                                                 )
                                             }
-                                            placeholder={x(
-                                                'Use this to verify push delivery and dashboard alert flow.',
-                                                'Gebruik dit om push delivery en de dashboardmelding te testen.',
-                                            )}
+                                            placeholder={t('Use this to verify push delivery and dashboard alert flow.')}
                                             disabled={testForm.processing}
                                         />
                                     </div>
@@ -359,14 +341,8 @@ export default function AlertsIndex({
                                         }
                                     >
                                         {testForm.processing
-                                            ? x(
-                                                  'Triggering...',
-                                                  'Wordt getriggerd...',
-                                              )
-                                            : x(
-                                                  'Create Test Alert',
-                                                  'Maak Testmelding',
-                                              )}
+                                            ? t('Triggering...')
+                                            : t('Create Test Alert')}
                                     </button>
                                 </form>
                             </CardContent>
@@ -375,15 +351,12 @@ export default function AlertsIndex({
                         <Card className="border-white/10 bg-[color:var(--landing-surface)] xl:col-span-2">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Price-drop Watchlist', 'Prijsdaling Watchlist')}
+                                    {t('Price-drop Watchlist')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <p className="text-sm text-white/70">
-                                    {x(
-                                        'Follow monsters to receive push notifications when approved offers drop in price.',
-                                        'Volg monsters om pushmeldingen te krijgen wanneer goedgekeurde aanbiedingen in prijs dalen.',
-                                    )}
+                                    {t('Follow monsters to receive push notifications when approved offers drop in price.')}
                                 </p>
 
                                 <form
@@ -420,10 +393,7 @@ export default function AlertsIndex({
                                     >
                                         {availableMonsters.length === 0 ? (
                                             <option value="">
-                                                {x(
-                                                    'All active monsters are already followed',
-                                                    'Alle actieve monsters zijn al gevolgd',
-                                                )}
+                                                {t('All active monsters are already followed')}
                                             </option>
                                         ) : (
                                             availableMonsters.map((monster) => (
@@ -448,16 +418,13 @@ export default function AlertsIndex({
                                         )}
                                         disabled={availableMonsters.length === 0}
                                     >
-                                        {x('Follow', 'Volgen')}
+                                        {t('Follow')}
                                     </button>
                                 </form>
 
                                 {followedPriceDrops.length === 0 ? (
                                     <p className="rounded-lg border border-white/10 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/65">
-                                        {x(
-                                            'No followed monsters yet.',
-                                            'Nog geen gevolgde monsters.',
-                                        )}
+                                        {t('No followed monsters yet.')}
                                     </p>
                                 ) : (
                                     <div className="grid gap-3 lg:grid-cols-2">
@@ -473,17 +440,14 @@ export default function AlertsIndex({
                                                 <div className="flex flex-wrap items-start justify-between gap-2">
                                                     <h3 className="font-medium text-white">
                                                         {follow.monster.name ??
-                                                            x('Unknown', 'Onbekend')}
+                                                            t('Unknown')}
                                                         {follow.monster.size_label
                                                             ? ` (${follow.monster.size_label})`
                                                             : ''}
                                                     </h3>
                                                     {follow.followed_at && (
                                                         <span className="text-xs text-white/55">
-                                                            {x(
-                                                                'Followed',
-                                                                'Gevolgd',
-                                                            )}
+                                                            {t('Followed')}
                                                             :{' '}
                                                             {new Date(
                                                                 follow.followed_at,
@@ -498,10 +462,7 @@ export default function AlertsIndex({
                                                     <div className="mt-2 space-y-1 text-sm text-white/75">
                                                         <p>
                                                             <span className="font-medium text-white">
-                                                                {x(
-                                                                    'Per can',
-                                                                    'Per blik',
-                                                                )}
+                                                                {t('Per can')}
                                                                 :
                                                             </span>{' '}
                                                             {formatMoney(
@@ -511,21 +472,15 @@ export default function AlertsIndex({
                                                                     .currency,
                                                             )}{' '}
                                                             ({follow.best_offer.can_count}-
-                                                            {x(
-                                                                'pack',
-                                                                'pack',
-                                                            )})
+                                                            {t('pack')})
                                                             {follow.best_offer
                                                                 .assumed_single_can
-                                                                ? ` (${x('assumed', 'aangenomen')})`
+                                                                ? ` (${t('assumed')})`
                                                                 : ''}
                                                         </p>
                                                         <p>
                                                             <span className="font-medium text-white">
-                                                                {x(
-                                                                    'Total buy',
-                                                                    'Totale aankoop',
-                                                                )}
+                                                                {t('Total buy')}
                                                                 :
                                                             </span>{' '}
                                                             {formatMoney(
@@ -537,19 +492,13 @@ export default function AlertsIndex({
                                                             (
                                                             {follow.best_offer
                                                                 .site ??
-                                                                x(
-                                                                    'Unknown store',
-                                                                    'Onbekende winkel',
-                                                                )}
+                                                                t('Unknown store')}
                                                             )
                                                         </p>
                                                         {follow.best_offer
                                                             .checked_at && (
                                                             <p className="text-xs text-white/55">
-                                                                {x(
-                                                                    'Checked',
-                                                                    'Gecheckt',
-                                                                )}
+                                                                {t('Checked')}
                                                                 :{' '}
                                                                 {new Date(
                                                                     follow.best_offer.checked_at,
@@ -561,10 +510,7 @@ export default function AlertsIndex({
                                                     </div>
                                                 ) : (
                                                     <p className="mt-2 text-sm text-white/65">
-                                                        {x(
-                                                            'No successful snapshot yet for this follow.',
-                                                            'Nog geen succesvolle snapshot voor deze follow.',
-                                                        )}
+                                                        {t('No successful snapshot yet for this follow.')}
                                                     </p>
                                                 )}
 
@@ -583,10 +529,7 @@ export default function AlertsIndex({
                                                                 'border-white/20 bg-transparent text-white hover:bg-white/10',
                                                             )}
                                                         >
-                                                            {x(
-                                                                'Open Monster',
-                                                                'Open Monster',
-                                                            )}
+                                                            {t('Open Monster')}
                                                         </Link>
                                                     )}
                                                     {monsterSlug && (
@@ -616,10 +559,7 @@ export default function AlertsIndex({
                                                                 )
                                                             }
                                                         >
-                                                            {x(
-                                                                'Unfollow',
-                                                                'Niet meer volgen',
-                                                            )}
+                                                            {t('Unfollow')}
                                                         </button>
                                                     )}
                                                 </div>
@@ -634,16 +574,13 @@ export default function AlertsIndex({
                         <Card className="border-white/10 bg-[color:var(--landing-surface)] xl:col-span-3">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Alert Types', 'Meldingstypes')}
+                                    {t('Alert Types')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <BarMeter
                                     rows={byType}
-                                    emptyLabel={x(
-                                        'No alert distribution yet.',
-                                        'Nog geen meldingsverdeling.',
-                                    )}
+                                    emptyLabel={t('No alert distribution yet.')}
                                 />
                             </CardContent>
                         </Card>
@@ -653,13 +590,13 @@ export default function AlertsIndex({
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('In-app Alerts', 'In-app Meldingen')}
+                                    {t('In-app Alerts')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
                                 {alerts.data.length === 0 && (
                                     <p className="text-sm text-white/65">
-                                        {x('No alerts yet.', 'Nog geen meldingen.')}
+                                        {t('No alerts yet.')}
                                     </p>
                                 )}
 
@@ -668,10 +605,15 @@ export default function AlertsIndex({
                                     const displayBody =
                                         alert.type === 'new_best_price' &&
                                         currentPerCan !== null
-                                            ? x(
-                                                  `${alert.monster.name} now has a new best per-can price of ${formatMoney(currentPerCan, alert.monitor.latest_snapshot?.currency ?? 'EUR')} at ${alert.monitor.site.name}.`,
-                                                  `${alert.monster.name} heeft nu een nieuwe beste prijs per blik van ${formatMoney(currentPerCan, alert.monitor.latest_snapshot?.currency ?? 'EUR')} bij ${alert.monitor.site.name}.`,
-                                              )
+                                            ? t('{monster} now has a new best per-can price of {price} at {store}.', {
+                                                      monster: alert.monster.name,
+                                                      price: formatMoney(
+                                                          currentPerCan,
+                                                          alert.monitor.latest_snapshot?.currency ??
+                                                              'EUR',
+                                                      ),
+                                                      store: alert.monitor.site.name,
+                                                  })
                                             : alert.body;
 
                                     return (
@@ -693,11 +635,11 @@ export default function AlertsIndex({
                                                 {displayBody}
                                             </p>
                                             <p className="mt-2 text-xs text-white/60">
-                                                {x('Monster:', 'Monster:')}{' '}
+                                                {t('Monster:')}{' '}
                                                 {alert.monster.name} •{' '}
-                                                {x('Store:', 'Winkel:')}{' '}
+                                                {t('Store:')}{' '}
                                                 {alert.monitor.site.name} •{' '}
-                                                {x('Type:', 'Type:')} {alert.type}
+                                                {t('Type:')} {alert.type}
                                             </p>
                                             {!alert.read_at && (
                                                 <button
@@ -722,10 +664,7 @@ export default function AlertsIndex({
                                                         )
                                                     }
                                                 >
-                                                    {x(
-                                                        'Mark Read',
-                                                        'Markeer Als Gelezen',
-                                                    )}
+                                                    {t('Mark Read')}
                                                 </button>
                                             )}
                                         </article>

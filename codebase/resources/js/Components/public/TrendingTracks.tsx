@@ -15,34 +15,28 @@ type TrendingTracksProps = {
 };
 
 export default function TrendingTracks({ tracks }: TrendingTracksProps) {
-    const { locale, x } = useLocale();
-    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const { locale, localeTag, t } = useLocale();
+    const dateLocale = localeTag;
 
     return (
         <section id="trending-tracks" className="space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                     <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--landing-accent)]">
-                        {x('Trending Tracks', 'Trending Tracks')}
+                        {t('Trending Tracks')}
                     </p>
                     <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
-                        {x('Hottest Value Right Now', 'Beste Waarde Van Nu')}
+                        {t('Hottest Value Right Now')}
                     </h2>
                 </div>
                 <p className="font-body text-sm text-white/60">
-                    {x(
-                        'Ranked by strongest per-can value, freshness, and active data.',
-                        'Gerangschikt op beste prijs per blik, versheid en actieve data.',
-                    )}
+                    {t('Ranked by strongest per-can value, freshness, and active data.')}
                 </p>
             </div>
 
             {tracks.length === 0 ? (
                 <div className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface)] p-6 font-body text-sm text-white/70">
-                    {x(
-                        'No trending tracks yet. Add monitors and run captures to populate this section.',
-                        'Nog geen trending tracks. Voeg records toe en voer scrapes uit om deze sectie te vullen.',
-                    )}
+                    {t('No trending tracks yet. Add monitors and run captures to populate this section.')}
                 </div>
             ) : (
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -63,30 +57,30 @@ export default function TrendingTracks({ tracks }: TrendingTracksProps) {
                                     </h3>
                                     <p className="font-display text-base font-bold text-[color:var(--landing-accent)] sm:text-lg sm:text-right">
                                         {perCanCents !== null
-                                            ? `${formatMoney(perCanCents, track.currency)} / ${x('can', 'blik')}`
-                                            : `${formatMoney(track.effective_total_cents, track.currency)} ${x('total', 'totaal')}`}
+                                            ? `${formatMoney(perCanCents, track.currency)} / ${t('can')}`
+                                            : `${formatMoney(track.effective_total_cents, track.currency)} ${t('total')}`}
                                     </p>
                                 </div>
 
                                 <p className="mt-3 font-body text-sm text-white/70">
                                     <strong className="text-white">
-                                        {x('Store:', 'Winkel:')}
+                                        {t('Store:')}
                                     </strong>{' '}
-                                    {track.site ?? x('Unknown', 'Onbekend')}
+                                    {track.site ?? t('Unknown')}
                                     {track.domain ? ` (${track.domain})` : ''}
                                 </p>
                                 <p className="mt-1 font-body text-sm text-white/70">
                                     <strong className="text-white">
-                                        {x('Pack:', 'Pack:')}
+                                        {t('Pack:')}
                                     </strong>{' '}
                                     {volumeLabel(
                                         track.can_count,
-                                        x('volume unknown', 'volume onbekend'),
+                                        t('volume unknown'),
                                     )}
                                 </p>
                                 <p className="mt-1 font-body text-sm text-white/70">
                                     <strong className="text-white">
-                                        {x('Total buy:', 'Totale aankoop:')}
+                                        {t('Total buy:')}
                                     </strong>{' '}
                                     {formatMoney(
                                         track.effective_total_cents,
@@ -94,11 +88,11 @@ export default function TrendingTracks({ tracks }: TrendingTracksProps) {
                                     )}
                                 </p>
                                 <p className="mt-1 font-body text-sm text-white/60">
-                                    {x('Checked', 'Gecheckt')}{' '}
+                                    {t('Checked')}{' '}
                                     {readableCheckedAt(
                                         track.checked_at,
                                         dateLocale,
-                                        x('N/A', 'N/B'),
+                                        t('N/A'),
                                     )}
                                 </p>
 
@@ -112,7 +106,7 @@ export default function TrendingTracks({ tracks }: TrendingTracksProps) {
                                         'mt-4 border-white/20 bg-transparent text-white hover:bg-white/10',
                                     )}
                                 >
-                                    {x('View Track', 'Bekijk Track')}
+                                    {t('View Track')}
                                 </Link>
                             </article>
                         );

@@ -16,11 +16,11 @@ export default function ThemeToggle({
     inverse = false,
 }: ThemeToggleProps) {
     const { isDark, toggleTheme } = useTheme();
-    const { x } = useLocale();
+    const { t } = useLocale();
 
     const label = isDark
-        ? x('Switch to light mode', 'Schakel naar lichte modus')
-        : x('Switch to dark mode', 'Schakel naar donkere modus');
+        ? t('Switch to light mode')
+        : t('Switch to dark mode');
 
     return (
         <Button
@@ -34,7 +34,7 @@ export default function ThemeToggle({
         >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             <span className={cn(compact && 'sr-only')}>
-                {isDark ? x('Light', 'Licht') : x('Dark', 'Donker')}
+                {isDark ? t('Light') : t('Dark')}
             </span>
         </Button>
     );

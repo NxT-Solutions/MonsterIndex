@@ -61,9 +61,9 @@ type RunsEventPayload = {
 };
 
 export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
-    const { locale, x } = useLocale();
+    const { locale, localeTag, t } = useLocale();
     const { confirm } = useAppDialogs();
-    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const dateLocale = localeTag;
 
     const form = useForm({
         site_name: '',
@@ -115,26 +115,26 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
         return [
             {
                 id: 'configured',
-                label: x('Selector configured', 'Selector geconfigureerd'),
+                label: t('Selector configured'),
                 value: stats.configured,
             },
             {
                 id: 'priced',
-                label: x('Price detected', 'Prijs gedetecteerd'),
+                label: t('Price detected'),
                 value: stats.withPrice,
             },
             {
                 id: 'running',
-                label: x('Running now', 'Nu bezig'),
+                label: t('Running now'),
                 value: runningMonitorIds.length,
             },
             {
                 id: 'failed',
-                label: x('Failed latest', 'Laatste mislukt'),
+                label: t('Failed latest'),
                 value: stats.failed,
             },
         ];
-    }, [runningMonitorIds.length, stats, x]);
+    }, [runningMonitorIds.length, stats, t]);
 
     useEffect(() => {
         setRunningMonitorIds(initialRunningMonitorIds(monster.monitors));
@@ -231,10 +231,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
             window.location.assign(selectorBrowserUrl.toString());
         } catch {
             toast.error(
-                x(
-                    'Could not open selector browser. Try reloading this page.',
-                    'Kon de selectorbrowser niet openen. Probeer deze pagina opnieuw te laden.',
-                ),
+                t('Could not open selector browser. Try reloading this page.'),
             );
         } finally {
             setLoadingSelector(null);
@@ -258,20 +255,14 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
         try {
             await axios.post(route('api.admin.monitors.run-now', record.id));
             toast.success(
-                x(
-                    'Scrape run queued successfully.',
-                    'Scrape-run succesvol ingepland.',
-                ),
+                t('Scrape run queued successfully.'),
             );
         } catch {
             setRunningMonitorIds((currentRunning) =>
                 currentRunning.filter((monitorId) => monitorId !== record.id),
             );
             toast.error(
-                x(
-                    'Could not queue this scrape run. Please retry.',
-                    'Kon deze scrape-run niet inplannen. Probeer opnieuw.',
-                ),
+                t('Could not queue this scrape run. Please retry.'),
             );
         } finally {
             setLoadingRun(null);
@@ -316,13 +307,10 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
 
     const deleteMonitor = async (record: MonitorRecord) => {
         const confirmed = await confirm({
-            title: x('Delete this website record?', 'Dit website-record verwijderen?'),
-            description: x(
-                'This permanently removes the monitor and its selector configuration.',
-                'Dit verwijdert de monitor en de selectorconfiguratie permanent.',
-            ),
-            confirmLabel: x('Delete record', 'Record verwijderen'),
-            cancelLabel: x('Cancel', 'Annuleren'),
+            title: t('Delete this website record?'),
+            description: t('This permanently removes the monitor and its selector configuration.'),
+            confirmLabel: t('Delete record'),
+            cancelLabel: t('Cancel'),
             destructive: true,
         });
 
@@ -346,11 +334,11 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                             'border-white/20 bg-transparent text-white hover:bg-white/10',
                         )}
                     >
-                        {x('Back', 'Terug')}
+                        {t('Back')}
                     </Link>
                     <div>
                         <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                            {x('Monster Ops', 'Monster Ops')}
+                            {t('Monster Ops')}
                         </p>
                         <h2 className="font-display text-2xl font-semibold text-white">
                             {monster.name}
@@ -360,28 +348,28 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                 </div>
             }
         >
-            <Head title={`${x('Monster', 'Monster')}: ${monster.name}`} />
+            <Head title={`${t('Monster')}: ${monster.name}`} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         <KpiCard
-                            label={x('Website Records', 'Website-Records')}
+                            label={t('Website Records')}
                             value={stats.total}
                             accent="lime"
                         />
                         <KpiCard
-                            label={x('Selector Ready', 'Selector Klaar')}
+                            label={t('Selector Ready')}
                             value={stats.configured}
                             accent="emerald"
                         />
                         <KpiCard
-                            label={x('Running', 'Bezig')}
+                            label={t('Running')}
                             value={runningMonitorIds.length}
                             accent="cyan"
                         />
                         <KpiCard
-                            label={x('Failed Latest', 'Laatste Mislukt')}
+                            label={t('Failed Latest')}
                             value={stats.failed}
                             accent="orange"
                         />
@@ -391,7 +379,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Add Website Record', 'Website-Record Toevoegen')}
+                                    {t('Add Website Record')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -401,11 +389,11 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                 >
                                     <div className="space-y-1 md:col-span-3">
                                         <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
-                                            {x('Website Name', 'Websitenaam')}
+                                            {t('Website Name')}
                                         </label>
                                         <input
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
-                                            placeholder={x('Optional', 'Optioneel')}
+                                            placeholder={t('Optional')}
                                             value={form.data.site_name}
                                             onChange={(event) =>
                                                 form.setData('site_name', event.target.value)
@@ -414,7 +402,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                     </div>
                                     <div className="space-y-1 md:col-span-5">
                                         <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
-                                            {x('Product URL', 'Product-URL')}
+                                            {t('Product URL')}
                                         </label>
                                         <input
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
@@ -428,7 +416,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                     </div>
                                     <div className="space-y-1 md:col-span-2">
                                         <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
-                                            {x('Currency', 'Valuta')}
+                                            {t('Currency')}
                                         </label>
                                         <input
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white/70"
@@ -445,15 +433,12 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                             )}
                                             disabled={form.processing}
                                         >
-                                            {x('Add Record', 'Record Toevoegen')}
+                                            {t('Add Record')}
                                         </button>
                                     </div>
                                 </form>
                                 <p className="mt-2 text-xs text-white/60">
-                                    {x(
-                                        'After adding the URL, click "Start Guided Selector" to pick price, shipping, and can-count elements visually.',
-                                        'Na het toevoegen van de URL klik je op "Start Guided Selector" om prijs-, verzend- en aantalelementen visueel te kiezen.',
-                                    )}
+                                    {t('After adding the URL, click "Start Guided Selector" to pick price, shipping, and can-count elements visually.')}
                                 </p>
                             </CardContent>
                         </Card>
@@ -461,16 +446,13 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Record Health', 'Recordgezondheid')}
+                                    {t('Record Health')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <BarMeter
                                     rows={healthRows}
-                                    emptyLabel={x(
-                                        'No records yet.',
-                                        'Nog geen records.',
-                                    )}
+                                    emptyLabel={t('No records yet.')}
                                 />
                             </CardContent>
                         </Card>
@@ -479,16 +461,13 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                     <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader>
                             <CardTitle className="font-display text-lg text-white">
-                                {x('Website Records', 'Website-Records')}
+                                {t('Website Records')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {monster.monitors.length === 0 ? (
                                 <p className="text-sm text-white/65">
-                                    {x(
-                                        'No records yet. Add a website product URL first.',
-                                        'Nog geen records. Voeg eerst een website-product-URL toe.',
-                                    )}
+                                    {t('No records yet. Add a website product URL first.')}
                                 </p>
                             ) : (
                                 monster.monitors.map((record) => (
@@ -510,32 +489,29 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                     {record.product_url}
                                                 </a>
                                                 <p>
-                                                    {x('Selector:', 'Selector:')}{' '}
+                                                    {t('Selector:')}{' '}
                                                     {hasPriceSelector(record)
-                                                        ? x('Configured', 'Geconfigureerd')
-                                                        : x('Missing', 'Ontbreekt')}
+                                                        ? t('Configured')
+                                                        : t('Missing')}
                                                 </p>
                                                 <p>
-                                                    {x('Latest:', 'Laatste:')}{' '}
+                                                    {t('Latest:')}{' '}
                                                     {record.latest_snapshot
                                                         ? latestSnapshotLabel(
                                                               record,
-                                                              x,
+                                                              t,
                                                           )
-                                                        : x(
-                                                              'No checks yet',
-                                                              'Nog geen checks',
-                                                          )}
+                                                        : t('No checks yet')}
                                                 </p>
                                                 <p>
-                                                    {x('Next Check:', 'Volgende Check:')}{' '}
+                                                    {t('Next Check:')}{' '}
                                                     {record.next_check_at
                                                         ? new Date(
                                                               record.next_check_at,
                                                           ).toLocaleString(
                                                               dateLocale,
                                                           )
-                                                        : x('N/A', 'N/B')}
+                                                        : t('N/A')}
                                                 </p>
                                             </div>
 
@@ -553,7 +529,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                         openEditModal(record)
                                                     }
                                                 >
-                                                    {x('Edit', 'Bewerken')}
+                                                    {t('Edit')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -574,14 +550,8 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                 >
                                                     {loadingSelector ===
                                                     record.id
-                                                        ? x(
-                                                              'Opening...',
-                                                              'Openen...',
-                                                          )
-                                                        : x(
-                                                              'Start Guided Selector',
-                                                              'Start Guided Selector',
-                                                          )}
+                                                        ? t('Opening...')
+                                                        : t('Start Guided Selector')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -602,21 +572,12 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                     onClick={() => runNow(record)}
                                                 >
                                                     {loadingRun === record.id
-                                                        ? x(
-                                                              'Queueing...',
-                                                              'In wachtrij...',
-                                                          )
+                                                        ? t('Queueing...')
                                                         : runningMonitorSet.has(
                                                                 record.id,
                                                             )
-                                                          ? x(
-                                                                'Running...',
-                                                                'Draait...',
-                                                            )
-                                                          : x(
-                                                                'Run Now',
-                                                                'Nu Draaien',
-                                                            )}
+                                                          ? t('Running...')
+                                                          : t('Run Now')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -629,10 +590,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                     )}
                                                     onClick={() => void deleteMonitor(record)}
                                                 >
-                                                    {x(
-                                                        'Delete',
-                                                        'Verwijderen',
-                                                    )}
+                                                    {t('Delete')}
                                                 </button>
                                             </div>
                                         </div>
@@ -642,10 +600,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                 <div className="max-w-xs space-y-1.5">
                                                     <div className="flex items-center gap-2 text-xs font-medium text-orange-200">
                                                         <span className="h-3 w-3 animate-spin rounded-full border-2 border-orange-300 border-t-transparent" />
-                                                        {x(
-                                                            'Scraping now...',
-                                                            'Nu aan het scrapen...',
-                                                        )}
+                                                        {t('Scraping now...')}
                                                     </div>
                                                     <div className="h-1.5 overflow-hidden rounded bg-orange-900/40">
                                                         <div className="h-full w-1/2 animate-pulse rounded bg-orange-300" />
@@ -653,7 +608,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                                 </div>
                                             ) : (
                                                 <span className="text-xs text-white/55">
-                                                    {x('Idle', 'Inactief')}
+                                                    {t('Idle')}
                                                 </span>
                                             )}
                                         </div>
@@ -672,17 +627,17 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                 >
                     <div>
                         <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--landing-accent)]">
-                            {x('Monitor', 'Monitor')}
+                            {t('Monitor')}
                         </p>
                         <h3 className="mt-1 font-display text-xl font-semibold">
-                            {x('Edit Website Record', 'Website-Record Bewerken')}
+                            {t('Edit Website Record')}
                         </h3>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-1">
                             <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
-                                {x('Store', 'Winkel')}
+                                {t('Store')}
                             </label>
                             <input
                                 value={
@@ -696,7 +651,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                         </div>
                         <div className="space-y-1">
                             <label className="block text-xs uppercase tracking-[0.12em] text-white/60">
-                                {x('Currency', 'Valuta')}
+                                {t('Currency')}
                             </label>
                             <input
                                 value="EUR"
@@ -711,7 +666,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                             htmlFor="edit-record-product-url"
                             className="block text-xs uppercase tracking-[0.12em] text-white/60"
                         >
-                            {x('Product URL', 'Product-URL')}
+                            {t('Product URL')}
                         </label>
                         <input
                             id="edit-record-product-url"
@@ -734,7 +689,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                 htmlFor="edit-record-interval"
                                 className="block text-xs uppercase tracking-[0.12em] text-white/60"
                             >
-                                {x('Interval (minutes)', 'Interval (minuten)')}
+                                {t('Interval (minutes)')}
                             </label>
                             <input
                                 id="edit-record-interval"
@@ -767,7 +722,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                                 }
                                 className="h-4 w-4 rounded border-white/40 bg-transparent text-[color:var(--landing-accent)] focus:ring-[color:var(--landing-accent)]"
                             />
-                            {x('Active', 'Actief')}
+                            {t('Active')}
                         </label>
                     </div>
 
@@ -781,7 +736,7 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                             onClick={closeEditModal}
                             disabled={editForm.processing}
                         >
-                            {x('Cancel', 'Annuleren')}
+                            {t('Cancel')}
                         </button>
                         <button
                             type="submit"
@@ -792,8 +747,8 @@ export default function MonsterShow({ monster }: { monster: MonsterDetail }) {
                             disabled={editForm.processing}
                         >
                             {editForm.processing
-                                ? x('Saving...', 'Opslaan...')
-                                : x('Save Changes', 'Wijzigingen Opslaan')}
+                                ? t('Saving...')
+                                : t('Save Changes')}
                         </button>
                     </div>
                 </form>
@@ -827,11 +782,11 @@ function hasPriceSelector(record: MonitorRecord): boolean {
 
 function latestSnapshotLabel(
     record: MonitorRecord,
-    x: (english: string, dutch: string) => string,
+    t: (key: string, values?: Record<string, string | number | boolean | null | undefined>, fallback?: string) => string,
 ): string {
     const latest = record.latest_snapshot;
     if (!latest) {
-        return x('No checks yet', 'Nog geen checks');
+        return t('No checks yet');
     }
 
     if (latest.effective_total_cents === null) {
@@ -841,7 +796,7 @@ function latestSnapshotLabel(
     const total = `${latest.currency} ${(latest.effective_total_cents / 100).toFixed(2)}`;
     const perCan =
         latest.price_per_can_cents !== null
-            ? ` | ${x('per can', 'per blik')} ${latest.currency} ${(latest.price_per_can_cents / 100).toFixed(2)}${latest.can_count !== null ? ` (${latest.can_count} ${x('cans', 'blikjes')})` : ''}`
+            ? ` | ${t('per can')} ${latest.currency} ${(latest.price_per_can_cents / 100).toFixed(2)}${latest.can_count !== null ? ` (${latest.can_count} ${t('cans')})` : ''}`
             : '';
 
     return `${total}${perCan} (${latest.status})`;

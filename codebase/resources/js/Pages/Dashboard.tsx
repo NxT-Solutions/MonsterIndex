@@ -14,7 +14,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 export default function Dashboard({ auth, push }: PageProps) {
-    const { x } = useLocale();
+    const { t } = useLocale();
     const [pushBusy, setPushBusy] = useState(false);
     const [pushFeedback, setPushFeedback] = useState<string | null>(null);
     const [permission, setPermission] = useState<
@@ -50,36 +50,33 @@ export default function Dashboard({ auth, push }: PageProps) {
             header={
                 <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                        {x('Workspace', 'Werkruimte')}
+                        {t('Workspace')}
                     </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold text-white">
-                        {x('Dashboard', 'Dashboard')}
+                        {t('Dashboard')}
                     </h2>
                 </div>
             }
         >
-            <Head title={x('Dashboard', 'Dashboard')} />
+            <Head title={t('Dashboard')} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <KpiCard
-                            label={x('Signed-in User', 'Aangemelde Gebruiker')}
+                            label={t('Signed-in User')}
                             value={auth.user?.name ?? '-'}
                             hint={auth.user?.email ?? undefined}
                             accent="lime"
                         />
                         <KpiCard
-                            label={x('Role', 'Rol')}
+                            label={t('Role')}
                             value={
                                 auth.user?.can.admin_access
-                                    ? x('Admin', 'Admin')
-                                    : x('Contributor', 'Bijdrager')
+                                    ? t('Admin')
+                                    : t('Contributor')
                             }
-                            hint={x(
-                                'Access level in this workspace',
-                                'Toegangsniveau in deze werkruimte',
-                            )}
+                            hint={t('Access level in this workspace')}
                             accent="cyan"
                         />
                     </section>
@@ -88,15 +85,12 @@ export default function Dashboard({ auth, push }: PageProps) {
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Explore Deals', 'Verken Deals')}
+                                    {t('Explore Deals')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm text-white/75">
                                 <p>
-                                    {x(
-                                        'Use the public board to browse current best Monster offers.',
-                                        'Gebruik het publieke bord om huidige beste Monster-aanbiedingen te bekijken.',
-                                    )}
+                                    {t('Use the public board to browse current best Monster offers.')}
                                 </p>
                                 <div className="flex flex-wrap gap-2">
                                     <Link
@@ -109,7 +103,7 @@ export default function Dashboard({ auth, push }: PageProps) {
                                             'border border-white/10 bg-white/5 text-white hover:bg-white/10',
                                         )}
                                     >
-                                        {x('Open Public Board', 'Open Publiek Bord')}
+                                        {t('Open Public Board')}
                                     </Link>
 
                                     {auth.user?.can.monitor_submit && (
@@ -123,7 +117,7 @@ export default function Dashboard({ auth, push }: PageProps) {
                                                 'border border-white/10 bg-white/5 text-white hover:bg-white/10',
                                             )}
                                         >
-                                            {x('Manage My Monitors', 'Beheer Mijn Monitoren')}
+                                            {t('Manage My Monitors')}
                                         </Link>
                                     )}
 
@@ -138,7 +132,7 @@ export default function Dashboard({ auth, push }: PageProps) {
                                                 'border border-white/10 bg-white/5 text-white hover:bg-white/10',
                                             )}
                                         >
-                                            {x('Suggest Monster', 'Stel Monster Voor')}
+                                            {t('Suggest Monster')}
                                         </Link>
                                     )}
                                 </div>
@@ -149,15 +143,12 @@ export default function Dashboard({ auth, push }: PageProps) {
                             <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                                 <CardHeader>
                                     <CardTitle className="font-display text-lg text-white">
-                                        {x('Admin Controls', 'Adminbesturing')}
+                                        {t('Admin Controls')}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-3 text-sm text-white/75">
                                     <p>
-                                        {x(
-                                            'Manage monsters, monitors, and alerts from the operations dashboard.',
-                                            'Beheer monsters, monitoren en meldingen vanuit het operationele dashboard.',
-                                        )}
+                                        {t('Manage monsters, monitors, and alerts from the operations dashboard.')}
                                     </p>
                                     <Link
                                         href={route('admin.dashboard')}
@@ -169,7 +160,7 @@ export default function Dashboard({ auth, push }: PageProps) {
                                             'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                         )}
                                     >
-                                        {x('Open Admin Console', 'Open Admin Console')}
+                                        {t('Open Admin Console')}
                                     </Link>
                                 </CardContent>
                             </Card>
@@ -180,24 +171,21 @@ export default function Dashboard({ auth, push }: PageProps) {
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Notification Settings', 'Meldingsinstellingen')}
+                                    {t('Notification Settings')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm text-white/75">
                                 <p>
-                                    {x(
-                                        'Enable web push to receive alert notifications in your browser/PWA.',
-                                        'Schakel web push in om alertmeldingen in je browser/PWA te ontvangen.',
-                                    )}
+                                    {t('Enable web push to receive alert notifications in your browser/PWA.')}
                                 </p>
                                 <p className="text-xs text-white/60">
-                                    {x('Browser support', 'Browserondersteuning')}: {pushSupported ? x('Yes', 'Ja') : x('No', 'Nee')}
+                                    {t('Browser support')}: {pushSupported ? t('Yes') : t('No')}
                                     {' • '}
-                                    {x('Permission', 'Permissie')}: {permission}
+                                    {t('Permission')}: {permission}
                                     {' • '}
-                                    {x('Configured', 'Geconfigureerd')}: {pushConfigured ? x('Yes', 'Ja') : x('No', 'Nee')}
+                                    {t('Configured')}: {pushConfigured ? t('Yes') : t('No')}
                                     {' • '}
-                                    {x('Subscribed', 'Geabonneerd')}: {subscriptionActive ? x('Yes', 'Ja') : x('No', 'Nee')}
+                                    {t('Subscribed')}: {subscriptionActive ? t('Yes') : t('No')}
                                 </p>
                                 {pushFeedback && (
                                     <p className="text-xs text-[color:var(--landing-accent)]">
@@ -229,25 +217,16 @@ export default function Dashboard({ auth, push }: PageProps) {
                                                     if (result.ok) {
                                                         setSubscriptionActive(true);
                                                         setPushFeedback(
-                                                            x(
-                                                                'Push notifications enabled.',
-                                                                'Pushmeldingen ingeschakeld.',
-                                                            ),
+                                                            t('Push notifications enabled.'),
                                                         );
                                                     } else {
                                                         setPushFeedback(
-                                                            x(
-                                                                'Could not enable push notifications.',
-                                                                'Kon pushmeldingen niet inschakelen.',
-                                                            ),
+                                                            t('Could not enable push notifications.'),
                                                         );
                                                     }
                                                 } catch {
                                                     setPushFeedback(
-                                                        x(
-                                                            'Push setup failed. Check browser permissions and VAPID config.',
-                                                            'Pushinstelling mislukt. Controleer browserrechten en VAPID-configuratie.',
-                                                        ),
+                                                        t('Push setup failed. Check browser permissions and VAPID config.'),
                                                     );
                                                 } finally {
                                                     setPushBusy(false);
@@ -256,8 +235,8 @@ export default function Dashboard({ auth, push }: PageProps) {
                                             }}
                                         >
                                             {pushBusy
-                                                ? x('Processing...', 'Verwerken...')
-                                                : x('Enable Push', 'Push Inschakelen')}
+                                                ? t('Processing...')
+                                                : t('Enable Push')}
                                         </button>
                                     )}
                                     {subscriptionActive && (
@@ -280,25 +259,16 @@ export default function Dashboard({ auth, push }: PageProps) {
                                                     setSubscriptionActive(false);
                                                     if (result.browserPermissionRevoked) {
                                                         setPushFeedback(
-                                                            x(
-                                                                'Push notifications disabled.',
-                                                                'Pushmeldingen uitgeschakeld.',
-                                                            ),
+                                                            t('Push notifications disabled.'),
                                                         );
                                                     } else {
                                                         setPushFeedback(
-                                                            x(
-                                                                'Push notifications disabled. Browser notification permission is still granted; change it in your browser site settings if you want to be asked again.',
-                                                                'Pushmeldingen uitgeschakeld. Browsermeldingsrechten blijven toegestaan; wijzig dit in je browser-site-instellingen als je opnieuw gevraagd wil worden.',
-                                                            ),
+                                                            t('Push notifications disabled. Browser notification permission is still granted; change it in your browser site settings if you want to be asked again.'),
                                                         );
                                                     }
                                                 } catch {
                                                     setPushFeedback(
-                                                        x(
-                                                            'Could not disable push notifications.',
-                                                            'Kon pushmeldingen niet uitschakelen.',
-                                                        ),
+                                                        t('Could not disable push notifications.'),
                                                     );
                                                 } finally {
                                                     setPushBusy(false);
@@ -306,7 +276,7 @@ export default function Dashboard({ auth, push }: PageProps) {
                                                 }
                                             }}
                                         >
-                                            {x('Disable Push', 'Push Uitschakelen')}
+                                            {t('Disable Push')}
                                         </button>
                                     )}
                                 </div>

@@ -19,7 +19,7 @@ interface Monster {
 }
 
 export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
-    const { x } = useLocale();
+    const { t } = useLocale();
     const { prompt } = useAppDialogs();
 
     const form = useForm({
@@ -65,15 +65,12 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
 
     const editMonster = async (monster: Monster) => {
         const name = await prompt({
-            title: x('Edit monster', 'Monster bewerken'),
-            description: x(
-                'Update the display name for this monster.',
-                'Werk de zichtbare naam van dit monster bij.',
-            ),
-            label: x('Monster name', 'Monster naam'),
+            title: t('Edit monster'),
+            description: t('Update the display name for this monster.'),
+            label: t('Monster name'),
             defaultValue: monster.name,
             required: true,
-            confirmLabel: x('Continue', 'Doorgaan'),
+            confirmLabel: t('Continue'),
         });
         if (!name) {
             return;
@@ -81,25 +78,19 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
 
         const slug =
             (await prompt({
-                title: x('Edit slug', 'Slug bewerken'),
-                description: x(
-                    'Adjust the slug if you want a different URL path.',
-                    'Pas de slug aan als je een ander URL-pad wilt.',
-                ),
-                label: x('Slug', 'Slug'),
+                title: t('Edit slug'),
+                description: t('Adjust the slug if you want a different URL path.'),
+                label: t('Slug'),
                 defaultValue: monster.slug,
-                confirmLabel: x('Continue', 'Doorgaan'),
+                confirmLabel: t('Continue'),
             })) ?? monster.slug;
         const sizeLabel =
             (await prompt({
-                title: x('Edit size label', 'Formaatlabel bewerken'),
-                description: x(
-                    'Add or update the optional size label shown next to the monster name.',
-                    'Voeg het optionele formaatlabel naast de monsternaam toe of werk het bij.',
-                ),
-                label: x('Size label', 'Formaatlabel'),
+                title: t('Edit size label'),
+                description: t('Add or update the optional size label shown next to the monster name.'),
+                label: t('Size label'),
                 defaultValue: monster.size_label ?? '',
-                confirmLabel: x('Save changes', 'Wijzigingen opslaan'),
+                confirmLabel: t('Save changes'),
             })) ?? '';
 
         router.put(route('admin.monsters.update', monster.slug), {
@@ -115,38 +106,38 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
             header={
                 <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                        {x('Catalog', 'Catalogus')}
+                        {t('Catalog')}
                     </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold text-white">
-                        {x('Monsters', 'Monsters')}
+                        {t('Monsters')}
                     </h2>
                 </div>
             }
         >
-            <Head title={x('Admin Monsters', 'Admin Monsters')} />
+            <Head title={t('Admin Monsters')} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         <KpiCard
-                            label={x('Total Monsters', 'Totaal Monsters')}
+                            label={t('Total Monsters')}
                             value={stats.total}
                             accent="lime"
                         />
                         <KpiCard
-                            label={x('Active', 'Actief')}
+                            label={t('Active')}
                             value={stats.active}
                             accent="emerald"
                         />
                         <KpiCard
-                            label={x('Inactive', 'Inactief')}
+                            label={t('Inactive')}
                             value={stats.inactive}
                             accent="orange"
                         />
                         <KpiCard
-                            label={x('Total Records', 'Totaal Records')}
+                            label={t('Total Records')}
                             value={stats.records}
-                            hint={x('Attached website tracks', 'Gekoppelde website-tracks')}
+                            hint={t('Attached website tracks')}
                             accent="cyan"
                         />
                     </section>
@@ -155,7 +146,7 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Create Monster', 'Monster Maken')}
+                                    {t('Create Monster')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -168,12 +159,12 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                             htmlFor="create-monster-name"
                                             className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Name', 'Naam')}
+                                            {t('Name')}
                                         </label>
                                         <input
                                             id="create-monster-name"
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                            placeholder={x('Name', 'Naam')}
+                                            placeholder={t('Name')}
                                             value={form.data.name}
                                             onChange={(event) =>
                                                 form.setData('name', event.target.value)
@@ -186,15 +177,12 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                             htmlFor="create-monster-slug"
                                             className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Slug (optional)', 'Slug (optioneel)')}
+                                            {t('Slug (optional)')}
                                         </label>
                                         <input
                                             id="create-monster-slug"
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                            placeholder={x(
-                                                'Slug (optional)',
-                                                'Slug (optioneel)',
-                                            )}
+                                            placeholder={t('Slug (optional)')}
                                             value={form.data.slug}
                                             onChange={(event) =>
                                                 form.setData('slug', event.target.value)
@@ -206,15 +194,12 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                             htmlFor="create-monster-size-label"
                                             className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Size label (optional)', 'Formaatlabel (optioneel)')}
+                                            {t('Size label (optional)')}
                                         </label>
                                         <input
                                             id="create-monster-size-label"
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                            placeholder={x(
-                                                'Size label (optional)',
-                                                'Formaatlabel (optioneel)',
-                                            )}
+                                            placeholder={t('Size label (optional)')}
                                             value={form.data.size_label}
                                             onChange={(event) =>
                                                 form.setData(
@@ -229,7 +214,7 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                             htmlFor="create-monster-submit"
                                             className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Action', 'Actie')}
+                                            {t('Action')}
                                         </label>
                                         <button
                                             id="create-monster-submit"
@@ -242,7 +227,7 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                             )}
                                             disabled={form.processing}
                                         >
-                                            {x('Add Monster', 'Monster Toevoegen')}
+                                            {t('Add Monster')}
                                         </button>
                                     </div>
                                 </form>
@@ -252,16 +237,13 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Most Tracked Monsters', 'Meest Gevolgde Monsters')}
+                                    {t('Most Tracked Monsters')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <BarMeter
                                     rows={topByRecords}
-                                    emptyLabel={x(
-                                        'No monsters in catalog yet.',
-                                        'Nog geen monsters in de catalogus.',
-                                    )}
+                                    emptyLabel={t('No monsters in catalog yet.')}
                                 />
                             </CardContent>
                         </Card>
@@ -270,19 +252,19 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                     <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader>
                             <CardTitle className="font-display text-lg text-white">
-                                {x('Monster List', 'Monsterlijst')}
+                                {t('Monster List')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="overflow-x-auto">
                             <table className="w-full min-w-[760px] text-left text-sm">
                                 <thead>
                                     <tr className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-white/55">
-                                        <th className="px-3 py-2">{x('Name', 'Naam')}</th>
-                                        <th className="px-3 py-2">{x('Slug', 'Slug')}</th>
-                                        <th className="px-3 py-2">{x('Size', 'Formaat')}</th>
-                                        <th className="px-3 py-2">{x('Records', 'Records')}</th>
-                                        <th className="px-3 py-2">{x('Active', 'Actief')}</th>
-                                        <th className="px-3 py-2">{x('Actions', 'Acties')}</th>
+                                        <th className="px-3 py-2">{t('Name')}</th>
+                                        <th className="px-3 py-2">{t('Slug')}</th>
+                                        <th className="px-3 py-2">{t('Size')}</th>
+                                        <th className="px-3 py-2">{t('Records')}</th>
+                                        <th className="px-3 py-2">{t('Active')}</th>
+                                        <th className="px-3 py-2">{t('Actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -305,8 +287,8 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                             </td>
                                             <td className="px-3 py-2">
                                                 {monster.active
-                                                    ? x('Yes', 'Ja')
-                                                    : x('No', 'Nee')}
+                                                    ? t('Yes')
+                                                    : t('No')}
                                             </td>
                                             <td className="px-3 py-2">
                                                 <div className="flex flex-wrap gap-2">
@@ -323,7 +305,7 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                                             'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
                                                         )}
                                                     >
-                                                        {x('Open Detail', 'Open Detail')}
+                                                        {t('Open Detail')}
                                                     </Link>
                                                     <button
                                                         type="button"
@@ -338,7 +320,7 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                                             editMonster(monster)
                                                         }
                                                     >
-                                                        {x('Edit', 'Bewerken')}
+                                                        {t('Edit')}
                                                     </button>
                                                     <button
                                                         type="button"
@@ -358,7 +340,7 @@ export default function MonstersIndex({ monsters }: { monsters: Monster[] }) {
                                                             )
                                                         }
                                                     >
-                                                        {x('Delete', 'Verwijderen')}
+                                                        {t('Delete')}
                                                     </button>
                                                 </div>
                                             </td>
