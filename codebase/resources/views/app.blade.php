@@ -8,6 +8,13 @@
             $siteUrl = $baseUrl !== '' ? $baseUrl.'/' : '/';
             $canonical = request()->url();
             $ogImage = $baseUrl !== '' ? $baseUrl.'/brand/monsterindex-og.png' : '/brand/monsterindex-og.png';
+            $criticalFontPreloads = [
+                'node_modules/@fontsource/oxanium/files/oxanium-latin-600-normal.woff2',
+                'node_modules/@fontsource/oxanium/files/oxanium-latin-700-normal.woff2',
+                'node_modules/@fontsource/rajdhani/files/rajdhani-latin-400-normal.woff2',
+                'node_modules/@fontsource/rajdhani/files/rajdhani-latin-500-normal.woff2',
+                'node_modules/@fontsource/rajdhani/files/rajdhani-latin-600-normal.woff2',
+            ];
             $websiteSchema = [
                 '@context' => 'https://schema.org',
                 '@type' => 'WebSite',
@@ -42,6 +49,9 @@
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
         <link rel="canonical" href="{{ $canonical }}">
+        @foreach ($criticalFontPreloads as $fontAsset)
+            <link rel="preload" href="{{ Vite::asset($fontAsset) }}" as="font" type="font/woff2" crossorigin>
+        @endforeach
 
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="MonsterIndex">
