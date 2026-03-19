@@ -108,3 +108,35 @@ HTML;
         ->and($result->canCount)->toBe(12)
         ->and($result->pricePerCanCents)->toBe(238);
 });
+
+it('extracts a selected substring from a longer price sentence', function () {
+    $extractor = new ManualSelectorExtractor(
+        new SelectorTextExtractor,
+        new MoneyParser,
+    );
+
+    $html = <<<'HTML'
+<html>
+  <body>
+    <div class="price-note">Vandaag € 1,89 per blik</div>
+  </body>
+</html>
+HTML;
+
+    $result = $extractor->extract($html, [
+        'price' => [
+            'css' => '.price-note',
+            'sample_text' => '€ 1,75',
+            'text_selection' => [
+                'selected_text' => '€ 1,75',
+                'prefix' => 'Vandaag',
+                'suffix' => 'per blik',
+            ],
+        ],
+    ]);
+
+    expect($result->status)->toBe('ok')
+        ->and($result->priceCents)->toBe(189)
+        ->and($result->effectiveTotalCents)->toBe(189)
+        ->and($result->currency)->toBe('EUR');
+});
