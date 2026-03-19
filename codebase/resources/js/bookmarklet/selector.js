@@ -8,6 +8,10 @@
   const token = scriptUrl.searchParams.get('token');
   const sourceUrl = scriptUrl.searchParams.get('source_url') || window.location.href;
   const returnUrl = scriptUrl.searchParams.get('return_url') || '/admin/monsters';
+  const language =
+    typeof __monsterindexLocale === 'string' && __monsterindexLocale !== ''
+      ? __monsterindexLocale
+      : scriptUrl.searchParams.get('lang') || 'en';
   const messages =
     typeof __monsterindexLocaleMessages === 'object' && __monsterindexLocaleMessages !== null
       ? __monsterindexLocaleMessages
@@ -735,19 +739,19 @@
       state.quantityManualValue,
     );
 
-    const payload = {
-      lang: language,
-      token,
-      page_url: sourceUrl,
-      page_title: document.title,
-      selectors: {
-        price: selectorPayloadFromParts(state.priceParts),
-        shipping: shippingSelectorPayload,
-        quantity: quantitySelectorPayload,
-      },
-    };
-
     try {
+      const payload = {
+        lang: language,
+        token,
+        page_url: sourceUrl,
+        page_title: document.title,
+        selectors: {
+          price: selectorPayloadFromParts(state.priceParts),
+          shipping: shippingSelectorPayload,
+          quantity: quantitySelectorPayload,
+        },
+      };
+
       const response = await fetch(captureEndpoint.toString(), {
         method: 'POST',
         headers: {
