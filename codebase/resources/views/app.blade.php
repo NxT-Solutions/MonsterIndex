@@ -8,6 +8,8 @@
             $siteUrl = $baseUrl !== '' ? $baseUrl.'/' : '/';
             $canonical = request()->url();
             $ogImage = $baseUrl !== '' ? $baseUrl.'/brand/monsterindex-og.png' : '/brand/monsterindex-og.png';
+            $vite = app(\Illuminate\Foundation\Vite::class);
+            $shouldRenderViteAssets = ! app()->runningUnitTests();
             $criticalFontPreloads = [
                 'node_modules/@fontsource/oxanium/files/oxanium-latin-600-normal.woff2',
                 'node_modules/@fontsource/oxanium/files/oxanium-latin-700-normal.woff2',
@@ -49,9 +51,11 @@
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
         <link rel="canonical" href="{{ $canonical }}">
-        @foreach ($criticalFontPreloads as $fontAsset)
-            <link rel="preload" href="{{ Vite::asset($fontAsset) }}" as="font" type="font/woff2" crossorigin>
-        @endforeach
+        @if ($shouldRenderViteAssets)
+            @foreach ($criticalFontPreloads as $fontAsset)
+                <link rel="preload" href="{{ $vite->asset($fontAsset) }}" as="font" type="font/woff2" crossorigin>
+            @endforeach
+        @endif
 
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="MonsterIndex">
@@ -92,8 +96,10 @@
 
         <!-- Scripts -->
         @routes
-        @viteReactRefresh
-        @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
+        @if ($shouldRenderViteAssets)
+            @viteReactRefresh
+            @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
+        @endif
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
