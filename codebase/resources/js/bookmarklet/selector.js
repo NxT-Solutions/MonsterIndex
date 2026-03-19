@@ -882,6 +882,9 @@
       return;
     }
 
+    state.freeClick = false;
+    state.panelCollapsed = false;
+    state.restoreMode = mode;
     state.mode = mode;
     setStatus(message, 'info');
     updateUi();
