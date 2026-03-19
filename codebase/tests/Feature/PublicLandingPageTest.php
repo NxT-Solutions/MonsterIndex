@@ -22,7 +22,9 @@ it('returns landing page with trending tracks and best prices props', function (
             ->component('Public/BestPricesIndex')
             ->has('bestPrices', 1)
             ->has('trendingTracks', 1)
-            ->where('bestPrices.0.monster.slug', 'monster-landing-one'));
+            ->where('bestPrices.0.monster.slug', 'monster-landing-one')
+            ->where('bestPrices.0.product_url', 'https://monster-landing-one.example/product')
+            ->where('trendingTracks.0.product_url', 'https://monster-landing-one.example/product'));
 });
 
 it('ranks trending tracks by best per-can value first', function () {
@@ -117,6 +119,7 @@ function seedOffer(
     $monitor = Monitor::factory()->create([
         'monster_id' => $monster->id,
         'site_id' => $site->id,
+        'product_url' => "https://{$slug}.example/product",
         'selector_config' => $selectorConfig ?? [
             'price' => ['css' => '.price'],
         ],

@@ -8,6 +8,7 @@ export type PublicOfferRow = {
     };
     site: string | null;
     domain: string | null;
+    product_url: string | null;
     currency: string;
     price_cents: number | null;
     shipping_cents: number | null;
@@ -31,6 +32,7 @@ export type TrendingTrackRow = {
     };
     site: string | null;
     domain: string | null;
+    product_url: string | null;
     currency: string;
     effective_total_cents: number;
     can_count: number | null;

@@ -23,7 +23,7 @@ class HomeController extends Controller
             ->with([
                 'monster:id,name,slug,size_label',
                 'snapshot:id,monitor_id,checked_at,price_cents,shipping_cents,effective_total_cents,can_count,price_per_can_cents,currency,status',
-                'snapshot.monitor:id,site_id,selector_config',
+                'snapshot.monitor:id,site_id,product_url,selector_config',
                 'snapshot.monitor.site:id,name,domain',
             ])
             ->orderBy('effective_total_cents')
@@ -102,6 +102,7 @@ class HomeController extends Controller
                     'monster' => $row['monster'],
                     'site' => $row['site'],
                     'domain' => $row['domain'],
+                    'product_url' => $row['product_url'],
                     'currency' => $row['currency'],
                     'effective_total_cents' => $row['effective_total_cents'],
                     'can_count' => $row['can_count'],
@@ -145,6 +146,7 @@ class HomeController extends Controller
             ],
             'site' => $site?->name,
             'domain' => $site?->domain,
+            'product_url' => $snapshot?->monitor?->product_url,
             'currency' => $bestPrice->currency,
             'price_cents' => $snapshot?->price_cents,
             'shipping_cents' => $snapshot?->shipping_cents,
