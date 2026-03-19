@@ -9,7 +9,9 @@
             $canonical = request()->url();
             $ogImage = $baseUrl !== '' ? $baseUrl.'/brand/monsterindex-og.png' : '/brand/monsterindex-og.png';
             $vite = app(\Illuminate\Foundation\Vite::class);
-            $shouldRenderViteAssets = ! app()->runningUnitTests();
+            $shouldRenderViteAssets = ! app()->runningUnitTests()
+                || is_file($vite->hotFile())
+                || file_exists(public_path('build/manifest.json'));
             $criticalFontPreloads = [
                 'node_modules/@fontsource/oxanium/files/oxanium-latin-600-normal.woff2',
                 'node_modules/@fontsource/oxanium/files/oxanium-latin-700-normal.woff2',
