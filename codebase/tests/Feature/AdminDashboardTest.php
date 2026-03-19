@@ -7,12 +7,14 @@ use App\Models\Monster;
 use App\Models\PriceSnapshot;
 use App\Models\Site;
 use App\Models\User;
+use App\Support\Authorization\PermissionBootstrapper;
 use Inertia\Testing\AssertableInertia as Assert;
 
 it('renders admin dashboard with stats and chart props', function () {
     $admin = User::factory()->create([
         'role' => User::ROLE_ADMIN,
     ]);
+    PermissionBootstrapper::syncUserRole($admin, true);
 
     $monster = Monster::factory()->create();
     $site = Site::factory()->create();
@@ -50,12 +52,14 @@ it('renders admin dashboard with stats and chart props', function () {
         'read_at' => null,
     ]);
 
+    $expectedMonsterCount = Monster::query()->count();
+
     $this->actingAs($admin)
         ->get(route('admin.dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Dashboard')
-            ->where('stats.monsters_total', 1)
+            ->where('stats.monsters_total', $expectedMonsterCount)
             ->where('stats.monitors_total', 1)
             ->where('stats.monitors_with_selector', 1)
             ->where('stats.alerts_unread', 1)

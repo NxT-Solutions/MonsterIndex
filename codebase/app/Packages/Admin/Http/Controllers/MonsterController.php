@@ -65,7 +65,7 @@ class MonsterController extends Controller
             'active' => $validated['active'] ?? true,
         ]);
 
-        return back()->with('success', 'Monster created.');
+        return back()->with('success', __('Monster created.'));
     }
 
     public function update(Request $request, Monster $monster): RedirectResponse
@@ -87,20 +87,20 @@ class MonsterController extends Controller
             'active' => $validated['active'],
         ]);
 
-        return back()->with('success', 'Monster updated.');
+        return back()->with('success', __('Monster updated.'));
     }
 
     public function destroy(Monster $monster): RedirectResponse
     {
         if ($monster->monitors()->exists()) {
             throw ValidationException::withMessages([
-                'monster' => 'Cannot delete a monster that still has monitors.',
+                'monster' => __('Cannot delete a monster that still has monitors.'),
             ]);
         }
 
         $monster->delete();
 
-        return back()->with('success', 'Monster deleted.');
+        return back()->with('success', __('Monster deleted.'));
     }
 
     public function storeRecord(Request $request, Monster $monster): RedirectResponse
@@ -115,7 +115,7 @@ class MonsterController extends Controller
         $domain = strtolower((string) parse_url($validated['product_url'], PHP_URL_HOST));
         if ($domain === '') {
             throw ValidationException::withMessages([
-                'product_url' => 'Could not resolve a domain from the provided product URL.',
+                'product_url' => __('Could not resolve a domain from the provided product URL.'),
             ]);
         }
 
@@ -165,7 +165,7 @@ class MonsterController extends Controller
 
         return redirect()
             ->route('admin.monsters.show', $monster->slug)
-            ->with('success', 'Site record added. Open selector to configure price fields.');
+            ->with('success', __('Site record added. Open selector to configure price fields.'));
     }
 
     public function recordsEvents(Request $request, Monster $monster): StreamedResponse

@@ -4,11 +4,13 @@ namespace Packages\Admin\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Monitor;
+use App\Support\Locales\LocaleRegistry;
 use App\Support\Authorization\PermissionBootstrapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\Rule;
 use Packages\Bookmarklet\Services\BookmarkletSessionService;
 use Throwable;
 
@@ -26,13 +28,13 @@ class BookmarkletController extends Controller
 
         $validated = $request->validate([
             'monitor_id' => ['required', 'integer', 'exists:monitors,id'],
-            'lang' => ['nullable', 'in:en,nl'],
+            'lang' => ['nullable', Rule::in(LocaleRegistry::supportedCodes())],
         ]);
 
         $monitor = Monitor::query()->findOrFail($validated['monitor_id']);
         $this->authorize('update', $monitor);
         $session = $this->bookmarkletSessionService->create($monitor, $request->user());
-        $lang = $validated['lang'] ?? 'en';
+        $lang = LocaleRegistry::resolve($validated['lang'] ?? null);
 
         return response()->json([
             'token' => $session->token,
@@ -57,9 +59,9 @@ class BookmarkletController extends Controller
         $validated = $request->validate([
             'token' => ['required', 'string'],
             'url' => ['nullable', 'url', 'max:2048'],
-            'lang' => ['nullable', 'in:en,nl'],
+            'lang' => ['nullable', Rule::in(LocaleRegistry::supportedCodes())],
         ]);
-        $lang = $validated['lang'] ?? 'en';
+        $lang = LocaleRegistry::resolve($validated['lang'] ?? null);
 
         $session = $this->bookmarkletSessionService->resolveValidToken($validated['token']);
         abort_unless(
@@ -67,23 +69,19 @@ class BookmarkletController extends Controller
             && (int) $session->monitor_id === (int) $monitor->id
             && (int) $session->created_by_user_id === (int) $request->user()->id,
             403,
-            'Selector token is invalid or expired.',
+            __('Selector token is invalid or expired.', [], $lang),
         );
 
         $this->authorize('update', $monitor);
 
         $targetUrl = $validated['url'] ?: $monitor->product_url;
         if (! $this->supportsUrl($targetUrl)) {
-            abort(422, $this->translate($lang, 'Only HTTP/HTTPS URLs are supported.', 'Alleen HTTP/HTTPS-URL\'s worden ondersteund.'));
+            abort(422, __('Only HTTP/HTTPS URLs are supported.', [], $lang));
         }
 
         $html = $this->fetchHtml($targetUrl);
         if ($html === null) {
-            $message = $this->translate(
-                $lang,
-                'Failed to fetch the target page. Check URL, anti-bot protection, or try another page.',
-                'Kon de doelpagina niet ophalen. Controleer de URL, anti-botbescherming of probeer een andere pagina.',
-            );
+            $message = __('Failed to fetch the target page. Check URL, anti-bot protection, or try another page.', [], $lang);
 
             return response($this->renderErrorDocument($message, $lang), 502, [
                 'Content-Type' => 'text/html; charset=UTF-8',
@@ -119,7 +117,7 @@ class BookmarkletController extends Controller
         );
         $injected = $this->injectSelectorRuntime(
             html: $html,
-            monitorName: $monitor->monster?->name ?: 'Monitor',
+            monitorName: $monitor->monster?->name ?: __('Monitor', [], $lang),
             currentUrl: $targetUrl,
             token: $session->token,
             actionUrl: $actionUrl,
@@ -134,9 +132,29 @@ class BookmarkletController extends Controller
         ]);
     }
 
-    public function script(): Response
+    public function script(Request $request): Response
     {
+        $lang = LocaleRegistry::resolve($request->query('lang'));
         $script = (string) file_get_contents(resource_path('js/bookmarklet/selector.js'));
+        $serializedLocale = json_encode($lang, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $serializedMessages = json_encode(
+            LocaleRegistry::messages($lang),
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+        );
+
+        if (! is_string($serializedLocale)) {
+            $serializedLocale = '"en"';
+        }
+
+        if (! is_string($serializedMessages)) {
+            $serializedMessages = '{}';
+        }
+
+        $script = <<<JS
+const __monsterindexLocale = {$serializedLocale};
+const __monsterindexLocaleMessages = {$serializedMessages};
+{$script}
+JS;
 
         return response($script, 200, [
             'Content-Type' => 'application/javascript; charset=UTF-8',
@@ -175,16 +193,16 @@ class BookmarkletController extends Controller
     {
         $escapedMessage = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
         $title = htmlspecialchars(
-            $this->translate($lang, 'Selector Browser Error', 'Selectorbrowser Fout'),
+            __('Selector Browser Error', [], $lang),
             ENT_QUOTES,
             'UTF-8',
         );
         $header = htmlspecialchars(
-            $this->translate($lang, 'MonsterIndex Selector Browser', 'MonsterIndex Selectorbrowser'),
+            __('MonsterIndex Selector Browser', [], $lang),
             ENT_QUOTES,
             'UTF-8',
         );
-        $docLang = htmlspecialchars($lang === 'nl' ? 'nl' : 'en', ENT_QUOTES, 'UTF-8');
+        $docLang = htmlspecialchars(LocaleRegistry::resolve($lang), ENT_QUOTES, 'UTF-8');
 
         return <<<HTML
 <!doctype html>
@@ -226,49 +244,37 @@ HTML;
         $escapedActionUrl = htmlspecialchars($actionUrl, ENT_QUOTES, 'UTF-8');
         $escapedReturnUrl = htmlspecialchars($returnUrl, ENT_QUOTES, 'UTF-8');
         $escapedSelectorScriptUrl = htmlspecialchars($selectorScriptUrl, ENT_QUOTES, 'UTF-8');
-        $escapedLang = htmlspecialchars($lang === 'nl' ? 'nl' : 'en', ENT_QUOTES, 'UTF-8');
+        $escapedLang = htmlspecialchars(LocaleRegistry::resolve($lang), ENT_QUOTES, 'UTF-8');
         $headerLabel = htmlspecialchars(
-            $this->translate($lang, 'Guided Selector Setup', 'Geleide Selector Setup'),
+            __('Guided Selector Setup', [], $lang),
             ENT_QUOTES,
             'UTF-8',
         );
         $stayMessage = htmlspecialchars(
-            $this->translate(
-                $lang,
-                'Stay on this page while selecting. We keep navigation in selector mode until you save.',
-                'Blijf op deze pagina tijdens het selecteren. We houden navigatie in selectormodus tot je opslaat.',
-            ),
+            __('Stay on this page while selecting. We keep navigation in selector mode until you save.', [], $lang),
             ENT_QUOTES,
             'UTF-8',
         );
         $inputPlaceholder = htmlspecialchars(
-            $this->translate($lang, 'https://example.com/product-url', 'https://voorbeeld.com/product-url'),
+            __('https://example.com/product-url', [], $lang),
             ENT_QUOTES,
             'UTF-8',
         );
         $openUrlLabel = htmlspecialchars(
-            $this->translate($lang, 'Open URL', 'Open URL'),
+            __('Open URL', [], $lang),
             ENT_QUOTES,
             'UTF-8',
         );
         $backLabel = htmlspecialchars(
-            $this->translate($lang, 'Back to Admin', 'Terug naar Admin'),
+            __('Back to Admin', [], $lang),
             ENT_QUOTES,
             'UTF-8',
         );
         $formBlockedMessage = json_encode(
-            $this->translate(
-                $lang,
-                'Form submission is disabled in selector mode. Use the URL field in the top bar to navigate safely.',
-                'Formulierverzending is uitgeschakeld in selectormodus. Gebruik het URL-veld in de bovenbalk om veilig te navigeren.',
-            ),
+            __('Form submission is disabled in selector mode. Use the URL field in the top bar to navigate safely.', [], $lang),
         );
         $unsavedLeaveMessage = json_encode(
-            $this->translate(
-                $lang,
-                'You still have unsaved selector changes. Leave anyway?',
-                'Je hebt nog niet-opgeslagen selectorwijzigingen. Toch verlaten?',
-            ),
+            __('You still have unsaved selector changes. Leave anyway?', [], $lang),
         );
         $encodedCurrentUrl = json_encode($currentUrl);
         if (! is_string($encodedCurrentUrl)) {
@@ -365,10 +371,5 @@ HTML;
         }
 
         return '<body>'.$runtime.$html.'</body>';
-    }
-
-    private function translate(string $lang, string $english, string $dutch): string
-    {
-        return $lang === 'nl' ? $dutch : $english;
     }
 }

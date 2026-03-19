@@ -1,6 +1,10 @@
 <?php
 
+use App\Models\User;
+use App\Support\Authorization\PermissionBootstrapper;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Packages\Admin\Http\Controllers\AlertController as AdminAlertController;
 use Packages\Admin\Http\Controllers\BookmarkletController as AdminBookmarkletController;
@@ -24,6 +28,18 @@ use Packages\PublicBoard\Http\Controllers\SitemapController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/monsters/{monster:slug}', [PublicMonsterController::class, 'show'])->name('monsters.show');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
+Route::get('/robots.txt', function () {
+    return response(
+        implode("\n", [
+            'User-agent: *',
+            'Allow: /',
+            'Sitemap: '.route('sitemap.xml'),
+            '',
+        ]),
+        200,
+        ['Content-Type' => 'text/plain; charset=UTF-8'],
+    );
+})->name('robots.txt');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
@@ -164,5 +180,45 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/bookmarklet/selector.js', [AdminBookmarkletController::class, 'script'])->name('bookmarklet.script');
+
+if (app()->environment(['local', 'testing']) && env('SMOKE_TEST_LOGIN_ENABLED', false)) {
+    Route::get('/__smoke/login', function (Request $request) {
+        $role = $request->string('role')->toString();
+        abort_unless(in_array($role, ['admin', 'contributor'], true), 404);
+
+        $isAdmin = $role === 'admin';
+        $email = $isAdmin
+            ? 'smoke-admin@monsterindex.local'
+            : 'smoke-contributor@monsterindex.local';
+
+        $user = User::query()->firstOrCreate(
+            ['email' => $email],
+            [
+                'name' => $isAdmin ? 'Smoke Admin' : 'Smoke Contributor',
+                'google_id' => $isAdmin
+                    ? 'smoke-admin-google-id'
+                    : 'smoke-contributor-google-id',
+                'role' => $isAdmin ? User::ROLE_ADMIN : User::ROLE_USER,
+            ],
+        );
+
+        PermissionBootstrapper::syncUserRole($user, $isAdmin);
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        $redirect = $request->string('redirect')->toString();
+
+        return redirect()->to($redirect !== '' ? $redirect : route('dashboard'));
+    })->name('smoke.login');
+
+    Route::get('/__smoke/logout', function (Request $request) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->to('/');
+    })->name('smoke.logout');
+}
 
 require __DIR__.'/auth.php';

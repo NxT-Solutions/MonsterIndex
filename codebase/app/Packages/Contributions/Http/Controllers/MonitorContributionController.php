@@ -67,7 +67,7 @@ class MonitorContributionController extends Controller
         $canonicalProductUrl = UrlCanonicalizer::canonicalize($validated['product_url']);
         if (! $canonicalProductUrl) {
             throw ValidationException::withMessages([
-                'product_url' => 'Could not normalize the product URL.',
+                'product_url' => __('Could not normalize the product URL.'),
             ]);
         }
 
@@ -94,7 +94,7 @@ class MonitorContributionController extends Controller
             'validation_result' => null,
         ]);
 
-        return back()->with('success', 'Monitor proposal created as draft. Configure selectors and submit for review.');
+        return back()->with('success', __('Monitor proposal created as draft. Configure selectors and submit for review.'));
     }
 
     public function update(Request $request, Monitor $monitor): RedirectResponse
@@ -116,7 +116,7 @@ class MonitorContributionController extends Controller
         $canonicalProductUrl = UrlCanonicalizer::canonicalize($validated['product_url']);
         if (! $canonicalProductUrl) {
             throw ValidationException::withMessages([
-                'product_url' => 'Could not normalize the product URL.',
+                'product_url' => __('Could not normalize the product URL.'),
             ]);
         }
 
@@ -170,7 +170,7 @@ class MonitorContributionController extends Controller
             $this->bestPriceProjector->recomputeForMonsterCurrency($oldMonsterId, $oldCurrency);
         }
 
-        return back()->with('success', 'Monitor proposal updated.');
+        return back()->with('success', __('Monitor proposal updated.'));
     }
 
     public function submit(Request $request, Monitor $monitor): RedirectResponse
@@ -179,7 +179,7 @@ class MonitorContributionController extends Controller
 
         if (! $this->hasPriceSelector($monitor)) {
             throw ValidationException::withMessages([
-                'monitor' => 'Please configure at least one price selector before submitting.',
+                'monitor' => __('Please configure at least one price selector before submitting.'),
             ]);
         }
 
@@ -210,10 +210,10 @@ class MonitorContributionController extends Controller
         ])->save();
 
         if ($isValidationSuccess) {
-            return back()->with('success', 'Submitted for admin review.');
+            return back()->with('success', __('Submitted for admin review.'));
         }
 
-        return back()->with('warning', 'Submitted for review with failed validation. Admin can force-approve if needed.');
+        return back()->with('warning', __('Submitted for review with failed validation. Admin can force-approve if needed.'));
     }
 
     public function destroy(Request $request, Monitor $monitor): RedirectResponse
@@ -227,7 +227,7 @@ class MonitorContributionController extends Controller
                 'next_check_at' => null,
                 'rejected_by_user_id' => $request->user()?->id,
                 'rejected_at' => now(),
-                'review_note' => 'Withdrawn by owner.',
+                'review_note' => __('Withdrawn by owner.'),
             ])->save();
 
             $this->bestPriceProjector->recomputeForMonsterCurrency(
@@ -235,12 +235,12 @@ class MonitorContributionController extends Controller
                 (string) $monitor->currency,
             );
 
-            return back()->with('success', 'Monitor withdrawn.');
+            return back()->with('success', __('Monitor withdrawn.'));
         }
 
         $monitor->delete();
 
-        return back()->with('success', 'Draft monitor removed.');
+        return back()->with('success', __('Draft monitor removed.'));
     }
 
     private function hasPriceSelector(Monitor $monitor): bool
@@ -311,7 +311,7 @@ class MonitorContributionController extends Controller
         $domain = $this->normalizeDomain($rawDomain);
         if ($domain === '') {
             throw ValidationException::withMessages([
-                'product_url' => 'Could not resolve a domain from the provided product URL.',
+                'product_url' => __('Could not resolve a domain from the provided product URL.'),
             ]);
         }
 
@@ -377,7 +377,7 @@ class MonitorContributionController extends Controller
 
         if ($duplicateQuery->exists()) {
             throw ValidationException::withMessages([
-                'product_url' => 'A monitor proposal for this monster and product URL already exists.',
+                'product_url' => __('A monitor proposal for this monster and product URL already exists.'),
             ]);
         }
 
@@ -392,7 +392,7 @@ class MonitorContributionController extends Controller
 
         if ($cooldownExists) {
             throw ValidationException::withMessages([
-                'product_url' => 'You already submitted a very similar monitor recently. Please wait before retrying.',
+                'product_url' => __('You already submitted a very similar monitor recently. Please wait before retrying.'),
             ]);
         }
     }

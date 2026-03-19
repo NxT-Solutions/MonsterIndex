@@ -58,19 +58,13 @@ export default function BestPricesIndex({
         offers: number;
     };
 }>) {
-    const { locale, x } = useLocale();
+    const { locale, t } = useLocale();
     const [query, setQuery] = useState("");
     const normalizedQuery = query.trim().toLowerCase();
-    const copy = LANDING_COPY[locale];
+    const copy = LANDING_COPY[locale as 'en' | 'nl'] ?? LANDING_COPY.en;
     const canonicalUrl = route("home");
-    const pageTitle = x(
-        "MonsterIndex | Live Monster Energy Deal Tracker",
-        "MonsterIndex | Live Monster Energy Deal Tracker",
-    );
-    const pageDescription = x(
-        "Compare live Monster Energy prices, track per-can value, and discover the best current offer across stores.",
-        "Vergelijk live Monster Energy prijzen, volg de prijs per blik en ontdek de beste huidige aanbieding over winkels heen.",
-    );
+    const pageTitle = t("MonsterIndex | Live Monster Energy Deal Tracker");
+    const pageDescription = t("Compare live Monster Energy prices, track per-can value, and discover the best current offer across stores.");
     const ogImageUrl = new URL(
         "/brand/monsterindex-og.png",
         canonicalUrl,
@@ -194,44 +188,32 @@ export default function BestPricesIndex({
                         <div className="flex flex-wrap items-end justify-between gap-3">
                             <div>
                                 <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--landing-accent)]">
-                                    {x("Search Radar", "Zoek Radar")}
+                                    {t("Search Radar")}
                                 </p>
                                 <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
-                                    {x(
-                                        "Find Your Favorite Monster",
-                                        "Zoek Je Favoriete Monster",
-                                    )}
+                                    {t("Find Your Favorite Monster")}
                                 </h2>
                             </div>
                             <p className="w-full font-body text-sm text-white/60 sm:w-auto sm:text-right">
                                 {filteredOffers.length}{" "}
-                                {x("matching offer", "passende aanbieding")}
+                                {t("matching offer")}
                                 {filteredOffers.length === 1
                                     ? ""
-                                    : x("s", "en")}
+                                    : t("s")}
                             </p>
                         </div>
 
                         <label htmlFor="monster-search" className="sr-only">
-                            {x(
-                                "Search monsters by name, size, or store",
-                                "Zoek monsters op naam, formaat of winkel",
-                            )}
+                            {t("Search monsters by name, size, or store")}
                         </label>
                         <input
                             id="monster-search"
                             type="search"
                             value={query}
                             onChange={(event) => setQuery(event.target.value)}
-                            placeholder={x(
-                                "Search Monster Ultra, Mango Loco, Amazon, 500ml...",
-                                "Zoek Monster Ultra, Mango Loco, Amazon, 500ml...",
-                            )}
+                            placeholder={t("Search Monster Ultra, Mango Loco, Amazon, 500ml...")}
                             className="h-12 w-full rounded-xl border border-white/15 bg-[color:var(--landing-surface-2)] px-4 font-body text-sm text-white placeholder:text-white/45 focus:border-[color:var(--landing-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--landing-accent-soft)]"
-                            aria-label={x(
-                                "Search favorite monster",
-                                "Zoek favoriete monster",
-                            )}
+                            aria-label={t("Search favorite monster")}
                         />
                     </section>
 
@@ -243,20 +225,14 @@ export default function BestPricesIndex({
                         <div className="flex flex-wrap items-end justify-between gap-3">
                             <div>
                                 <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--landing-accent)]">
-                                    {x("Live Offers", "Live Aanbiedingen")}
+                                    {t("Live Offers")}
                                 </p>
                                 <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
-                                    {x(
-                                        "Real-Time Monster Deal Board",
-                                        "Realtime Monster Deal Board",
-                                    )}
+                                    {t("Real-Time Monster Deal Board")}
                                 </h2>
                             </div>
                             <p className="w-full font-body text-sm text-white/60 sm:w-auto sm:text-right">
-                                {x(
-                                    "Public snapshots with per-can and pack-level context",
-                                    "Publieke snapshots met prijs per blik en pack-context",
-                                )}
+                                {t("Public snapshots with per-can and pack-level context")}
                             </p>
                         </div>
 
@@ -267,63 +243,39 @@ export default function BestPricesIndex({
                         <Card className="border-white/10 bg-[color:var(--landing-surface)] shadow-[0_14px_40px_rgba(0,0,0,.3)]">
                             <CardContent className="space-y-2 p-6">
                                 <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--landing-accent)]">
-                                    {x(
-                                        "Public snapshots",
-                                        "Publieke snapshots",
-                                    )}
+                                    {t("Public snapshots")}
                                 </p>
                                 <h3 className="font-display text-xl font-semibold text-white">
-                                    {x(
-                                        "Transparent Price Signals",
-                                        "Transparante Prijssignalen",
-                                    )}
+                                    {t("Transparent Price Signals")}
                                 </h3>
                                 <p className="font-body text-sm text-white/70">
-                                    {x(
-                                        "Every deal card is backed by stored snapshots so you can verify timing, totals, and pack value.",
-                                        "Elke dealkaart is gebaseerd op opgeslagen snapshots zodat je timing, totalen en packwaarde kunt controleren.",
-                                    )}
+                                    {t("Every deal card is backed by stored snapshots so you can verify timing, totals, and pack value.")}
                                 </p>
                             </CardContent>
                         </Card>
                         <Card className="border-white/10 bg-[color:var(--landing-surface)] shadow-[0_14px_40px_rgba(0,0,0,.3)]">
                             <CardContent className="space-y-2 p-6">
                                 <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">
-                                    {x(
-                                        "Open-source transparency",
-                                        "Open-source transparantie",
-                                    )}
+                                    {t("Open-source transparency")}
                                 </p>
                                 <h3 className="font-display text-xl font-semibold text-white">
-                                    {x(
-                                        "Community-Built Tracker",
-                                        "Tracker Gebouwd Door De Community",
-                                    )}
+                                    {t("Community-Built Tracker")}
                                 </h3>
                                 <p className="font-body text-sm text-white/70">
-                                    {x(
-                                        "Built in public so extraction logic, scoring, and improvements stay visible and auditable.",
-                                        "Publiek gebouwd zodat extractielogica, scoring en verbeteringen zichtbaar en controleerbaar blijven.",
-                                    )}
+                                    {t("Built in public so extraction logic, scoring, and improvements stay visible and auditable.")}
                                 </p>
                             </CardContent>
                         </Card>
                         <Card className="border-white/10 bg-[color:var(--landing-surface)] shadow-[0_14px_40px_rgba(0,0,0,.3)]">
                             <CardContent className="space-y-2 p-6">
                                 <p className="text-xs uppercase tracking-[0.18em] text-emerald-300">
-                                    {x(
-                                        "Updated on schedule",
-                                        "Geüpdatet op schema",
-                                    )}
+                                    {t("Updated on schedule")}
                                 </p>
                                 <h3 className="font-display text-xl font-semibold text-white">
-                                    {x("Monitoring First", "Monitoring Eerst")}
+                                    {t("Monitoring First")}
                                 </h3>
                                 <p className="font-body text-sm text-white/70">
-                                    {x(
-                                        "Hourly checks keep offers fresh while preserving historical context for quick market reads.",
-                                        "Uurlijkse checks houden aanbiedingen vers en bewaren historische context voor snelle marktinzichten.",
-                                    )}
+                                    {t("Hourly checks keep offers fresh while preserving historical context for quick market reads.")}
                                 </p>
                             </CardContent>
                         </Card>
@@ -332,10 +284,7 @@ export default function BestPricesIndex({
                     <footer className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface)] px-6 py-5 sm:px-8">
                         <div className="flex flex-col gap-3 font-body text-sm text-white/70 sm:flex-row sm:items-center sm:justify-between">
                             <p>
-                                {x(
-                                    "MonsterIndex is an independent Monster deals tracking platform.",
-                                    "MonsterIndex is een onafhankelijk platform voor het volgen van Monster-deals.",
-                                )}
+                                {t("MonsterIndex is an independent Monster deals tracking platform.")}
                             </p>
                             <a
                                 href={copy.github_url}
@@ -343,10 +292,7 @@ export default function BestPricesIndex({
                                 rel="noreferrer"
                                 className="text-[color:var(--landing-accent)] underline-offset-4 hover:underline"
                             >
-                                {x(
-                                    "View Open Source Repo",
-                                    "Bekijk Open Source Repo",
-                                )}
+                                {t("View Open Source Repo")}
                             </a>
                         </div>
                     </footer>

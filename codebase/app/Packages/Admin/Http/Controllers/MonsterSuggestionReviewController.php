@@ -37,7 +37,7 @@ class MonsterSuggestionReviewController extends Controller
 
         if ($suggestion->status !== MonsterSuggestion::STATUS_PENDING) {
             return back()->withErrors([
-                'suggestion' => 'This suggestion is no longer pending.',
+                'suggestion' => __('This suggestion is no longer pending.'),
             ]);
         }
 
@@ -58,7 +58,7 @@ class MonsterSuggestionReviewController extends Controller
             'monster_id' => $monster->id,
         ])->save();
 
-        return back()->with('success', 'Suggestion approved and monster created.');
+        return back()->with('success', __('Suggestion approved and monster created.'));
     }
 
     public function reject(Request $request, MonsterSuggestion $suggestion): RedirectResponse
@@ -71,7 +71,7 @@ class MonsterSuggestionReviewController extends Controller
 
         if ($suggestion->status !== MonsterSuggestion::STATUS_PENDING) {
             return back()->withErrors([
-                'suggestion' => 'This suggestion is no longer pending.',
+                'suggestion' => __('This suggestion is no longer pending.'),
             ]);
         }
 
@@ -79,10 +79,10 @@ class MonsterSuggestionReviewController extends Controller
             'status' => MonsterSuggestion::STATUS_REJECTED,
             'reviewed_by_user_id' => $request->user()?->id,
             'reviewed_at' => now(),
-            'review_note' => $validated['review_note'] ?? 'Rejected by moderator.',
+            'review_note' => $validated['review_note'] ?? __('Rejected by moderator.'),
         ])->save();
 
-        return back()->with('success', 'Suggestion rejected.');
+        return back()->with('success', __('Suggestion rejected.'));
     }
 
     private function resolveUniqueSlug(string $baseSlug): string

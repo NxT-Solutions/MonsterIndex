@@ -1,10 +1,9 @@
-import { Button, buttonVariants } from '@/Components/ui/button';
+import { buttonVariants } from '@/Components/ui/button';
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
-    CardTitle,
 } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
 import { cn } from '@/lib/utils';
@@ -12,7 +11,7 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, usePage } from '@inertiajs/react';
 
 export default function Login() {
-    const { x } = useLocale();
+    const { t } = useLocale();
     const errors = usePage().props.errors as Record<string, string>;
     const googleRedirectUrl = route('auth.google.redirect');
 
@@ -24,23 +23,20 @@ export default function Login() {
 
     return (
         <GuestLayout>
-            <Head title={x('Continue with Google', 'Doorgaan met Google')} />
+            <Head title={t('Login')} />
 
-            <Card className="border-[color:var(--border)] shadow-none">
+            <Card className="border-[color:var(--border)] bg-[color:var(--card)] shadow-[0_24px_80px_var(--auth-shadow)] backdrop-blur-xl">
                 <CardHeader className="space-y-2">
-                    <CardTitle>
-                        {x('Sign in to MonsterIndex', 'Meld je aan bij MonsterIndex')}
-                    </CardTitle>
-                    <CardDescription>
-                        {x(
-                            'OAuth-only authentication is enabled. Continue with your Google account.',
-                            'Alleen OAuth-authenticatie is actief. Ga verder met je Google-account.',
-                        )}
+                    <h1 className="font-display text-2xl font-semibold text-[color:var(--card-foreground)]">
+                        {t('Sign in to MonsterIndex')}
+                    </h1>
+                    <CardDescription className="font-body text-sm leading-6 text-[color:var(--muted-foreground)]">
+                        {t('OAuth-only authentication is enabled. Continue with your Google account.')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {errors.google && (
-                        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                        <p className="rounded-md border border-[color:var(--auth-error-border)] bg-[color:var(--auth-error-bg)] px-3 py-2 text-sm text-[color:var(--auth-error-foreground)]">
                             {errors.google}
                         </p>
                     )}
@@ -53,19 +49,8 @@ export default function Login() {
                         )}
                     >
                         <GoogleIcon className="size-4" />
-                        {x('Continue with Google', 'Doorgaan met Google')}
+                        {t('Continue with Google')}
                     </a>
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        className="w-full"
-                        disabled
-                    >
-                        {x(
-                            'Password login disabled',
-                            'Inloggen met wachtwoord is uitgeschakeld',
-                        )}
-                    </Button>
                 </CardContent>
             </Card>
         </GuestLayout>

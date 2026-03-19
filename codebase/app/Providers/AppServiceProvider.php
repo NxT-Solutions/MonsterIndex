@@ -32,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->shouldUseIsolatedTestingHotFile()) {
+            Vite::useHotFile(storage_path('framework/vite.testing.hot'));
+        }
+
         Vite::prefetch(concurrency: 3);
         Gate::policy(Monitor::class, MonitorPolicy::class);
         Gate::policy(MonsterSuggestion::class, MonsterSuggestionPolicy::class);
@@ -89,5 +93,10 @@ class AppServiceProvider extends ServiceProvider
         $ipPart = $request->ip() ? 'ip:'.$request->ip() : 'ip:unknown';
 
         return $userPart.'|'.$ipPart;
+    }
+
+    private function shouldUseIsolatedTestingHotFile(): bool
+    {
+        return env('MONSTERINDEX_ISOLATE_VITE_HOT') === '1';
     }
 }

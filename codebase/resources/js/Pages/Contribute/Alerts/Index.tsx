@@ -52,39 +52,39 @@ export default function ContributorAlertsIndex({
         last_24h: number;
     };
 }) {
-    const { locale, x } = useLocale();
-    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const { localeTag, t } = useLocale();
+    const dateLocale = localeTag;
 
     return (
         <AuthenticatedLayout
             header={
                 <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                        {x('Community', 'Community')}
+                        {t('Community')}
                     </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold text-white">
-                        {x('My Price Alerts', 'Mijn Prijsmeldingen')}
+                        {t('My Price Alerts')}
                     </h2>
                 </div>
             }
         >
-            <Head title={x('Contributor Alerts', 'Bijdragersmeldingen')} />
+            <Head title={t('Contributor Alerts')} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         <KpiCard
-                            label={x('Total Alerts', 'Totale Meldingen')}
+                            label={t('Total Alerts')}
                             value={stats.total}
                             accent="lime"
                         />
                         <KpiCard
-                            label={x('Unread', 'Ongelezen')}
+                            label={t('Unread')}
                             value={stats.unread}
                             accent="orange"
                         />
                         <KpiCard
-                            label={x('Last 24h', 'Laatste 24u')}
+                            label={t('Last 24h')}
                             value={stats.last_24h}
                             accent="cyan"
                         />
@@ -93,7 +93,7 @@ export default function ContributorAlertsIndex({
                     <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader className="flex flex-row items-center justify-between gap-3">
                             <CardTitle className="font-display text-lg text-white">
-                                {x('Alerts Inbox', 'Meldingen Inbox')}
+                                {t('Alerts Inbox')}
                             </CardTitle>
                             <button
                                 type="button"
@@ -112,33 +112,27 @@ export default function ContributorAlertsIndex({
                                     )
                                 }
                             >
-                                {x('Mark All Read', 'Markeer Alles Gelezen')}
+                                {t('Mark All Read')}
                             </button>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {alerts.data.length === 0 ? (
                                 <p className="text-sm text-white/70">
-                                    {x(
-                                        'No contributor alerts yet. Follow monsters to receive price-drop signals.',
-                                        'Nog geen bijdragersmeldingen. Volg monsters om prijsdalingssignalen te ontvangen.',
-                                    )}
+                                    {t('No contributor alerts yet. Follow monsters to receive price-drop signals.')}
                                 </p>
                             ) : (
                                 alerts.data.map((alert) => {
                                     const currentPerCan = perCanCents(alert);
                                     const displayTitle =
                                         alert.type === 'price_drop'
-                                            ? `${x(
-                                                  'Price drop',
-                                                  'Prijsdaling',
-                                              )}: ${alert.monster.name}${
+                                            ? `${t('Price drop')}: ${alert.monster.name}${
                                                   alert.monster.size_label
                                                       ? ` ${alert.monster.size_label}`
                                                       : ''
-                                              } ${x('now', 'nu')} ${formatMoney(
+                                              } ${t('now')} ${formatMoney(
                                                   currentPerCan,
                                                   alert.currency,
-                                              )} ${x('per can', 'per blik')}`
+                                              )} ${t('per can')}`
                                             : alert.title;
 
                                     return (
@@ -175,14 +169,14 @@ export default function ContributorAlertsIndex({
                                                 {alert.body}
                                             </p>
                                             <p className="mt-2 text-xs text-white/60">
-                                                {x('Store', 'Winkel')}:{' '}
+                                                {t('Store')}:{' '}
                                                 {alert.monitor.site?.name ??
-                                                    x('Unknown', 'Onbekend')}{' '}
-                                                • {x('Per Can', 'Per Blik')}:{' '}
+                                                    t('Unknown')}{' '}
+                                                • {t('Per Can')}:{' '}
                                                 {formatMoney(currentPerCan, alert.currency)}
                                                 {alert.snapshot?.can_count &&
                                                 alert.snapshot.can_count > 1
-                                                    ? ` (${alert.snapshot.can_count}-${x('pack', 'pack')})`
+                                                    ? ` (${alert.snapshot.can_count}-${t('pack')})`
                                                     : ''}
                                             </p>
 
@@ -200,7 +194,7 @@ export default function ContributorAlertsIndex({
                                                         'border-white/20 bg-transparent text-white hover:bg-white/10',
                                                     )}
                                                 >
-                                                    {x('Open Monster', 'Open Monster')}
+                                                    {t('Open Monster')}
                                                 </Link>
                                                 {!alert.read_at && (
                                                     <button
@@ -226,10 +220,7 @@ export default function ContributorAlertsIndex({
                                                             )
                                                         }
                                                     >
-                                                        {x(
-                                                            'Mark Read',
-                                                            'Markeer Gelezen',
-                                                        )}
+                                                        {t('Mark Read')}
                                                     </button>
                                                 )}
                                             </div>

@@ -2,20 +2,32 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @php
-            $seoTitle = 'MonsterIndex - Compare Monster Energy Deals';
-            $seoDescription = 'Compare live Monster Energy prices across stores, track best offers, and find the strongest per-can value with public snapshots.';
+            $seoTitle = __('MonsterIndex - Compare Monster Energy Deals');
+            $seoDescription = __('Compare live Monster Energy prices across stores, track best offers, and find the strongest per-can value with public snapshots.');
             $baseUrl = rtrim(config('app.url', 'https://monsterindex.app'), '/');
-            $canonical = $baseUrl !== '' ? $baseUrl.'/' : '/';
+            $siteUrl = $baseUrl !== '' ? $baseUrl.'/' : '/';
+            $canonical = request()->url();
             $ogImage = $baseUrl !== '' ? $baseUrl.'/brand/monsterindex-og.png' : '/brand/monsterindex-og.png';
+            $vite = app(\Illuminate\Foundation\Vite::class);
+            $shouldRenderViteAssets = ! app()->runningUnitTests()
+                || is_file($vite->hotFile())
+                || file_exists(public_path('build/manifest.json'));
+            $criticalFontPreloads = [
+                'node_modules/@fontsource/oxanium/files/oxanium-latin-600-normal.woff2',
+                'node_modules/@fontsource/oxanium/files/oxanium-latin-700-normal.woff2',
+                'node_modules/@fontsource/rajdhani/files/rajdhani-latin-400-normal.woff2',
+                'node_modules/@fontsource/rajdhani/files/rajdhani-latin-500-normal.woff2',
+                'node_modules/@fontsource/rajdhani/files/rajdhani-latin-600-normal.woff2',
+            ];
             $websiteSchema = [
                 '@context' => 'https://schema.org',
                 '@type' => 'WebSite',
                 'name' => 'MonsterIndex',
-                'url' => $canonical,
+                'url' => $siteUrl,
                 'description' => $seoDescription,
                 'potentialAction' => [
                     '@type' => 'SearchAction',
-                    'target' => $canonical.'?q={search_term_string}',
+                    'target' => $siteUrl.'?q={search_term_string}',
                     'query-input' => 'required name=search_term_string',
                 ],
             ];
@@ -24,10 +36,14 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="{{ $seoDescription }}">
-        <meta name="keywords" content="Monster Energy, price tracker, energy drink deals, compare prices, per can price, Monster offers">
+        <meta name="keywords" content="{{ __('Monster Energy, price tracker, energy drink deals, compare prices, per can price, Monster offers') }}">
         <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
         <meta name="author" content="MonsterIndex">
         <meta name="theme-color" content="#8CEB00">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="MonsterIndex">
 
         <title inertia>{{ config('app.name', 'MonsterIndex') }}</title>
 
@@ -37,6 +53,11 @@
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
         <link rel="canonical" href="{{ $canonical }}">
+        @if ($shouldRenderViteAssets)
+            @foreach ($criticalFontPreloads as $fontAsset)
+                <link rel="preload" href="{{ $vite->asset($fontAsset) }}" as="font" type="font/woff2" crossorigin>
+            @endforeach
+        @endif
 
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="MonsterIndex">
@@ -75,14 +96,12 @@
             {!! json_encode($websiteSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
         </script>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
         <!-- Scripts -->
         @routes
-        @viteReactRefresh
-        @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
+        @if ($shouldRenderViteAssets)
+            @viteReactRefresh
+            @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
+        @endif
         @inertiaHead
     </head>
     <body class="font-sans antialiased">

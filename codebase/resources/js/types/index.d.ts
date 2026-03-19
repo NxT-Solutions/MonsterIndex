@@ -28,6 +28,18 @@ export type PageProps<
     auth: {
         user: User | null;
     };
+    locale: {
+        current: string;
+        fallback: string;
+        cookie_name: string;
+        supported: Array<{
+            code: string;
+            name: string;
+            native_name: string;
+            dir: 'ltr' | 'rtl';
+            bcp47: string;
+        }>;
+    };
     adminReview?: {
         pending_monitors: number;
         pending_suggestions: number;

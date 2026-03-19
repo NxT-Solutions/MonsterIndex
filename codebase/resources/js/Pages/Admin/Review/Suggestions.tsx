@@ -1,3 +1,4 @@
+import { useAppDialogs } from '@/Components/providers/AppDialogProvider';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
@@ -23,14 +24,17 @@ export default function SuggestionReviewIndex({
 }: {
     pendingSuggestions: PendingSuggestion[];
 }) {
-    const { locale, x } = useLocale();
-    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const { localeTag, t } = useLocale();
+    const { prompt } = useAppDialogs();
+    const dateLocale = localeTag;
 
-    const approve = (suggestion: PendingSuggestion) => {
-        const reviewNote = window.prompt(
-            x('Optional approval note', 'Optionele goedkeuringsnotitie'),
-            '',
-        );
+    const approve = async (suggestion: PendingSuggestion) => {
+        const reviewNote = await prompt({
+            title: t('Approve and create monster'),
+            description: t('Optionally leave a note explaining the approval or any follow-up.'),
+            label: t('Optional approval note'),
+            confirmLabel: t('Approve suggestion'),
+        });
         if (reviewNote === null) {
             return;
         }
@@ -44,11 +48,13 @@ export default function SuggestionReviewIndex({
         );
     };
 
-    const reject = (suggestion: PendingSuggestion) => {
-        const reviewNote = window.prompt(
-            x('Optional rejection note', 'Optionele afwijsnotitie'),
-            '',
-        );
+    const reject = async (suggestion: PendingSuggestion) => {
+        const reviewNote = await prompt({
+            title: t('Reject suggestion'),
+            description: t('Optionally explain why this suggestion is being rejected.'),
+            label: t('Optional rejection note'),
+            confirmLabel: t('Reject suggestion'),
+        });
         if (reviewNote === null) {
             return;
         }
@@ -67,31 +73,28 @@ export default function SuggestionReviewIndex({
             header={
                 <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                        {x('Admin Review', 'Admin Review')}
+                        {t('Admin Review')}
                     </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold text-white">
-                        {x('Monster Suggestion Queue', 'Monstersuggestie Wachtrij')}
+                        {t('Monster Suggestion Queue')}
                     </h2>
                 </div>
             }
         >
-            <Head title={x('Suggestion Moderation', 'Suggestie Moderatie')} />
+            <Head title={t('Suggestion Moderation')} />
 
             <div className="py-8">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader>
                             <CardTitle className="font-display text-lg text-white">
-                                {x('Pending Suggestions', 'Wachtende Suggesties')} ({pendingSuggestions.length})
+                                {t('Pending Suggestions')} ({pendingSuggestions.length})
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {pendingSuggestions.length === 0 ? (
                                 <p className="text-sm text-white/70">
-                                    {x(
-                                        'No pending suggestions right now.',
-                                        'Momenteel geen wachtende suggesties.',
-                                    )}
+                                    {t('No pending suggestions right now.')}
                                 </p>
                             ) : (
                                 pendingSuggestions.map((suggestion) => (
@@ -116,12 +119,12 @@ export default function SuggestionReviewIndex({
                                         <div className="mt-2 space-y-1 text-sm text-white/75">
                                             {suggestion.notes && (
                                                 <p>
-                                                    <strong className="text-white">{x('Notes', 'Notities')}:</strong>{' '}
+                                                    <strong className="text-white">{t('Notes')}:</strong>{' '}
                                                     {suggestion.notes}
                                                 </p>
                                             )}
                                             <p>
-                                                <strong className="text-white">{x('Submitted', 'Ingediend')}:</strong>{' '}
+                                                <strong className="text-white">{t('Submitted')}:</strong>{' '}
                                                 {new Date(suggestion.created_at).toLocaleString(dateLocale)}
                                             </p>
                                         </div>
@@ -135,7 +138,7 @@ export default function SuggestionReviewIndex({
                                                     'bg-[color:var(--landing-accent)] text-[#0b1201]',
                                                 )}
                                             >
-                                                {x('Approve + Create Monster', 'Goedkeuren + Monster Maken')}
+                                                {t('Approve + Create Monster')}
                                             </button>
 
                                             <button
@@ -146,7 +149,7 @@ export default function SuggestionReviewIndex({
                                                     'border border-red-400/40 bg-red-500/10 text-red-100 hover:bg-red-500/20',
                                                 )}
                                             >
-                                                {x('Reject', 'Afwijzen')}
+                                                {t('Reject')}
                                             </button>
                                         </div>
                                     </div>

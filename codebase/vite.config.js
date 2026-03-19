@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
             },
             proxy: {
                 // Make the dev server usable as the app URL by forwarding page/API requests to Laravel.
-                '^/(?!@vite|@react-refresh|@id|@fs|resources/|node_modules/|build/|__vite_ping)': {
+                '^/(?!@vite|@react-refresh|@id|@fs|resources/|node_modules/|build/|lang/|__vite_ping)': {
                     target: backendUrl,
                     changeOrigin: false,
                     secure: false,

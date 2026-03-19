@@ -19,7 +19,7 @@ type HeroProps = {
 };
 
 export default function Hero({ copy, stats }: HeroProps) {
-    const { x } = useLocale();
+    const { t } = useLocale();
 
     return (
         <section id="top" className="relative overflow-hidden rounded-3xl border border-white/10 bg-[color:var(--landing-surface)] px-6 py-12 sm:px-10 lg:px-12">
@@ -63,30 +63,24 @@ export default function Hero({ copy, stats }: HeroProps) {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
                     <div className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface-2)] p-6">
                         <p className="text-xs uppercase tracking-[0.2em] text-white/60">
-                            {x('Tracked Monsters', 'Gevolgde Monsters')}
+                            {t('Tracked Monsters')}
                         </p>
                         <p className="mt-3 font-display text-4xl font-bold text-[color:var(--landing-accent)]">
                             {stats.tracked_monsters}
                         </p>
                         <p className="mt-1 font-body text-sm text-white/60">
-                            {x(
-                                'Active products under watch',
-                                'Actieve producten onder monitoring',
-                            )}
+                            {t('Active products under watch')}
                         </p>
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface-2)] p-6">
                         <p className="text-xs uppercase tracking-[0.2em] text-white/60">
-                            {x('Live Offers', 'Live Aanbiedingen')}
+                            {t('Live Offers')}
                         </p>
                         <p className="mt-3 font-display text-4xl font-bold text-cyan-300">
                             {stats.offers}
                         </p>
                         <p className="mt-1 font-body text-sm text-white/60">
-                            {x(
-                                'Price snapshots for comparison',
-                                'Prijssnapshots voor vergelijking',
-                            )}
+                            {t('Price snapshots for comparison')}
                         </p>
                     </div>
                 </div>

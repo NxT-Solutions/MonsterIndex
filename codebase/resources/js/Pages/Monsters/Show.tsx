@@ -7,6 +7,7 @@ import { PageProps } from '@/types';
 import axios from 'axios';
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 type Snapshot = {
     id: number;
@@ -55,8 +56,8 @@ export default function MonsterShow({
     available_currencies: string[];
     followed_currencies: string[];
 }>) {
-    const { locale, x } = useLocale();
-    const dateLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const { locale, localeTag, t } = useLocale();
+    const dateLocale = localeTag;
     const canFollow = Boolean(auth.user?.can.monster_follow);
     const followCurrencies = ['EUR'];
     const [followedCurrenciesState, setFollowedCurrenciesState] = useState<string[]>(
@@ -65,14 +66,10 @@ export default function MonsterShow({
     const [loadingCurrency, setLoadingCurrency] = useState<string | null>(null);
     const [selectedTimespan, setSelectedTimespan] = useState<TimespanKey>('7d');
     const canonicalUrl = route('monsters.show', monster.slug);
-    const pageTitle = `${monster.name}${monster.size_label ? ` (${monster.size_label})` : ''} | ${x(
-        'Monster Price History',
-        'Monster Prijshistoriek',
-    )}`;
-    const pageDescription = x(
-        `Compare recent prices for ${monster.name}, including total buy and per-can value from tracked stores.`,
-        `Vergelijk recente prijzen voor ${monster.name}, inclusief totaalaankoop en prijs per blik van gevolgde winkels.`,
-    );
+    const pageTitle = `${monster.name}${monster.size_label ? ` (${monster.size_label})` : ''} | ${t('Monster Price History')}`;
+    const pageDescription = t('Compare recent prices for {monster}, including total buy and per-can value from tracked stores.', {
+            monster: monster.name,
+        });
     const ogImageUrl = new URL('/brand/monsterindex-og.png', canonicalUrl).toString();
 
     const visibleSnapshots = useMemo(() => {
@@ -197,13 +194,13 @@ export default function MonsterShow({
 
     const timespanLabel = useMemo(() => {
         return selectedTimespan === '24h'
-            ? x('24h', '24u')
+            ? t('24h')
             : selectedTimespan === '7d'
-              ? x('7 days', '7 dagen')
+              ? t('7 days')
               : selectedTimespan === '30d'
-                ? x('30 days', '30 dagen')
-                : x('All', 'Alles');
-    }, [selectedTimespan, x]);
+                ? t('30 days')
+                : t('All');
+    }, [selectedTimespan, t]);
 
     const trend = useMemo(() => {
         if (chartPoints.length < 2) {
@@ -284,22 +281,19 @@ export default function MonsterShow({
                         <div className="flex flex-wrap items-start justify-between gap-4">
                             <div>
                                 <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                                    {x('Monster Track Detail', 'Monster Track Detail')}
+                                    {t('Monster Track Detail')}
                                 </p>
                                 <h1 className="mt-2 font-display text-3xl font-semibold text-white sm:text-4xl">
                                     {monster.name}
                                     {monster.size_label ? ` (${monster.size_label})` : ''}
                                 </h1>
                                 <p className="mt-2 font-body text-sm text-white/70">
-                                    {x(
-                                        'Snapshot history, store comparison, and per-can performance in one view.',
-                                        'Snapshotgeschiedenis, winkelvergelijking en prestaties per blik in één overzicht.',
-                                    )}
+                                    {t('Snapshot history, store comparison, and per-can performance in one view.')}
                                 </p>
                                 {canFollow && (
                                     <div className="mt-4 flex flex-wrap items-center gap-2">
                                         <p className="text-xs uppercase tracking-[0.16em] text-white/55">
-                                            {x('Follow alerts', 'Volg meldingen')}
+                                            {t('Follow alerts')}
                                         </p>
                                         {followCurrencies.map((currency) => {
                                             const isFollowing =
@@ -362,11 +356,8 @@ export default function MonsterShow({
                                                                 );
                                                             }
                                                         } catch {
-                                                            window.alert(
-                                                                x(
-                                                                    'Could not update follow status right now.',
-                                                                    'Kon de volgstatus nu niet bijwerken.',
-                                                                ),
+                                                            toast.error(
+                                                                t('Could not update follow status right now.'),
                                                             );
                                                         } finally {
                                                             setLoadingCurrency(null);
@@ -383,18 +374,15 @@ export default function MonsterShow({
                                                     )}
                                                 >
                                                     {isLoading
-                                                        ? x('Saving...', 'Opslaan...')
+                                                        ? t('Saving...')
                                                         : isFollowing
-                                                          ? `${currency} ${x('Following', 'Volgend')}`
-                                                          : `${currency} ${x('Follow', 'Volgen')}`}
+                                                          ? `${currency} ${t('Following')}`
+                                                          : `${currency} ${t('Follow')}`}
                                                 </button>
                                             );
                                         })}
                                         <span className="text-xs text-white/55">
-                                            {x(
-                                                'Price alerts are currently EUR-only.',
-                                                'Prijsmeldingen zijn momenteel enkel EUR.',
-                                            )}
+                                            {t('Price alerts are currently EUR-only.')}
                                         </span>
                                     </div>
                                 )}
@@ -407,14 +395,14 @@ export default function MonsterShow({
                                     'w-full border-white/20 bg-transparent text-white hover:bg-white/10 sm:w-auto',
                                 )}
                             >
-                                {x('Back to Board', 'Terug naar Bord')}
+                                {t('Back to Board')}
                             </Link>
                         </div>
 
                         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <div className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-white/60">
-                                    {x('Snapshots', 'Snapshots')}
+                                    {t('Snapshots')}
                                 </p>
                                 <p className="mt-2 font-display text-3xl font-bold text-[color:var(--landing-accent)]">
                                     {visibleSnapshots.length}
@@ -422,27 +410,27 @@ export default function MonsterShow({
                             </div>
                             <div className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-white/60">
-                                    {x('Best Per Can', 'Beste Per Blik')}
+                                    {t('Best Per Can')}
                                 </p>
                                 <p className="mt-2 font-display text-2xl font-bold text-cyan-300">
                                     {bestPerCan !== null && bestSnapshot
-                                        ? `${formatMoney(bestPerCan, bestSnapshot.currency)} / ${x('can', 'blik')}`
-                                        : x('Unknown', 'Onbekend')}
+                                        ? `${formatMoney(bestPerCan, bestSnapshot.currency)} / ${t('can')}`
+                                        : t('Unknown')}
                                 </p>
                             </div>
                             <div className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-white/60">
-                                    {x('Last Checked', 'Laatst Gecheckt')}
+                                    {t('Last Checked')}
                                 </p>
                                 <p className="mt-2 font-body text-sm font-medium text-white/85">
                                     {latestCheckedAt
                                         ? new Date(latestCheckedAt).toLocaleString(dateLocale)
-                                        : x('N/A', 'N/B')}
+                                        : t('N/A')}
                                 </p>
                             </div>
                             <div className="rounded-xl border border-white/10 bg-[color:var(--landing-surface-2)] p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-white/60">
-                                    {x('Currencies', 'Valuta')}
+                                    {t('Currencies')}
                                 </p>
                                 <p className="mt-2 font-body text-sm font-medium text-white/85">
                                     {available_currencies.length > 0
@@ -450,7 +438,7 @@ export default function MonsterShow({
                                         : 'EUR'}
                                 </p>
                                 <p className="mt-1 text-xs text-white/55">
-                                    {x('Following supports EUR only.', 'Volgen ondersteunt enkel EUR.')}
+                                    {t('Following supports EUR only.')}
                                 </p>
                             </div>
                         </div>
@@ -460,72 +448,53 @@ export default function MonsterShow({
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div>
                                 <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--landing-accent)]">
-                                    {x('Price Trend', 'Prijstrend')}
+                                    {t('Price Trend')}
                                 </p>
                                 <h2 className="mt-1 font-display text-2xl font-semibold text-white">
-                                    {x(
-                                        'Per-Can History Over Time',
-                                        'Per-Blik Geschiedenis Over Tijd',
-                                    )}
+                                    {t('Per-Can History Over Time')}
                                 </h2>
                                 <p className="mt-2 text-sm text-white/70">
                                     {trend.direction === 'down'
-                                        ? x(
-                                              `Price is down ${formatMoney(
-                                                  trend.diffCents,
-                                                  'EUR',
-                                              )} compared to the first point in this timespan.`,
-                                              `Prijs is ${formatMoney(
-                                                  trend.diffCents,
-                                                  'EUR',
-                                              )} gedaald ten opzichte van het eerste punt in deze periode.`,
-                                          )
+                                        ? t('Price is down {amount} compared to the first point in this timespan.', {
+                                                  amount: formatMoney(
+                                                      trend.diffCents,
+                                                      'EUR',
+                                                  ),
+                                              })
                                         : trend.direction === 'up'
-                                          ? x(
-                                                `Price is up ${formatMoney(
-                                                    trend.diffCents,
-                                                    'EUR',
-                                                )} compared to the first point in this timespan.`,
-                                                `Prijs is ${formatMoney(
-                                                    trend.diffCents,
-                                                    'EUR',
-                                                )} gestegen ten opzichte van het eerste punt in deze periode.`,
-                                            )
-                                          : x(
-                                                'Price is stable in this timespan.',
-                                                'Prijs is stabiel in deze periode.',
-                                            )}
+                                          ? t('Price is up {amount} compared to the first point in this timespan.', {
+                                                    amount: formatMoney(
+                                                        trend.diffCents,
+                                                        'EUR',
+                                                    ),
+                                                })
+                                          : t('Price is stable in this timespan.')}
                                 </p>
                                 {chartStartPoint && chartEndPoint && (
                                     <p className="mt-1 text-sm text-white/70">
-                                        {x(
-                                            `From ${formatMoney(
-                                                chartStartPoint.value,
-                                                'EUR',
-                                            )} to ${formatMoney(chartEndPoint.value, 'EUR')}.`,
-                                            `Van ${formatMoney(
-                                                chartStartPoint.value,
-                                                'EUR',
-                                            )} naar ${formatMoney(chartEndPoint.value, 'EUR')}.`,
-                                        )}
+                                        {t('From {start} to {end}.', {
+                                                start: formatMoney(
+                                                    chartStartPoint.value,
+                                                    'EUR',
+                                                ),
+                                                end: formatMoney(
+                                                    chartEndPoint.value,
+                                                    'EUR',
+                                                ),
+                                            })}
                                     </p>
                                 )}
                                 <p className="mt-1 text-xs uppercase tracking-[0.14em] text-white/55">
-                                    {x(
-                                        `Showing ${snapshotsInTimespan.length} of ${visibleSnapshots.length} snapshots (${timespanLabel}).`,
-                                        `Toont ${snapshotsInTimespan.length} van ${visibleSnapshots.length} snapshots (${timespanLabel}).`,
-                                    )}
+                                    {t('Showing {visible} of {total} snapshots ({timespan}).', {
+                                            visible: snapshotsInTimespan.length,
+                                            total: visibleSnapshots.length,
+                                            timespan: timespanLabel,
+                                        })}
                                 </p>
                                 <p className="mt-1 text-xs text-white/55">
                                     {selectedTimespan === '24h'
-                                        ? x(
-                                              'Chart points show the lowest per-can price per hour.',
-                                              'Grafiekpunten tonen de laagste prijs per blik per uur.',
-                                          )
-                                        : x(
-                                              'Chart points show the lowest per-can price per day.',
-                                              'Grafiekpunten tonen de laagste prijs per blik per dag.',
-                                          )}
+                                        ? t('Chart points show the lowest per-can price per hour.')
+                                        : t('Chart points show the lowest per-can price per day.')}
                                 </p>
                             </div>
 
@@ -546,12 +515,12 @@ export default function MonsterShow({
                                         )}
                                     >
                                         {option.key === '24h'
-                                            ? x('24h', '24u')
+                                            ? t('24h')
                                             : option.key === '7d'
-                                              ? x('7 days', '7 dagen')
+                                              ? t('7 days')
                                               : option.key === '30d'
-                                                ? x('30 days', '30 dagen')
-                                                : x('All', 'Alles')}
+                                                ? t('30 days')
+                                                : t('All')}
                                     </button>
                                 ))}
                             </div>
@@ -560,18 +529,9 @@ export default function MonsterShow({
                         <div className="mt-5">
                             <PriceHistoryChart
                                 points={chartPoints}
-                                lineLabel={x(
-                                    'Lowest per-can price (EUR)',
-                                    'Laagste prijs per blik (EUR)',
-                                )}
-                                emptyLabel={x(
-                                    'No valid price points in this timespan.',
-                                    'Geen geldige prijspunten in deze periode.',
-                                )}
-                                ariaLabel={x(
-                                    'Monster price trend chart',
-                                    'Monster prijstrend grafiek',
-                                )}
+                                lineLabel={t('Lowest per-can price (EUR)')}
+                                emptyLabel={t('No valid price points in this timespan.')}
+                                ariaLabel={t('Monster price trend chart')}
                                 valueFormatter={(value) => formatMoney(value, 'EUR')}
                             />
                         </div>
@@ -580,16 +540,13 @@ export default function MonsterShow({
                     <section className="overflow-hidden rounded-2xl border border-white/10 bg-[color:var(--landing-surface)]">
                         <div className="border-b border-white/10 px-6 py-4">
                             <h2 className="font-display text-xl font-semibold text-white">
-                                {x('Snapshot History', 'Snapshotgeschiedenis')}
+                                {t('Snapshot History')}
                             </h2>
                         </div>
 
                         {snapshotsInTimespan.length === 0 && (
                             <div className="px-6 py-5 font-body text-sm text-white/70">
-                                {x(
-                                    'No successful snapshots in this selected timespan.',
-                                    'Geen geslaagde snapshots in de gekozen periode.',
-                                )}
+                                {t('No successful snapshots in this selected timespan.')}
                             </div>
                         )}
 
@@ -618,28 +575,25 @@ export default function MonsterShow({
                                                       ).toLocaleString(
                                                           dateLocale,
                                                       )
-                                                    : x('N/A', 'N/B')}
+                                                    : t('N/A')}
                                             </p>
                                         </div>
 
                                         <div className="mt-3 grid grid-cols-2 gap-2 font-body text-xs text-white/75">
                                             <p>
                                                 <span className="text-white/55">
-                                                    {x('Price', 'Prijs')}:
+                                                    {t('Price')}:
                                                 </span>{' '}
                                                 {snapshot.price_cents !== null
                                                     ? formatMoney(
                                                           snapshot.price_cents,
                                                           snapshot.currency,
                                                       )
-                                                    : x('N/A', 'N/B')}
+                                                    : t('N/A')}
                                             </p>
                                             <p>
                                                 <span className="text-white/55">
-                                                    {x(
-                                                        'Shipping',
-                                                        'Verzending',
-                                                    )}
+                                                    {t('Shipping')}
                                                     :
                                                 </span>{' '}
                                                 {snapshot.shipping_cents !== null
@@ -647,11 +601,11 @@ export default function MonsterShow({
                                                           snapshot.shipping_cents,
                                                           snapshot.currency,
                                                       )
-                                                    : x('Unknown', 'Onbekend')}
+                                                    : t('Unknown')}
                                             </p>
                                             <p>
                                                 <span className="text-white/55">
-                                                    {x('Total', 'Totaal')}:
+                                                    {t('Total')}:
                                                 </span>{' '}
                                                 <span className="font-semibold text-[color:var(--landing-accent)]">
                                                     {snapshot.effective_total_cents !==
@@ -660,28 +614,28 @@ export default function MonsterShow({
                                                               snapshot.effective_total_cents,
                                                               snapshot.currency,
                                                           )
-                                                        : x('N/A', 'N/B')}
+                                                        : t('N/A')}
                                                 </span>
                                             </p>
                                             <p>
                                                 <span className="text-white/55">
-                                                    {x('Per Can', 'Per Blik')}:
+                                                    {t('Per Can')}:
                                                 </span>{' '}
                                                 {perCan !== null
                                                     ? formatMoney(
                                                           perCan,
                                                           snapshot.currency,
                                                       )
-                                                    : x('Unknown', 'Onbekend')}
+                                                    : t('Unknown')}
                                                 {snapshot.can_count !== null
-                                                    ? ` (${snapshot.can_count}-${x('pack', 'pack')})`
+                                                    ? ` (${snapshot.can_count}-${t('pack')})`
                                                     : ''}
                                             </p>
                                         </div>
 
                                         <div className="mt-3 flex items-center justify-between gap-3">
                                             <p className="font-body text-xs text-white/70">
-                                                {x('Status', 'Status')}: {snapshot.status}
+                                                {t('Status')}: {snapshot.status}
                                                 {snapshot.error_code
                                                     ? ` (${snapshot.error_code})`
                                                     : ''}
@@ -692,7 +646,7 @@ export default function MonsterShow({
                                                 target="_blank"
                                                 rel="noreferrer"
                                             >
-                                                {x('Open', 'Open')}
+                                                {t('Open')}
                                             </a>
                                         </div>
                                     </article>
@@ -704,14 +658,14 @@ export default function MonsterShow({
                             <table className="w-full min-w-[960px] text-left text-sm">
                                 <thead>
                                     <tr className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-white/55">
-                                        <th className="px-4 py-3">{x('Checked', 'Gecheckt')}</th>
-                                        <th className="px-4 py-3">{x('Store', 'Winkel')}</th>
-                                        <th className="px-4 py-3">{x('Price', 'Prijs')}</th>
-                                        <th className="px-4 py-3">{x('Shipping', 'Verzending')}</th>
-                                        <th className="px-4 py-3">{x('Total', 'Totaal')}</th>
-                                        <th className="px-4 py-3">{x('Per Can', 'Per Blik')}</th>
-                                        <th className="px-4 py-3">{x('Status', 'Status')}</th>
-                                        <th className="px-4 py-3">{x('Product URL', 'Product-URL')}</th>
+                                        <th className="px-4 py-3">{t('Checked')}</th>
+                                        <th className="px-4 py-3">{t('Store')}</th>
+                                        <th className="px-4 py-3">{t('Price')}</th>
+                                        <th className="px-4 py-3">{t('Shipping')}</th>
+                                        <th className="px-4 py-3">{t('Total')}</th>
+                                        <th className="px-4 py-3">{t('Per Can')}</th>
+                                        <th className="px-4 py-3">{t('Status')}</th>
+                                        <th className="px-4 py-3">{t('Product URL')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -723,7 +677,7 @@ export default function MonsterShow({
                                             <td className="px-4 py-3">
                                                 {snapshot.checked_at
                                                     ? new Date(snapshot.checked_at).toLocaleString(dateLocale)
-                                                    : x('N/A', 'N/B')}
+                                                    : t('N/A')}
                                             </td>
                                             <td className="px-4 py-3">
                                                 <p className="font-medium text-white">
@@ -736,17 +690,17 @@ export default function MonsterShow({
                                             <td className="px-4 py-3">
                                                 {snapshot.price_cents !== null
                                                     ? formatMoney(snapshot.price_cents, snapshot.currency)
-                                                    : x('N/A', 'N/B')}
+                                                    : t('N/A')}
                                             </td>
                                             <td className="px-4 py-3">
                                                 {snapshot.shipping_cents !== null
                                                     ? formatMoney(snapshot.shipping_cents, snapshot.currency)
-                                                    : x('Unknown', 'Onbekend')}
+                                                    : t('Unknown')}
                                             </td>
                                             <td className="px-4 py-3 font-semibold text-[color:var(--landing-accent)]">
                                                 {snapshot.effective_total_cents !== null
                                                     ? formatMoney(snapshot.effective_total_cents, snapshot.currency)
-                                                    : x('N/A', 'N/B')}
+                                                    : t('N/A')}
                                             </td>
                                             <td className="px-4 py-3">
                                                 {effectivePerCanCents(snapshot) !== null
@@ -754,9 +708,9 @@ export default function MonsterShow({
                                                           effectivePerCanCents(snapshot) as number,
                                                           snapshot.currency,
                                                       )
-                                                    : x('Unknown', 'Onbekend')}
+                                                    : t('Unknown')}
                                                 {snapshot.can_count !== null
-                                                    ? ` (${snapshot.can_count}-${x('pack', 'pack')})`
+                                                    ? ` (${snapshot.can_count}-${t('pack')})`
                                                     : ''}
                                             </td>
                                             <td className="px-4 py-3">
@@ -772,7 +726,7 @@ export default function MonsterShow({
                                                     target="_blank"
                                                     rel="noreferrer"
                                                 >
-                                                    {x('Open', 'Open')}
+                                                    {t('Open')}
                                                 </a>
                                             </td>
                                         </tr>

@@ -29,7 +29,11 @@ it('creates alert when a lower best price is found', function () {
 
     $newSnapshot = PriceSnapshot::factory()->create([
         'monitor_id' => $monitor->id,
+        'price_cents' => 1999,
+        'shipping_cents' => 0,
         'effective_total_cents' => 1999,
+        'can_count' => 12,
+        'price_per_can_cents' => 167,
         'currency' => 'USD',
         'status' => 'ok',
     ]);
@@ -46,6 +50,11 @@ it('creates alert when a lower best price is found', function () {
         'monster_id' => $monitor->monster_id,
         'monitor_id' => $monitor->id,
         'type' => 'new_best_price',
+        'body' => sprintf(
+            '%s now has a new best per-can price of USD 1.67 at %s.',
+            $monitor->monster->name,
+            $monitor->site->name,
+        ),
     ]);
 });
 

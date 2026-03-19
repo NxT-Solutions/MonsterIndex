@@ -1,4 +1,4 @@
-import { Locale } from '@/lib/locale';
+import { Locale, resolveLocaleTag } from '@/lib/locale';
 
 type SupportedValuesIntl = typeof Intl & {
     supportedValuesOf?: (key: 'currency') => string[];
@@ -178,7 +178,7 @@ type CurrencyOption = {
 
 export function currencyOptionsForLocale(locale: Locale): CurrencyOption[] {
     const codes = resolveCurrencyCodes();
-    const displayLocale = locale === 'nl' ? 'nl-BE' : 'en-US';
+    const displayLocale = resolveLocaleTag(locale);
     const displayNames =
         typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function'
             ? new Intl.DisplayNames([displayLocale], { type: 'currency' })

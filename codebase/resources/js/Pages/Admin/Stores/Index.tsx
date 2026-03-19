@@ -1,5 +1,6 @@
 import BarMeter from '@/Components/admin/BarMeter';
 import KpiCard from '@/Components/admin/KpiCard';
+import { useAppDialogs } from '@/Components/providers/AppDialogProvider';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
@@ -17,7 +18,8 @@ type Store = {
 };
 
 export default function StoresIndex({ stores }: { stores: Store[] }) {
-    const { x } = useLocale();
+    const { t } = useLocale();
+    const { confirm, prompt } = useAppDialogs();
 
     const form = useForm({
         name: '',
@@ -64,12 +66,28 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
         });
     };
 
-    const editStore = (store: Store) => {
-        const name = window.prompt(x('Store name', 'Winkelnaam'), store.name);
-        if (!name) return;
+    const editStore = async (store: Store) => {
+        const name = await prompt({
+            title: t('Edit store'),
+            description: t('Update the visible store name.'),
+            label: t('Store name'),
+            defaultValue: store.name,
+            required: true,
+            confirmLabel: t('Continue'),
+        });
+        if (!name) {
+            return;
+        }
 
         const domain =
-            window.prompt(x('Domain', 'Domein'), store.domain) ?? store.domain;
+            (await prompt({
+                title: t('Edit domain'),
+                description: t('Use a bare domain or full URL for matching and admin display.'),
+                label: t('Domain'),
+                defaultValue: store.domain,
+                required: true,
+                confirmLabel: t('Save changes'),
+            })) ?? store.domain;
 
         router.put(route('admin.stores.update', store.id), {
             name,
@@ -86,8 +104,22 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
         });
     };
 
-    const deleteStore = (store: Store) => {
-        router.delete(route('admin.stores.destroy', store.id));
+    const deleteStore = async (store: Store) => {
+        const confirmed = await confirm({
+            title: t('Delete this store?'),
+            description: t('Only remove stores that are no longer needed. Existing monitor links may be affected.'),
+            confirmLabel: t('Delete store'),
+            cancelLabel: t('Cancel'),
+            destructive: true,
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        router.delete(route('admin.stores.destroy', store.id), {
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -95,41 +127,41 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
             header={
                 <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--landing-accent)]">
-                        {x('Catalog', 'Catalogus')}
+                        {t('Catalog')}
                     </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold text-white">
-                        {x('Stores', 'Winkels')}
+                        {t('Stores')}
                     </h2>
                 </div>
             }
         >
-            <Head title={x('Admin Stores', 'Admin Winkels')} />
+            <Head title={t('Admin Stores')} />
 
             <div className="py-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
                     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                         <KpiCard
-                            label={x('Total Stores', 'Totaal Winkels')}
+                            label={t('Total Stores')}
                             value={stats.total}
                             accent="lime"
                         />
                         <KpiCard
-                            label={x('Active', 'Actief')}
+                            label={t('Active')}
                             value={stats.active}
                             accent="emerald"
                         />
                         <KpiCard
-                            label={x('Inactive', 'Inactief')}
+                            label={t('Inactive')}
                             value={stats.inactive}
                             accent="orange"
                         />
                         <KpiCard
-                            label={x('Used By Monitors', 'Gebruikt Door Monitoren')}
+                            label={t('Used By Monitors')}
                             value={stats.usedByMonitors}
                             accent="cyan"
                         />
                         <KpiCard
-                            label={x('Total Monitor Links', 'Totale Monitor Links')}
+                            label={t('Total Monitor Links')}
                             value={stats.totalMonitors}
                             accent="orange"
                         />
@@ -139,7 +171,7 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Create Store', 'Winkel Maken')}
+                                    {t('Create Store')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -152,15 +184,12 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                                             htmlFor="create-store-name"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Name', 'Naam')}
+                                            {t('Name')}
                                         </label>
                                         <input
                                             id="create-store-name"
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                            placeholder={x(
-                                                'Example: Amazon',
-                                                'Voorbeeld: Amazon',
-                                            )}
+                                            placeholder={t('Example: Amazon')}
                                             value={form.data.name}
                                             onChange={(event) =>
                                                 form.setData('name', event.target.value)
@@ -173,15 +202,12 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                                             htmlFor="create-store-domain"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Domain', 'Domein')}
+                                            {t('Domain')}
                                         </label>
                                         <input
                                             id="create-store-domain"
                                             className="w-full rounded-md border border-white/15 bg-[color:var(--landing-surface-2)] px-3 py-2 text-sm text-white placeholder:text-white/45"
-                                            placeholder={x(
-                                                'amazon.com or https://amazon.com',
-                                                'amazon.com of https://amazon.com',
-                                            )}
+                                            placeholder={t('amazon.com or https://amazon.com')}
                                             value={form.data.domain}
                                             onChange={(event) =>
                                                 form.setData('domain', event.target.value)
@@ -194,7 +220,7 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                                             htmlFor="create-store-active"
                                             className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/60"
                                         >
-                                            {x('Status', 'Status')}
+                                            {t('Status')}
                                         </label>
                                         <select
                                             id="create-store-active"
@@ -205,10 +231,10 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                                             }
                                         >
                                             <option className="text-black" value="1">
-                                                {x('Active', 'Actief')}
+                                                {t('Active')}
                                             </option>
                                             <option className="text-black" value="0">
-                                                {x('Inactive', 'Inactief')}
+                                                {t('Inactive')}
                                             </option>
                                         </select>
                                     </div>
@@ -223,7 +249,7 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                                             )}
                                             disabled={form.processing}
                                         >
-                                            {x('Add Store', 'Winkel Toevoegen')}
+                                            {t('Add Store')}
                                         </button>
                                     </div>
                                 </form>
@@ -233,16 +259,13 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                         <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                             <CardHeader>
                                 <CardTitle className="font-display text-lg text-white">
-                                    {x('Most Used Stores', 'Meest Gebruikte Winkels')}
+                                    {t('Most Used Stores')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <BarMeter
                                     rows={topTrackedStores}
-                                    emptyLabel={x(
-                                        'No stores yet.',
-                                        'Nog geen winkels.',
-                                    )}
+                                    emptyLabel={t('No stores yet.')}
                                 />
                             </CardContent>
                         </Card>
@@ -251,18 +274,18 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                     <Card className="border-white/10 bg-[color:var(--landing-surface)]">
                         <CardHeader>
                             <CardTitle className="font-display text-lg text-white">
-                                {x('Store List', 'Winkellijst')}
+                                {t('Store List')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="overflow-x-auto">
                             <table className="w-full min-w-[760px] text-left text-sm">
                                 <thead>
                                     <tr className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-white/55">
-                                        <th className="px-3 py-2">{x('Name', 'Naam')}</th>
-                                        <th className="px-3 py-2">{x('Domain', 'Domein')}</th>
-                                        <th className="px-3 py-2">{x('Monitors', 'Monitoren')}</th>
-                                        <th className="px-3 py-2">{x('Active', 'Actief')}</th>
-                                        <th className="px-3 py-2">{x('Actions', 'Acties')}</th>
+                                        <th className="px-3 py-2">{t('Name')}</th>
+                                        <th className="px-3 py-2">{t('Domain')}</th>
+                                        <th className="px-3 py-2">{t('Monitors')}</th>
+                                        <th className="px-3 py-2">{t('Active')}</th>
+                                        <th className="px-3 py-2">{t('Actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -280,8 +303,8 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                                             <td className="px-3 py-2">{store.monitors_count}</td>
                                             <td className="px-3 py-2">
                                                 {store.active
-                                                    ? x('Yes', 'Ja')
-                                                    : x('No', 'Nee')}
+                                                    ? t('Yes')
+                                                    : t('No')}
                                             </td>
                                             <td className="px-3 py-2">
                                                 <div className="flex flex-wrap gap-2">
@@ -296,7 +319,7 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                                                         )}
                                                         onClick={() => editStore(store)}
                                                     >
-                                                        {x('Edit', 'Bewerken')}
+                                                        {t('Edit')}
                                                     </button>
                                                     <button
                                                         type="button"
@@ -310,8 +333,8 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                                                         onClick={() => toggleStore(store)}
                                                     >
                                                         {store.active
-                                                            ? x('Disable', 'Uitschakelen')
-                                                            : x('Enable', 'Inschakelen')}
+                                                            ? t('Disable')
+                                                            : t('Enable')}
                                                     </button>
                                                     <button
                                                         type="button"
@@ -324,7 +347,7 @@ export default function StoresIndex({ stores }: { stores: Store[] }) {
                                                         )}
                                                         onClick={() => deleteStore(store)}
                                                     >
-                                                        {x('Delete', 'Verwijderen')}
+                                                        {t('Delete')}
                                                     </button>
                                                 </div>
                                             </td>

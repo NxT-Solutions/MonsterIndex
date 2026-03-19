@@ -66,15 +66,19 @@ class BestPriceProjector
         $siteName = (string) ($monitor->site?->name ?: 'Unknown store');
 
         if ($hasNewBestTotal) {
+            if ($currentPerCanCents === null) {
+                return;
+            }
+
             Alert::query()->create([
                 'monster_id' => $monster->id,
                 'monitor_id' => $monitor->id,
                 'type' => 'new_best_price',
                 'title' => sprintf('New best price for %s', $monster->name),
                 'body' => sprintf(
-                    '%s now has a new best total price of %s at %s.',
+                    '%s now has a new best per-can price of %s at %s.',
                     $monster->name,
-                    $this->formatCents($snapshot->effective_total_cents, $snapshotCurrency),
+                    $this->formatCents($currentPerCanCents, $snapshotCurrency),
                     $siteName,
                 ),
             ]);

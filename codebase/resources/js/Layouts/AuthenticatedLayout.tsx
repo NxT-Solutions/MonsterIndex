@@ -38,7 +38,7 @@ export default function AuthenticatedLayout({
 }: PropsWithChildren<{ header?: ReactNode }>) {
     const page = usePage<LayoutProps>();
     const user = page.props.auth.user;
-    const { x } = useLocale();
+    const { t } = useLocale();
 
     if (!user) {
         return null;
@@ -59,7 +59,7 @@ export default function AuthenticatedLayout({
     const primaryNavItems = useMemo<NavItem[]>(() => {
         const items: NavItem[] = [
             {
-                label: x('Dashboard', 'Dashboard'),
+                label: t('Dashboard'),
                 href: route('dashboard'),
                 active: route().current('dashboard'),
             },
@@ -67,7 +67,7 @@ export default function AuthenticatedLayout({
 
         if (!isAdmin && user.can.monitor_submit) {
             items.push({
-                label: x('My Monitors', 'Mijn Monitoren'),
+                label: t('My Monitors'),
                 href: route('contribute.monitors.index'),
                 active: route().current('contribute.monitors.*'),
             });
@@ -75,7 +75,7 @@ export default function AuthenticatedLayout({
 
         if (!isAdmin && user.can.monster_suggestion_submit) {
             items.push({
-                label: x('Suggestions', 'Suggesties'),
+                label: t('Suggestions'),
                 href: route('contribute.suggestions.index'),
                 active: route().current('contribute.suggestions.*'),
             });
@@ -83,7 +83,7 @@ export default function AuthenticatedLayout({
 
         if (!isAdmin && user.can.monster_follow) {
             items.push({
-                label: x('Following', 'Volgend'),
+                label: t('Following'),
                 href: route('contribute.follows.index'),
                 active: route().current('contribute.follows.*'),
             });
@@ -91,7 +91,7 @@ export default function AuthenticatedLayout({
 
         if (!isAdmin && user.can.contributor_alert_view) {
             items.push({
-                label: x('Alerts', 'Meldingen'),
+                label: t('Alerts'),
                 href: route('contribute.alerts.index'),
                 active: route().current('contribute.alerts.*'),
                 badge: contributorAlerts.unread,
@@ -106,7 +106,7 @@ export default function AuthenticatedLayout({
         user.can.monster_suggestion_submit,
         user.can.monster_follow,
         user.can.contributor_alert_view,
-        x,
+        t,
     ]);
 
     const adminNavItems = useMemo<NavItem[]>(() => {
@@ -116,39 +116,39 @@ export default function AuthenticatedLayout({
 
         return [
             {
-                label: x('Admin Overview', 'Admin Overzicht'),
+                label: t('Admin Overview'),
                 href: route('admin.dashboard'),
                 active: route().current('admin.dashboard'),
             },
             {
-                label: x('Monsters', 'Monsters'),
+                label: t('Monsters'),
                 href: route('admin.monsters.index'),
                 active: route().current('admin.monsters.*'),
             },
             {
-                label: x('Stores', 'Winkels'),
+                label: t('Stores'),
                 href: route('admin.stores.index'),
                 active: route().current('admin.stores.*'),
             },
             {
-                label: x('Monitors', 'Monitoren'),
+                label: t('Monitors'),
                 href: route('admin.monitors.index'),
                 active: route().current('admin.monitors.*'),
             },
             {
-                label: x('Alerts', 'Meldingen'),
+                label: t('Alerts'),
                 href: route('admin.alerts.index'),
                 active: route().current('admin.alerts.*'),
             },
         ];
-    }, [isAdmin, x]);
+    }, [isAdmin, t]);
 
     const reviewNavItems = useMemo<NavItem[]>(() => {
         const items: NavItem[] = [];
 
         if (user.can.monitor_review) {
             items.push({
-                label: x('Review Monitors', 'Review Monitoren'),
+                label: t('Review Monitors'),
                 href: route('admin.review.monitors.index'),
                 active: route().current('admin.review.monitors.*'),
                 badge: reviewCounts.pending_monitors,
@@ -157,7 +157,7 @@ export default function AuthenticatedLayout({
 
         if (user.can.monster_suggestion_review) {
             items.push({
-                label: x('Review Suggestions', 'Review Suggesties'),
+                label: t('Review Suggestions'),
                 href: route('admin.review.suggestions.index'),
                 active: route().current('admin.review.suggestions.*'),
                 badge: reviewCounts.pending_suggestions,
@@ -170,7 +170,7 @@ export default function AuthenticatedLayout({
         user.can.monster_suggestion_review,
         reviewCounts.pending_monitors,
         reviewCounts.pending_suggestions,
-        x,
+        t,
     ]);
 
     return (
@@ -184,7 +184,7 @@ export default function AuthenticatedLayout({
                         <div className="hidden sm:block">
                             <p className="font-display text-lg font-semibold text-white">MonsterIndex</p>
                             <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">
-                                {x('Admin Ops', 'Admin Ops')}
+                                {t('Admin Ops')}
                             </p>
                         </div>
                     </Link>
@@ -212,13 +212,13 @@ export default function AuthenticatedLayout({
                                 'border-white/20 bg-transparent text-white hover:bg-white/10',
                             )}
                         >
-                            {x('Log Out', 'Uitloggen')}
+                            {t('Log Out')}
                         </Link>
                         <button
                             type="button"
                             onClick={() => setMobileOpen((state) => !state)}
                             className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/20 bg-white/5 text-white lg:hidden"
-                            aria-label={x('Toggle menu', 'Menu wisselen')}
+                            aria-label={t('Toggle menu')}
                         >
                             <svg
                                 viewBox="0 0 24 24"
@@ -249,7 +249,7 @@ export default function AuthenticatedLayout({
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
-                                        'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                        'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors',
                                         item.active
                                             ? 'bg-[color:var(--landing-accent)] text-[#0b1201]'
                                             : 'text-white/70 hover:bg-white/10 hover:text-white',
@@ -271,8 +271,8 @@ export default function AuthenticatedLayout({
 
                             {adminNavItems.length > 0 && (
                                 <details className="group relative [&_summary::-webkit-details-marker]:hidden">
-                                    <summary className="inline-flex list-none cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm font-medium text-white/85 transition-colors hover:bg-white/10">
-                                        <span>{x('Admin Tools', 'Admin Tools')}</span>
+                                    <summary className="inline-flex list-none cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm font-medium whitespace-nowrap text-white/85 transition-colors hover:bg-white/10">
+                                        <span>{t('Admin Tools')}</span>
                                         <svg
                                             viewBox="0 0 20 20"
                                             fill="none"
@@ -287,16 +287,16 @@ export default function AuthenticatedLayout({
                                             />
                                         </svg>
                                     </summary>
-                                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-60 rounded-xl border border-white/15 bg-[color:var(--landing-surface)] p-2 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-60 rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--popover)] p-2 shadow-[var(--shadow-dialog)]">
                                         {adminNavItems.map((item) => (
                                             <Link
                                                 key={item.href}
                                                 href={item.href}
                                                 className={cn(
-                                                    'flex items-center rounded-md px-3 py-2 text-sm transition-colors',
+                                                    'flex items-center rounded-md px-3 py-2 text-sm whitespace-nowrap transition-colors',
                                                     item.active
                                                         ? 'bg-[color:var(--landing-accent)] text-[#0b1201]'
-                                                        : 'text-white/80 hover:bg-white/10 hover:text-white',
+                                                        : 'text-[color:var(--popover-foreground)] hover:bg-[color:var(--surface-3)] hover:text-[color:var(--foreground)]',
                                                 )}
                                             >
                                                 {item.label}
@@ -308,13 +308,13 @@ export default function AuthenticatedLayout({
                         </div>
 
                         {reviewNavItems.length > 0 && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex min-w-fit shrink-0 items-center gap-2">
                                 {reviewNavItems.map((item) => (
                                     <Link
                                         key={item.href}
                                         href={item.href}
                                         className={cn(
-                                            'inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors',
+                                            'inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors',
                                             item.active
                                                 ? 'border-[color:var(--landing-accent-soft)] bg-[color:var(--landing-accent)] text-[#0b1201]'
                                                 : 'border-white/15 bg-white/5 text-white/85 hover:bg-white/10',
@@ -381,7 +381,7 @@ export default function AuthenticatedLayout({
                             {adminNavItems.length > 0 && (
                                 <div className="rounded-md border border-white/10 bg-white/5 p-2">
                                     <p className="px-2 pb-1 text-[11px] uppercase tracking-[0.18em] text-white/55">
-                                        {x('Admin Tools', 'Admin Tools')}
+                                        {t('Admin Tools')}
                                     </p>
                                     <div className="grid gap-1">
                                         {adminNavItems.map((item) => (
@@ -406,7 +406,7 @@ export default function AuthenticatedLayout({
                             {reviewNavItems.length > 0 && (
                                 <div className="rounded-md border border-white/10 bg-white/5 p-2">
                                     <p className="px-2 pb-1 text-[11px] uppercase tracking-[0.18em] text-white/55">
-                                        {x('Review Queue', 'Review Wachtrij')}
+                                        {t('Review Queue')}
                                     </p>
                                     <div className="grid gap-1">
                                         {reviewNavItems.map((item) => (

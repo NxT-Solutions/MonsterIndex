@@ -1,14 +1,8 @@
 @php
-    $lang = request()->query('lang') === 'nl' ? 'nl' : 'en';
-    $title = $lang === 'nl'
-        ? 'MonsterIndex Selector Resultaat'
-        : 'MonsterIndex Selector Capture';
-    $successHeading = $lang === 'nl'
-        ? 'Selector Opslag Gelukt'
-        : 'Selector Capture Success';
-    $errorHeading = $lang === 'nl'
-        ? 'Selector Opslag Fout'
-        : 'Selector Capture Error';
+    $lang = isset($lang) && is_string($lang) ? $lang : app()->getLocale();
+    $title = __('MonsterIndex Selector Capture', [], $lang);
+    $successHeading = __('Selector Capture Success', [], $lang);
+    $errorHeading = __('Selector Capture Error', [], $lang);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $lang }}">

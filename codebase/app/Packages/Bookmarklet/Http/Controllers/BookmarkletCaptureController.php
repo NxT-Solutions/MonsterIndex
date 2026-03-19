@@ -5,10 +5,12 @@ namespace Packages\Bookmarklet\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Monitor;
 use App\Models\PriceSnapshot;
+use App\Support\Locales\LocaleRegistry;
 use App\Support\UrlCanonicalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 use Packages\Bookmarklet\Services\BookmarkletSessionService;
 use Packages\Monitoring\Services\BestPriceProjector;
@@ -28,7 +30,7 @@ class BookmarkletCaptureController extends Controller
         $lang = $this->resolveLang($request, $payload);
 
         $validator = Validator::make($payload, [
-            'lang' => ['nullable', 'in:en,nl'],
+            'lang' => ['nullable', Rule::in(LocaleRegistry::supportedCodes())],
             'token' => ['required', 'string'],
             'page_url' => ['required', 'url', 'max:2048'],
             'page_title' => ['nullable', 'string', 'max:500'],
@@ -63,7 +65,7 @@ class BookmarkletCaptureController extends Controller
         if ($validator->fails()) {
             return $this->errorResponse(
                 $request,
-                $this->translate($lang, 'Invalid selector payload.', 'Ongeldige selector-payload.'),
+                __('Invalid selector payload.', [], $lang),
                 422,
                 $lang,
             );
@@ -75,7 +77,7 @@ class BookmarkletCaptureController extends Controller
         if (! $session) {
             return $this->errorResponse(
                 $request,
-                $this->translate($lang, 'Selector token is invalid or expired.', 'Selectortoken is ongeldig of verlopen.'),
+                __('Selector token is invalid or expired.', [], $lang),
                 401,
                 $lang,
             );
@@ -151,14 +153,12 @@ class BookmarkletCaptureController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'ok' => true,
-                'message' => $this->translate(
-                    $lang,
+                'message' => __(
                     $monitor->submission_status === Monitor::STATUS_APPROVED
                         ? 'Selectors captured and validated.'
                         : 'Selectors captured and validation stored. Submit this monitor for admin review.',
-                    $monitor->submission_status === Monitor::STATUS_APPROVED
-                        ? 'Selectors opgeslagen en gevalideerd.'
-                        : 'Selectors opgeslagen en validatie bewaard. Dien deze monitor nu in voor adminreview.',
+                    [],
+                    $lang,
                 ),
                 'status' => $result->status,
                 'currency' => $monitorCurrency,
@@ -173,11 +173,8 @@ class BookmarkletCaptureController extends Controller
         return response(
             view('bookmarklet-capture-result', [
                 'ok' => true,
-                'message' => $this->translate(
-                    $lang,
-                    'Selectors captured and validated successfully. You can close this tab.',
-                    'Selectors zijn succesvol opgeslagen en gevalideerd. Je kunt dit tabblad sluiten.',
-                ),
+                'message' => __('Selectors captured and validated successfully. You can close this tab.', [], $lang),
+                'lang' => $lang,
             ]),
             200,
         );
@@ -249,12 +246,7 @@ class BookmarkletCaptureController extends Controller
     {
         $candidate = $payload['lang'] ?? $request->query('lang');
 
-        return $candidate === 'nl' ? 'nl' : 'en';
-    }
-
-    private function translate(string $lang, string $english, string $dutch): string
-    {
-        return $lang === 'nl' ? $dutch : $english;
+        return LocaleRegistry::resolve(is_string($candidate) ? $candidate : null);
     }
 
     private function validationFailedMessage(string $lang, ?string $errorCode): string
@@ -263,17 +255,9 @@ class BookmarkletCaptureController extends Controller
             ? $errorCode
             : 'UNKNOWN';
 
-        return $this->translate(
-            $lang,
-            sprintf(
-                'Selector capture saved, but validation failed (%s). This is usually a selector mismatch. Select the exact price text and retry.',
-                $code,
-            ),
-            sprintf(
-                'Selectoropslag is bewaard, maar validatie faalde (%s). Dit is meestal een selector-mismatch. Selecteer exact de prijstekst en probeer opnieuw.',
-                $code,
-            ),
-        );
+        return __('Selector capture saved, but validation failed (:code). This is usually a selector mismatch. Select the exact price text and retry.', [
+            'code' => $code,
+        ], $lang);
     }
 
     /**
