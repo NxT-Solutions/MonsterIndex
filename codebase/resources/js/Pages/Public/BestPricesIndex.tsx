@@ -1,13 +1,23 @@
 import Hero from "@/Components/public/Hero";
 import LandingNav from "@/Components/public/LandingNav";
-import OfferGrid from "@/Components/public/OfferGrid";
-import TrendingTracks from "@/Components/public/TrendingTracks";
 import { Card, CardContent } from "@/Components/ui/card";
 import { useLocale } from "@/lib/locale";
 import { PublicOfferRow, TrendingTrackRow } from "@/lib/publicPricing";
 import { PageProps } from "@/types";
 import { Head, router } from "@inertiajs/react";
-import { useEffect, useMemo, useState } from "react";
+import {
+    type ReactNode,
+    Suspense,
+    lazy,
+    startTransition,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
+
+const OfferGrid = lazy(() => import("@/Components/public/OfferGrid"));
+const TrendingTracks = lazy(() => import("@/Components/public/TrendingTracks"));
 
 type LandingCopy = {
     name: string;
@@ -218,7 +228,9 @@ export default function BestPricesIndex({
                     </section>
 
                     {normalizedQuery === "" && (
-                        <TrendingTracks tracks={trendingTracks} />
+                        <DeferredSection fallback={<TrendingTracksSkeleton />}>
+                            <TrendingTracks tracks={trendingTracks} />
+                        </DeferredSection>
                     )}
 
                     <section id="live-offers" className="space-y-4">
@@ -236,7 +248,9 @@ export default function BestPricesIndex({
                             </p>
                         </div>
 
-                        <OfferGrid offers={filteredOffers} query={query} />
+                        <DeferredSection fallback={<OfferGridSkeleton />}>
+                            <OfferGrid offers={filteredOffers} query={query} />
+                        </DeferredSection>
                     </section>
 
                     <section className="grid gap-4 md:grid-cols-3">
@@ -299,5 +313,133 @@ export default function BestPricesIndex({
                 </main>
             </div>
         </>
+    );
+}
+
+type DeferredSectionProps = {
+    children: ReactNode;
+    fallback: ReactNode;
+    rootMargin?: string;
+};
+
+function DeferredSection({
+    children,
+    fallback,
+    rootMargin = "480px 0px",
+}: DeferredSectionProps) {
+    const [enabled, setEnabled] = useState(false);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        if (enabled) {
+            return;
+        }
+
+        const container = containerRef.current;
+
+        if (
+            !container ||
+            typeof window === "undefined" ||
+            typeof window.IntersectionObserver !== "function"
+        ) {
+            startTransition(() => setEnabled(true));
+
+            return;
+        }
+
+        const observer = new window.IntersectionObserver(
+            (entries) => {
+                if (!entries.some((entry) => entry.isIntersecting)) {
+                    return;
+                }
+
+                startTransition(() => setEnabled(true));
+                observer.disconnect();
+            },
+            { rootMargin },
+        );
+
+        observer.observe(container);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [enabled, rootMargin]);
+
+    return (
+        <div ref={containerRef}>
+            {enabled ? (
+                <Suspense fallback={fallback}>{children}</Suspense>
+            ) : (
+                fallback
+            )}
+        </div>
+    );
+}
+
+function TrendingTracksSkeleton() {
+    return (
+        <div
+            className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+            aria-hidden="true"
+        >
+            {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                    key={index}
+                    className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface)] p-5 shadow-[0_16px_45px_rgba(0,0,0,.35)]"
+                >
+                    <div className="h-7 w-2/3 rounded-full bg-white/10" />
+                    <div className="mt-3 h-4 w-1/2 rounded-full bg-white/10" />
+                    <div className="mt-2 h-4 w-3/4 rounded-full bg-white/10" />
+                    <div className="mt-2 h-4 w-1/3 rounded-full bg-white/10" />
+                    <div className="mt-6 flex gap-2">
+                        <div className="h-9 w-36 rounded-full bg-white/10" />
+                        <div className="h-9 w-28 rounded-full bg-white/10" />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function OfferGridSkeleton() {
+    return (
+        <div className="space-y-4" aria-hidden="true">
+            {Array.from({ length: 2 }).map((_, index) => (
+                <div
+                    key={index}
+                    className="rounded-2xl border border-white/10 bg-[color:var(--landing-surface)] p-4 shadow-[0_12px_35px_rgba(0,0,0,.28)] sm:p-6"
+                >
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="w-full sm:max-w-xl">
+                            <div className="h-8 w-2/3 rounded-full bg-white/10" />
+                            <div className="mt-3 h-4 w-1/2 rounded-full bg-white/10" />
+                        </div>
+                        <div className="w-full sm:max-w-[10rem]">
+                            <div className="h-8 w-32 rounded-full bg-white/10 sm:ml-auto" />
+                            <div className="mt-2 h-4 w-24 rounded-full bg-white/10 sm:ml-auto" />
+                        </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        {Array.from({ length: 4 }).map((_, detailIndex) => (
+                            <div
+                                key={detailIndex}
+                                className="h-4 rounded-full bg-white/10"
+                            />
+                        ))}
+                    </div>
+
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="h-4 w-24 rounded-full bg-white/10" />
+                        <div className="flex gap-2">
+                            <div className="h-9 w-36 rounded-full bg-white/10" />
+                            <div className="h-9 w-32 rounded-full bg-white/10" />
+                            <div className="h-9 w-28 rounded-full bg-white/10" />
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
     );
 }
