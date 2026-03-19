@@ -37,29 +37,47 @@ class BookmarkletCaptureController extends Controller
             'selectors.price.css' => ['nullable', 'string', 'max:2000'],
             'selectors.price.xpath' => ['nullable', 'string', 'max:2000'],
             'selectors.price.sample_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.price.text_selection.selected_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.price.text_selection.prefix' => ['nullable', 'string', 'max:500'],
+            'selectors.price.text_selection.suffix' => ['nullable', 'string', 'max:500'],
             'selectors.price.join_with' => ['nullable', 'string', 'max:10'],
             'selectors.price.parts' => ['nullable', 'array', 'max:6'],
             'selectors.price.parts.*.css' => ['nullable', 'string', 'max:2000'],
             'selectors.price.parts.*.xpath' => ['nullable', 'string', 'max:2000'],
             'selectors.price.parts.*.sample_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.price.parts.*.text_selection.selected_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.price.parts.*.text_selection.prefix' => ['nullable', 'string', 'max:500'],
+            'selectors.price.parts.*.text_selection.suffix' => ['nullable', 'string', 'max:500'],
             'selectors.shipping.css' => ['nullable', 'string', 'max:2000'],
             'selectors.shipping.xpath' => ['nullable', 'string', 'max:2000'],
             'selectors.shipping.sample_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.shipping.text_selection.selected_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.shipping.text_selection.prefix' => ['nullable', 'string', 'max:500'],
+            'selectors.shipping.text_selection.suffix' => ['nullable', 'string', 'max:500'],
             'selectors.shipping.join_with' => ['nullable', 'string', 'max:10'],
             'selectors.shipping.manual_value' => ['nullable', 'string', 'max:50'],
             'selectors.shipping.parts' => ['nullable', 'array', 'max:6'],
             'selectors.shipping.parts.*.css' => ['nullable', 'string', 'max:2000'],
             'selectors.shipping.parts.*.xpath' => ['nullable', 'string', 'max:2000'],
             'selectors.shipping.parts.*.sample_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.shipping.parts.*.text_selection.selected_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.shipping.parts.*.text_selection.prefix' => ['nullable', 'string', 'max:500'],
+            'selectors.shipping.parts.*.text_selection.suffix' => ['nullable', 'string', 'max:500'],
             'selectors.quantity.css' => ['nullable', 'string', 'max:2000'],
             'selectors.quantity.xpath' => ['nullable', 'string', 'max:2000'],
             'selectors.quantity.sample_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.quantity.text_selection.selected_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.quantity.text_selection.prefix' => ['nullable', 'string', 'max:500'],
+            'selectors.quantity.text_selection.suffix' => ['nullable', 'string', 'max:500'],
             'selectors.quantity.join_with' => ['nullable', 'string', 'max:10'],
             'selectors.quantity.manual_value' => ['nullable', 'string', 'max:50'],
             'selectors.quantity.parts' => ['nullable', 'array', 'max:6'],
             'selectors.quantity.parts.*.css' => ['nullable', 'string', 'max:2000'],
             'selectors.quantity.parts.*.xpath' => ['nullable', 'string', 'max:2000'],
             'selectors.quantity.parts.*.sample_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.quantity.parts.*.text_selection.selected_text' => ['nullable', 'string', 'max:1000'],
+            'selectors.quantity.parts.*.text_selection.prefix' => ['nullable', 'string', 'max:500'],
+            'selectors.quantity.parts.*.text_selection.suffix' => ['nullable', 'string', 'max:500'],
         ]);
 
         if ($validator->fails()) {
@@ -291,16 +309,62 @@ class BookmarkletCaptureController extends Controller
             }
         }
 
+        $textSelection = $selector['text_selection'] ?? null;
+        if (is_array($textSelection)) {
+            $normalizedTextSelection = [
+                'selected_text' => is_string($textSelection['selected_text'] ?? null)
+                    ? trim($textSelection['selected_text'])
+                    : null,
+                'prefix' => is_string($textSelection['prefix'] ?? null)
+                    ? trim($textSelection['prefix'])
+                    : null,
+                'suffix' => is_string($textSelection['suffix'] ?? null)
+                    ? trim($textSelection['suffix'])
+                    : null,
+            ];
+
+            if (($normalizedTextSelection['selected_text'] ?? '') !== '') {
+                $normalized['text_selection'] = array_filter(
+                    $normalizedTextSelection,
+                    fn ($value): bool => is_string($value) && $value !== '',
+                );
+            }
+        }
+
         $parts = $selector['parts'] ?? null;
         if (is_array($parts)) {
             $normalizedParts = collect($parts)
                 ->filter(fn ($part): bool => is_array($part))
                 ->map(function (array $part): array {
-                    return [
+                    $normalizedPart = [
                         'css' => is_string($part['css'] ?? null) ? trim($part['css']) : null,
                         'xpath' => is_string($part['xpath'] ?? null) ? trim($part['xpath']) : null,
                         'sample_text' => is_string($part['sample_text'] ?? null) ? trim($part['sample_text']) : null,
                     ];
+
+                    $textSelection = $part['text_selection'] ?? null;
+                    if (is_array($textSelection)) {
+                        $normalizedTextSelection = [
+                            'selected_text' => is_string($textSelection['selected_text'] ?? null)
+                                ? trim($textSelection['selected_text'])
+                                : null,
+                            'prefix' => is_string($textSelection['prefix'] ?? null)
+                                ? trim($textSelection['prefix'])
+                                : null,
+                            'suffix' => is_string($textSelection['suffix'] ?? null)
+                                ? trim($textSelection['suffix'])
+                                : null,
+                        ];
+
+                        if (($normalizedTextSelection['selected_text'] ?? '') !== '') {
+                            $normalizedPart['text_selection'] = array_filter(
+                                $normalizedTextSelection,
+                                fn ($value): bool => is_string($value) && $value !== '',
+                            );
+                        }
+                    }
+
+                    return $normalizedPart;
                 })
                 ->filter(function (array $part): bool {
                     return ($part['css'] ?? '') !== '' || ($part['xpath'] ?? '') !== '';
