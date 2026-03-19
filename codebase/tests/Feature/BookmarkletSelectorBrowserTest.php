@@ -43,6 +43,109 @@ it('renders selector browser for valid admin token and monitor', function () {
         ->assertSee('Monster Product');
 });
 
+it('renders a stable static snapshot for Alpine-driven content in selector browser', function () {
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $monitor = Monitor::factory()->create([
+        'product_url' => 'https://example.com/product/alpine-price',
+    ]);
+
+    BookmarkletSession::query()->create([
+        'monitor_id' => $monitor->id,
+        'created_by_user_id' => $admin->id,
+        'token' => 'alpine-price-token',
+        'expires_at' => now()->addMinutes(10),
+        'used_at' => null,
+    ]);
+
+    Http::fake([
+        'https://example.com/product/alpine-price' => Http::response(
+            <<<'HTML'
+            <html>
+              <head>
+                <title>Alpine Product</title>
+                <script>window.remoteWidgetBooted = true;</script>
+              </head>
+              <body>
+                <div class="price-shell">
+                  <template x-if="ready">
+                    <span class="price">€ 1,75</span>
+                  </template>
+                </div>
+              </body>
+            </html>
+            HTML,
+            200,
+            ['Content-Type' => 'text/html'],
+        ),
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('admin.monitors.selector-browser', [
+        'monitor' => $monitor->id,
+        'token' => 'alpine-price-token',
+        'url' => 'https://example.com/product/alpine-price',
+    ]));
+
+    $response
+        ->assertOk()
+        ->assertDontSee('window.remoteWidgetBooted = true;', escape: false)
+        ->assertDontSee('<template x-if="ready">', escape: false)
+        ->assertSee('&euro; 1,75', escape: false);
+});
+
+it('keeps x-cloak based overlays hidden in selector browser snapshots', function () {
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $monitor = Monitor::factory()->create([
+        'product_url' => 'https://example.com/product/with-overlay',
+    ]);
+
+    BookmarkletSession::query()->create([
+        'monitor_id' => $monitor->id,
+        'created_by_user_id' => $admin->id,
+        'token' => 'overlay-token',
+        'expires_at' => now()->addMinutes(10),
+        'used_at' => null,
+    ]);
+
+    Http::fake([
+        'https://example.com/product/with-overlay' => Http::response(
+            <<<'HTML'
+            <html>
+              <head><title>Overlay Product</title></head>
+              <body>
+                <div x-cloak x-show="isLoading" class="loading-overlay">Laden...</div>
+                <div class="price-shell">
+                  <template x-if="ready">
+                    <span class="price">€ 1,75</span>
+                  </template>
+                </div>
+              </body>
+            </html>
+            HTML,
+            200,
+            ['Content-Type' => 'text/html'],
+        ),
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('admin.monitors.selector-browser', [
+        'monitor' => $monitor->id,
+        'token' => 'overlay-token',
+        'url' => 'https://example.com/product/with-overlay',
+    ]));
+
+    $response
+        ->assertOk()
+        ->assertSee('[x-cloak] { display: none !important; }', escape: false)
+        ->assertSee('x-cloak', escape: false)
+        ->assertSee('Laden...', escape: false)
+        ->assertSee('&euro; 1,75', escape: false);
+});
+
 it('rejects selector browser access when token does not belong to monitor', function () {
     $admin = User::factory()->create([
         'role' => User::ROLE_ADMIN,
