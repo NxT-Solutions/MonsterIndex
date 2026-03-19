@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { useLocale } from '@/lib/locale';
 import {
     enablePushNotifications,
+    fetchPushDeviceState,
     getPushPermissionState,
     isPushSupported,
 } from '@/lib/push';
@@ -37,13 +38,37 @@ export default function PwaExperienceDock() {
     const [installBusy, setInstallBusy] = useState(false);
     const [pushBusy, setPushBusy] = useState(false);
     const [permission, setPermission] = useState(() => getPushPermissionState());
-    const [subscriptionActive, setSubscriptionActive] = useState(
-        Boolean(page.props.push?.has_active_subscription),
-    );
+    const [subscriptionActive, setSubscriptionActive] = useState<boolean | null>(null);
 
     useEffect(() => {
-        setSubscriptionActive(Boolean(page.props.push?.has_active_subscription));
-    }, [page.props.push?.has_active_subscription]);
+        let cancelled = false;
+
+        const loadPushState = async () => {
+            if (!authUser) {
+                setSubscriptionActive(false);
+
+                return;
+            }
+
+            try {
+                const state = await fetchPushDeviceState();
+
+                if (!cancelled) {
+                    setSubscriptionActive(state.currentDeviceSubscribed);
+                }
+            } catch {
+                if (!cancelled) {
+                    setSubscriptionActive(null);
+                }
+            }
+        };
+
+        void loadPushState();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [authUser, page.props.push?.subscriptions_count]);
 
     useEffect(() => {
         if (subscriptionActive) {
@@ -135,7 +160,7 @@ export default function PwaExperienceDock() {
         return Boolean(authUser)
             && pushConfigured
             && pushSupported
-            && !subscriptionActive
+            && subscriptionActive === false
             && !pushDismissed
             && (!appleMobileBrowser || isStandalone);
     }, [
