@@ -7,7 +7,14 @@ use Symfony\Component\Process\Process;
 
 class HeadlessExtractorClient
 {
-    public function __construct(private readonly MoneyParser $moneyParser) {}
+    private SelectorTextSelectionApplier $textSelectionApplier;
+
+    public function __construct(
+        private readonly MoneyParser $moneyParser,
+        ?SelectorTextSelectionApplier $textSelectionApplier = null,
+    ) {
+        $this->textSelectionApplier = $textSelectionApplier ?? new SelectorTextSelectionApplier;
+    }
 
     /**
      * @param  array<string, mixed>  $selectors
@@ -45,15 +52,27 @@ class HeadlessExtractorClient
             )->withHeadlessFallback();
         }
 
-        $priceText = $output['price_text'] ?? null;
-        $shippingText = $output['shipping_text'] ?? null;
-        $quantityText = $output['quantity_text'] ?? null;
+        $priceSelector = is_array($selectors['price'] ?? null)
+            ? $selectors['price']
+            : [];
         $shippingSelector = is_array($selectors['shipping'] ?? null)
             ? $selectors['shipping']
             : [];
         $quantitySelector = is_array($selectors['quantity'] ?? null)
             ? $selectors['quantity']
             : [];
+        $priceText = $this->textSelectionApplier->apply(
+            is_string($output['price_text'] ?? null) ? $output['price_text'] : null,
+            $priceSelector,
+        );
+        $shippingText = $this->textSelectionApplier->apply(
+            is_string($output['shipping_text'] ?? null) ? $output['shipping_text'] : null,
+            $shippingSelector,
+        );
+        $quantityText = $this->textSelectionApplier->apply(
+            is_string($output['quantity_text'] ?? null) ? $output['quantity_text'] : null,
+            $quantitySelector,
+        );
         $manualShippingValue = $this->manualValue($shippingSelector);
         $manualQuantityValue = $this->manualValue($quantitySelector);
 

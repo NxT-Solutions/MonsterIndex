@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Monitor;
 use App\Support\Locales\LocaleRegistry;
 use App\Support\Authorization\PermissionBootstrapper;
+use DOMDocument;
+use DOMElement;
+use DOMNode;
+use DOMXPath;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -88,6 +92,8 @@ class BookmarkletController extends Controller
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             ]);
         }
+
+        $html = $this->prepareHtmlForSelectorBrowser($html);
 
         $user = $request->user();
         $isAdmin = $user?->can('monitors.manage.any') ?? false;
@@ -290,6 +296,7 @@ HTML;
         $runtime = <<<HTML
 <style data-monsterindex-ignore="true">
   html { scroll-padding-top: 76px; }
+  [x-cloak] { display: none !important; }
   #monsterindex-selector-toolbar { position: sticky; top: 0; z-index: 2147483646; background: #0f172a; color: #f8fafc; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-bottom: 2px solid #f97316; font: 13px/1.3 ui-sans-serif,system-ui,-apple-system,sans-serif; }
   #monsterindex-selector-toolbar strong { color: #fb923c; }
   #monsterindex-selector-toolbar .monsterindex-selector-meta { display: flex; flex-direction: column; gap: 2px; min-width: 260px; }
@@ -371,5 +378,85 @@ HTML;
         }
 
         return '<body>'.$runtime.$html.'</body>';
+    }
+
+    private function prepareHtmlForSelectorBrowser(string $html): string
+    {
+        $document = $this->createSelectorBrowserDocument($html);
+        if (! $document) {
+            return $html;
+        }
+
+        $xpath = new DOMXPath($document);
+
+        $scriptNodes = $xpath->query('//script');
+        if ($scriptNodes !== false) {
+            foreach ($this->nodesToArray($scriptNodes) as $scriptNode) {
+                $scriptNode->parentNode?->removeChild($scriptNode);
+            }
+        }
+
+        $templateNodes = $xpath->query('//template[@x-if]');
+        if ($templateNodes !== false) {
+            foreach ($this->nodesToArray($templateNodes) as $templateNode) {
+                $parent = $templateNode->parentNode;
+                if (! $parent instanceof DOMNode) {
+                    continue;
+                }
+
+                while ($templateNode->firstChild) {
+                    if ($templateNode->firstChild instanceof DOMElement) {
+                        $templateNode->firstChild->setAttribute(
+                            'data-monsterindex-unwrapped-template-root',
+                            'true',
+                        );
+                    }
+
+                    $parent->insertBefore($templateNode->firstChild, $templateNode);
+                }
+
+                $parent->removeChild($templateNode);
+            }
+        }
+
+        $serialized = $document->saveHTML();
+        if (! is_string($serialized) || trim($serialized) === '') {
+            return $html;
+        }
+
+        return (string) preg_replace('/<\?xml[^>]+>\s*/', '', $serialized, 1);
+    }
+
+    private function createSelectorBrowserDocument(string $html): ?DOMDocument
+    {
+        if (trim($html) === '') {
+            return null;
+        }
+
+        $internalErrors = libxml_use_internal_errors(true);
+
+        $document = new DOMDocument('1.0', 'UTF-8');
+        $loaded = $document->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_NOERROR | LIBXML_NOWARNING);
+
+        libxml_clear_errors();
+        libxml_use_internal_errors($internalErrors);
+
+        return $loaded ? $document : null;
+    }
+
+    /**
+     * @return list<DOMNode>
+     */
+    private function nodesToArray(\DOMNodeList $nodes): array
+    {
+        $items = [];
+
+        foreach ($nodes as $node) {
+            if ($node instanceof DOMNode) {
+                $items[] = $node;
+            }
+        }
+
+        return $items;
     }
 }

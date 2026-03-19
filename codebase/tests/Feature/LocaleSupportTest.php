@@ -44,5 +44,6 @@ it('injects the selected locale bundle into the bookmarklet script', function ()
         ->assertOk()
         ->assertHeader('Content-Type', 'application/javascript; charset=UTF-8')
         ->assertSee('const __monsterindexLocale = "fr";', false)
+        ->assertSee("const language =\n    typeof __monsterindexLocale === 'string' && __monsterindexLocale !== ''\n      ? __monsterindexLocale\n      : scriptUrl.searchParams.get('lang') || 'en';", false)
         ->assertSee('const __monsterindexLocaleMessages =', false);
 });

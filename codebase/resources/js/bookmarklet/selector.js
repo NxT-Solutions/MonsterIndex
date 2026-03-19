@@ -8,6 +8,10 @@
   const token = scriptUrl.searchParams.get('token');
   const sourceUrl = scriptUrl.searchParams.get('source_url') || window.location.href;
   const returnUrl = scriptUrl.searchParams.get('return_url') || '/admin/monsters';
+  const language =
+    typeof __monsterindexLocale === 'string' && __monsterindexLocale !== ''
+      ? __monsterindexLocale
+      : scriptUrl.searchParams.get('lang') || 'en';
   const messages =
     typeof __monsterindexLocaleMessages === 'object' && __monsterindexLocaleMessages !== null
       ? __monsterindexLocaleMessages
@@ -139,6 +143,9 @@
     shippingManualValue: '',
     quantityManualValue: '',
     shippingSkipped: false,
+    freeClick: false,
+    panelCollapsed: false,
+    restoreMode: 'select-price-main',
     submitting: false,
     done: false,
   };
@@ -163,8 +170,16 @@
 
   panel.innerHTML = `
     <div style="padding:14px 14px 10px;border-bottom:1px solid #e2e8f0;background:linear-gradient(180deg,#fff,#f8fafc)">
-      <div style="font-size:14px;font-weight:700">${t('Guided Price Selector')}</div>
-      <div style="font-size:12px;color:#475569;margin-top:4px">${t('Click values on the page. If a value is split (example 32 and 99), use "Add Part".')}</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+        <div style="min-width:0">
+          <div style="font-size:14px;font-weight:700">${t('Guided Price Selector')}</div>
+          <div style="font-size:12px;color:#475569;margin-top:4px">${t('Click values on the page. If a value is split (example 32 and 99), use "Add Part".')}</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;flex-shrink:0">
+          <button id="mi-free-click-toggle" type="button" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer">${t('Free Click')}</button>
+          <button id="mi-collapse-panel" type="button" aria-label="${t('Minimize selector panel')}" style="border:1px solid #cbd5e1;background:#ffffff;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer">${t('Minimize')}</button>
+        </div>
+      </div>
     </div>
     <div style="padding:12px 14px;display:grid;gap:10px">
       <div id="mi-instruction" style="font-size:13px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:10px"></div>
@@ -208,6 +223,35 @@
 
   document.body.appendChild(panel);
 
+  const collapsedDock = document.createElement('div');
+  collapsedDock.setAttribute('data-monsterindex-ignore', 'true');
+  collapsedDock.style.position = 'fixed';
+  collapsedDock.style.right = '24px';
+  collapsedDock.style.bottom = '24px';
+  collapsedDock.style.zIndex = '2147483647';
+  collapsedDock.style.display = 'none';
+  collapsedDock.style.maxWidth = 'min(380px, calc(100vw - 48px))';
+  collapsedDock.style.borderRadius = '18px';
+  collapsedDock.style.border = '1px solid rgba(148, 163, 184, 0.28)';
+  collapsedDock.style.background = 'rgba(15, 23, 42, 0.96)';
+  collapsedDock.style.boxShadow = '0 22px 48px rgba(2,6,23,.34)';
+  collapsedDock.style.color = '#f8fafc';
+  collapsedDock.style.fontFamily = 'ui-sans-serif,system-ui,-apple-system,sans-serif';
+  collapsedDock.style.overflow = 'hidden';
+  collapsedDock.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;flex-wrap:wrap">
+      <div style="display:grid;gap:4px;flex:1 1 180px;min-width:0">
+        <div id="mi-collapsed-title" style="font-size:12px;font-weight:700"></div>
+        <div id="mi-collapsed-note" style="font-size:11px;color:rgba(226,232,240,0.85)"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="mi-open-selector" type="button" style="border:1px solid rgba(255,255,255,0.18);background:#ffffff;color:#0f172a;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer">${t('Open Selector')}</button>
+        <button id="mi-resume-selecting" type="button" style="border:1px solid rgba(255,255,255,0.18);background:transparent;color:#f8fafc;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:600;cursor:pointer">${t('Resume Selecting')}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(collapsedDock);
+
   const instructionEl = panel.querySelector('#mi-instruction');
   const priceValueEl = panel.querySelector('#mi-price-value');
   const shippingValueEl = panel.querySelector('#mi-shipping-value');
@@ -226,8 +270,15 @@
   const resetBtn = panel.querySelector('#mi-reset');
   const saveBtn = panel.querySelector('#mi-save');
   const backBtn = panel.querySelector('#mi-back');
+  const freeClickToggleBtn = panel.querySelector('#mi-free-click-toggle');
+  const collapsePanelBtn = panel.querySelector('#mi-collapse-panel');
+  const openSelectorBtn = collapsedDock.querySelector('#mi-open-selector');
+  const resumeSelectingBtn = collapsedDock.querySelector('#mi-resume-selecting');
+  const collapsedTitleEl = collapsedDock.querySelector('#mi-collapsed-title');
+  const collapsedNoteEl = collapsedDock.querySelector('#mi-collapsed-note');
 
   let highlighted = null;
+  let ignoreNextClick = false;
 
   const selectingModes = new Set([
     'select-price-main',
@@ -239,11 +290,87 @@
   ]);
 
   const isSelecting = () => selectingModes.has(state.mode);
+  const defaultSelectionMode = () => (state.priceParts.length === 0 ? 'select-price-main' : 'idle');
 
   const cleanText = (value) =>
     String(value || '')
       .replace(/\s+/g, ' ')
       .trim();
+
+  const sampleText = (element) => {
+    if (!(element instanceof Element)) {
+      return '';
+    }
+
+    if (
+      element instanceof HTMLInputElement ||
+      element instanceof HTMLTextAreaElement ||
+      element instanceof HTMLSelectElement
+    ) {
+      return cleanText(element.value || element.getAttribute('value') || '');
+    }
+
+    if (element instanceof HTMLElement) {
+      const visibleText = cleanText(element.innerText || '');
+      if (visibleText !== '') {
+        return visibleText;
+      }
+    }
+
+    const clone = element.cloneNode(true);
+    if (clone instanceof Element) {
+      clone
+        .querySelectorAll('script, style, noscript, template, svg style, svg title, svg desc')
+        .forEach((node) => node.remove());
+    }
+
+    return cleanText((clone.textContent || '').slice(0, 500));
+  };
+
+  const textSelectionFromRange = (element, range) => {
+    if (!(element instanceof Element) || !(range instanceof Range)) {
+      return null;
+    }
+
+    const selectedText = cleanText(range.toString());
+    if (selectedText === '') {
+      return null;
+    }
+
+    const elementRange = document.createRange();
+    elementRange.selectNodeContents(element);
+
+    const beforeRange = document.createRange();
+    beforeRange.setStart(elementRange.startContainer, elementRange.startOffset);
+    beforeRange.setEnd(range.startContainer, range.startOffset);
+
+    const afterRange = document.createRange();
+    afterRange.setStart(range.endContainer, range.endOffset);
+    afterRange.setEnd(elementRange.endContainer, elementRange.endOffset);
+
+    const prefix = cleanText(beforeRange.toString().slice(-60));
+    const suffix = cleanText(afterRange.toString().slice(0, 60));
+
+    return {
+      selected_text: selectedText,
+      prefix,
+      suffix,
+    };
+  };
+
+  const selectionTargetFromRange = (range) => {
+    if (!(range instanceof Range)) {
+      return null;
+    }
+
+    const commonAncestor = range.commonAncestorContainer;
+    const element =
+      commonAncestor.nodeType === Node.ELEMENT_NODE
+        ? commonAncestor
+        : commonAncestor.parentElement;
+
+    return element instanceof Element ? element : null;
+  };
 
   const setStatus = (text, tone = 'info') => {
     if (!(statusEl instanceof HTMLElement)) {
@@ -309,6 +436,9 @@
     String(value || '')
       .replace(/\\/g, '\\\\')
       .replace(/"/g, '\\"');
+
+  const isUnwrappedTemplateRoot = (element) =>
+    element instanceof Element && element.hasAttribute('data-monsterindex-unwrapped-template-root');
 
   const isUniqueSelector = (selector) => {
     if (!selector || typeof selector !== 'string') {
@@ -458,6 +588,10 @@
         }
       }
 
+      if (isUnwrappedTemplateRoot(parent)) {
+        break;
+      }
+
       parent = parent.parentElement;
       depth++;
     }
@@ -485,11 +619,23 @@
     return '/' + segments.join('/');
   };
 
-  const toSelector = (element) => ({
-    css: cssPath(element),
-    xpath: xpathPath(element),
-    sample_text: cleanText((element.textContent || '').slice(0, 500)),
-  });
+  const toSelector = (element, options = {}) => {
+    const selection = options && typeof options === 'object' ? options.textSelection : null;
+    const selector = {
+      css: cssPath(element),
+      xpath: xpathPath(element),
+      sample_text:
+        selection && typeof selection.selected_text === 'string' && selection.selected_text !== ''
+          ? selection.selected_text
+          : sampleText(element),
+    };
+
+    if (selection && typeof selection.selected_text === 'string' && selection.selected_text !== '') {
+      selector.text_selection = selection;
+    }
+
+    return selector;
+  };
 
   const inferJoinWith = (parts) => {
     if (!Array.isArray(parts) || parts.length <= 1) {
@@ -573,38 +719,91 @@
     });
   };
 
+  const rememberRestoreMode = () => {
+    if (isSelecting()) {
+      state.restoreMode = state.mode;
+      return;
+    }
+
+    state.restoreMode = defaultSelectionMode();
+  };
+
+  const enableFreeClick = ({ collapse = true } = {}) => {
+    if (state.submitting || state.done) {
+      return;
+    }
+
+    rememberRestoreMode();
+    state.freeClick = true;
+    state.panelCollapsed = collapse;
+    state.mode = 'free-click';
+    setStatus(
+      t('Free click is enabled. Interact with the page to close drawers or overlays.'),
+      'info',
+    );
+    updateUi();
+  };
+
+  const openSelectorPanel = () => {
+    state.panelCollapsed = false;
+    updateUi();
+  };
+
+  const resumeSelecting = () => {
+    if (state.done) {
+      state.panelCollapsed = false;
+      updateUi();
+      return;
+    }
+
+    state.freeClick = false;
+    state.panelCollapsed = false;
+    state.mode = selectingModes.has(state.restoreMode)
+      ? state.restoreMode
+      : defaultSelectionMode();
+    setStatus(t('Selection mode restored. Click a value when ready.'), 'info');
+    updateUi();
+  };
+
   const updateInstruction = () => {
     if (!(instructionEl instanceof HTMLElement)) {
       return;
     }
 
+    if (state.freeClick) {
+      instructionEl.textContent = t(
+        'Free click mode is active. Interact with the page, then reopen the selector when you are ready to capture a value.',
+      );
+      return;
+    }
+
     if (state.mode === 'select-price-main') {
-      instructionEl.textContent = t('Click the main price value on the page.');
+      instructionEl.textContent = t('Click the main price value on the page, or highlight only the text you want.');
       return;
     }
 
     if (state.mode === 'select-price-extra') {
-      instructionEl.textContent = t('Click the extra price part (for example cents).');
+      instructionEl.textContent = t('Click the extra price part (for example cents), or highlight only the needed text.');
       return;
     }
 
     if (state.mode === 'select-shipping-main') {
-      instructionEl.textContent = t('Click the main shipping amount.');
+      instructionEl.textContent = t('Click the main shipping amount, or highlight only the text you want.');
       return;
     }
 
     if (state.mode === 'select-shipping-extra') {
-      instructionEl.textContent = t('Click the extra shipping part (optional).');
+      instructionEl.textContent = t('Click the extra shipping part (optional), or highlight only the needed text.');
       return;
     }
 
     if (state.mode === 'select-quantity-main') {
-      instructionEl.textContent = t('Click the can count (example: 12 pack).');
+      instructionEl.textContent = t('Click the can count (example: 12 pack), or highlight only the text you want.');
       return;
     }
 
     if (state.mode === 'select-quantity-extra') {
-      instructionEl.textContent = t('Click extra can-count part if the count is split.');
+      instructionEl.textContent = t('Click extra can-count part if the count is split, or highlight only the needed text.');
       return;
     }
 
@@ -617,6 +816,21 @@
   };
 
   const updateUi = () => {
+    panel.style.display = state.panelCollapsed ? 'none' : 'block';
+    collapsedDock.style.display = state.panelCollapsed ? 'block' : 'none';
+
+    if (collapsedTitleEl instanceof HTMLElement) {
+      collapsedTitleEl.textContent = state.freeClick
+        ? t('Free click is active')
+        : t('Selector minimized');
+    }
+
+    if (collapsedNoteEl instanceof HTMLElement) {
+      collapsedNoteEl.textContent = state.freeClick
+        ? t('Interact with the page, then reopen the selector when ready.')
+        : t('Reopen the selector to continue capturing values.');
+    }
+
     if (priceValueEl instanceof HTMLElement) {
       priceValueEl.textContent = previewParts(state.priceParts, t('Not selected'));
       priceValueEl.style.color = state.priceParts.length > 0 ? '#0f766e' : '#475569';
@@ -694,6 +908,26 @@
         : t('Save and Validate');
     }
 
+    if (freeClickToggleBtn instanceof HTMLButtonElement) {
+      freeClickToggleBtn.textContent = state.freeClick ? t('Resume Selecting') : t('Free Click');
+      freeClickToggleBtn.style.background = state.freeClick ? '#0f172a' : '#ffffff';
+      freeClickToggleBtn.style.borderColor = state.freeClick ? '#0f172a' : '#cbd5e1';
+      freeClickToggleBtn.style.color = state.freeClick ? '#ffffff' : '#0f172a';
+    }
+
+    if (collapsePanelBtn instanceof HTMLButtonElement) {
+      collapsePanelBtn.disabled = state.submitting;
+    }
+
+    if (openSelectorBtn instanceof HTMLButtonElement) {
+      openSelectorBtn.disabled = state.submitting;
+    }
+
+    if (resumeSelectingBtn instanceof HTMLButtonElement) {
+      resumeSelectingBtn.disabled = state.submitting;
+      resumeSelectingBtn.style.display = state.freeClick ? 'inline-flex' : 'none';
+    }
+
     updateInstruction();
 
     if (!isSelecting()) {
@@ -706,6 +940,9 @@
       return;
     }
 
+    state.freeClick = false;
+    state.panelCollapsed = false;
+    state.restoreMode = mode;
     state.mode = mode;
     setStatus(message, 'info');
     updateUi();
@@ -735,19 +972,19 @@
       state.quantityManualValue,
     );
 
-    const payload = {
-      lang: language,
-      token,
-      page_url: sourceUrl,
-      page_title: document.title,
-      selectors: {
-        price: selectorPayloadFromParts(state.priceParts),
-        shipping: shippingSelectorPayload,
-        quantity: quantitySelectorPayload,
-      },
-    };
-
     try {
+      const payload = {
+        lang: language,
+        token,
+        page_url: sourceUrl,
+        page_title: document.title,
+        selectors: {
+          price: selectorPayloadFromParts(state.priceParts),
+          shipping: shippingSelectorPayload,
+          quantity: quantitySelectorPayload,
+        },
+      };
+
       const response = await fetch(captureEndpoint.toString(), {
         method: 'POST',
         headers: {
@@ -784,12 +1021,16 @@
           : '';
 
       setStatus(
-        t('Saved successfully. Detected price: {price}{per_can}.', {
+        t('Saved successfully. Detected price: {price}{per_can}. Redirecting back...', {
             price: parsedPrice,
             per_can: perCanText,
           }),
         'success',
       );
+
+      window.setTimeout(() => {
+        window.location.assign(returnUrl);
+      }, 900);
     } catch (error) {
       const message =
         error instanceof Error
@@ -925,6 +1166,9 @@
         quantityManualInput.value = '';
       }
       state.shippingSkipped = false;
+      state.freeClick = false;
+      state.panelCollapsed = false;
+      state.restoreMode = 'select-price-main';
       state.done = false;
       state.mode = 'select-price-main';
       window.__monsterindex_selector_unsaved = true;
@@ -961,41 +1205,40 @@
     });
   }
 
-  const onMouseOver = (event) => {
-    if (!isSelecting()) {
+  if (freeClickToggleBtn instanceof HTMLButtonElement) {
+    freeClickToggleBtn.addEventListener('click', () => {
+      if (state.freeClick) {
+        resumeSelecting();
+        return;
+      }
+
+      enableFreeClick({ collapse: true });
+    });
+  }
+
+  if (collapsePanelBtn instanceof HTMLButtonElement) {
+    collapsePanelBtn.addEventListener('click', () => {
+      if (state.submitting) {
+        return;
+      }
+
+      state.panelCollapsed = true;
+      updateUi();
+    });
+  }
+
+  if (openSelectorBtn instanceof HTMLButtonElement) {
+    openSelectorBtn.addEventListener('click', openSelectorPanel);
+  }
+
+  if (resumeSelectingBtn instanceof HTMLButtonElement) {
+    resumeSelectingBtn.addEventListener('click', resumeSelecting);
+  }
+
+  const applySelectedSelector = (selector) => {
+    if (!selector || typeof selector !== 'object') {
       return;
     }
-
-    const el = event.target;
-    if (!(el instanceof Element)) {
-      return;
-    }
-
-    if (el.closest('[data-monsterindex-ignore="true"]')) {
-      return;
-    }
-
-    setHighlight(el);
-  };
-
-  const onClick = (event) => {
-    if (!isSelecting()) {
-      return;
-    }
-
-    const el = event.target;
-    if (!(el instanceof Element)) {
-      return;
-    }
-
-    if (el.closest('[data-monsterindex-ignore="true"]')) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const selector = toSelector(el);
 
     if (state.mode === 'select-price-main') {
       state.priceParts = [selector];
@@ -1065,6 +1308,86 @@
     }
   };
 
+  const onMouseOver = (event) => {
+    if (!isSelecting()) {
+      return;
+    }
+
+    const el = event.target;
+    if (!(el instanceof Element)) {
+      return;
+    }
+
+    if (el.closest('[data-monsterindex-ignore="true"]')) {
+      return;
+    }
+
+    setHighlight(el);
+  };
+
+  const onMouseUp = (event) => {
+    if (!isSelecting()) {
+      return;
+    }
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const targetElement = selectionTargetFromRange(range);
+
+    if (!(targetElement instanceof Element)) {
+      return;
+    }
+
+    if (targetElement.closest('[data-monsterindex-ignore="true"]')) {
+      return;
+    }
+
+    const textSelection = textSelectionFromRange(targetElement, range);
+    if (!textSelection) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    ignoreNextClick = true;
+    applySelectedSelector(
+      toSelector(targetElement, {
+        textSelection,
+      }),
+    );
+    selection.removeAllRanges();
+  };
+
+  const onClick = (event) => {
+    if (!isSelecting()) {
+      return;
+    }
+
+    if (ignoreNextClick) {
+      ignoreNextClick = false;
+      return;
+    }
+
+    const el = event.target;
+    if (!(el instanceof Element)) {
+      return;
+    }
+
+    if (el.closest('[data-monsterindex-ignore="true"]')) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    applySelectedSelector(toSelector(el));
+  };
+
   const onBeforeUnload = (event) => {
     if (!window.__monsterindex_selector_unsaved) {
       return;
@@ -1075,6 +1398,7 @@
   };
 
   document.addEventListener('mouseover', onMouseOver, true);
+  document.addEventListener('mouseup', onMouseUp, true);
   document.addEventListener('click', onClick, true);
   window.addEventListener('beforeunload', onBeforeUnload);
 

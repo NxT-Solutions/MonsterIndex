@@ -38,6 +38,64 @@ const page = await browser.newPage({
 try {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
 
+  const normalizeText = (value) => String(value || '').replace(/\s+/g, ' ').trim();
+
+  const applyTextSelection = (text, selector) => {
+    if (!text || typeof text !== 'string' || !selector || typeof selector !== 'object') {
+      return text;
+    }
+
+    const normalizedText = normalizeText(text);
+    if (!normalizedText) {
+      return normalizedText;
+    }
+
+    const selection = selector.text_selection;
+    if (!selection || typeof selection !== 'object') {
+      return normalizedText;
+    }
+
+    const selectedText = normalizeText(selection.selected_text);
+    const prefix = normalizeText(selection.prefix);
+    const suffix = normalizeText(selection.suffix);
+
+    if (prefix || suffix) {
+      let start = 0;
+
+      if (prefix) {
+        const prefixIndex = normalizedText.indexOf(prefix);
+        if (prefixIndex === -1) {
+          return selectedText && normalizedText.includes(selectedText)
+            ? selectedText
+            : normalizedText;
+        }
+
+        start = prefixIndex + prefix.length;
+      }
+
+      if (suffix) {
+        const suffixIndex = normalizedText.indexOf(suffix, start);
+        if (suffixIndex === -1) {
+          return selectedText && normalizedText.includes(selectedText)
+            ? selectedText
+            : normalizedText;
+        }
+
+        const slice = normalizeText(normalizedText.slice(start, suffixIndex));
+        return slice || normalizedText;
+      }
+
+      const slice = normalizeText(normalizedText.slice(start));
+      return slice || normalizedText;
+    }
+
+    if (selectedText && normalizedText.includes(selectedText)) {
+      return selectedText;
+    }
+
+    return normalizedText;
+  };
+
   const extractSingleText = async (selector) => {
     if (!selector || typeof selector !== 'object') return null;
 
@@ -46,7 +104,7 @@ try {
       const count = await locator.count();
       if (count > 0) {
         const text = await locator.textContent();
-        if (text && text.trim()) return text.trim();
+        if (text && text.trim()) return applyTextSelection(text.trim(), selector);
       }
     }
 
@@ -55,7 +113,7 @@ try {
       const count = await locator.count();
       if (count > 0) {
         const text = await locator.textContent();
-        if (text && text.trim()) return text.trim();
+        if (text && text.trim()) return applyTextSelection(text.trim(), selector);
       }
     }
 

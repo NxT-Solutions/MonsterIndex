@@ -10,10 +10,12 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 class SelectorTextExtractor
 {
     private CssSelectorConverter $cssToXPath;
+    private SelectorTextSelectionApplier $textSelectionApplier;
 
-    public function __construct()
+    public function __construct(?SelectorTextSelectionApplier $textSelectionApplier = null)
     {
         $this->cssToXPath = new CssSelectorConverter;
+        $this->textSelectionApplier = $textSelectionApplier ?? new SelectorTextSelectionApplier;
     }
 
     /**
@@ -62,13 +64,16 @@ class SelectorTextExtractor
             $xpathQuery = $this->cssToXPath->toXPath($css);
             $value = $this->extractFromQuery($xpath, $xpathQuery);
             if ($value !== null) {
-                return $value;
+                return $this->textSelectionApplier->apply($value, $selector);
             }
         }
 
         $xpathSelector = $selector['xpath'] ?? null;
         if (is_string($xpathSelector) && trim($xpathSelector) !== '') {
-            return $this->extractFromQuery($xpath, $xpathSelector);
+            return $this->textSelectionApplier->apply(
+                $this->extractFromQuery($xpath, $xpathSelector),
+                $selector,
+            );
         }
 
         return null;

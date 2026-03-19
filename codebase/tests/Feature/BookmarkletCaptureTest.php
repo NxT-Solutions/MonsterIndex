@@ -69,7 +69,15 @@ it('captures selector payload with valid token', function () {
         'token' => 'valid-token',
         'page_url' => 'https://example.com/product',
         'selectors' => [
-            'price' => ['css' => '.price', 'xpath' => '//*[@class="price"]'],
+            'price' => [
+                'css' => '.price',
+                'xpath' => '//*[@class="price"]',
+                'text_selection' => [
+                    'selected_text' => '$19.99',
+                    'prefix' => 'Only',
+                    'suffix' => 'today',
+                ],
+            ],
             'shipping' => ['css' => '.shipping', 'xpath' => '//*[@class="shipping"]', 'manual_value' => '4.99'],
             'quantity' => ['css' => '.pack-size', 'xpath' => '//*[@class="pack-size"]', 'manual_value' => '12'],
         ],
@@ -83,6 +91,7 @@ it('captures selector payload with valid token', function () {
 
     expect($monitor->product_url)->toBe('https://example.com/product')
         ->and($monitor->selector_config['price']['css'] ?? null)->toBe('.price')
+        ->and($monitor->selector_config['price']['text_selection']['selected_text'] ?? null)->toBe('$19.99')
         ->and($monitor->selector_config['shipping']['manual_value'] ?? null)->toBe('4.99')
         ->and($monitor->selector_config['quantity']['css'] ?? null)->toBe('.pack-size')
         ->and($monitor->selector_config['quantity']['manual_value'] ?? null)->toBe('12')
