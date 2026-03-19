@@ -278,6 +278,7 @@
   const collapsedNoteEl = collapsedDock.querySelector('#mi-collapsed-note');
 
   let highlighted = null;
+  let ignoreNextClick = false;
 
   const selectingModes = new Set([
     'select-price-main',
@@ -324,6 +325,51 @@
     }
 
     return cleanText((clone.textContent || '').slice(0, 500));
+  };
+
+  const textSelectionFromRange = (element, range) => {
+    if (!(element instanceof Element) || !(range instanceof Range)) {
+      return null;
+    }
+
+    const selectedText = cleanText(range.toString());
+    if (selectedText === '') {
+      return null;
+    }
+
+    const elementRange = document.createRange();
+    elementRange.selectNodeContents(element);
+
+    const beforeRange = document.createRange();
+    beforeRange.setStart(elementRange.startContainer, elementRange.startOffset);
+    beforeRange.setEnd(range.startContainer, range.startOffset);
+
+    const afterRange = document.createRange();
+    afterRange.setStart(range.endContainer, range.endOffset);
+    afterRange.setEnd(elementRange.endContainer, elementRange.endOffset);
+
+    const prefix = cleanText(beforeRange.toString().slice(-60));
+    const suffix = cleanText(afterRange.toString().slice(0, 60));
+
+    return {
+      selected_text: selectedText,
+      prefix,
+      suffix,
+    };
+  };
+
+  const selectionTargetFromRange = (range) => {
+    if (!(range instanceof Range)) {
+      return null;
+    }
+
+    const commonAncestor = range.commonAncestorContainer;
+    const element =
+      commonAncestor.nodeType === Node.ELEMENT_NODE
+        ? commonAncestor
+        : commonAncestor.parentElement;
+
+    return element instanceof Element ? element : null;
   };
 
   const setStatus = (text, tone = 'info') => {
@@ -573,11 +619,23 @@
     return '/' + segments.join('/');
   };
 
-  const toSelector = (element) => ({
-    css: cssPath(element),
-    xpath: xpathPath(element),
-    sample_text: sampleText(element),
-  });
+  const toSelector = (element, options = {}) => {
+    const selection = options && typeof options === 'object' ? options.textSelection : null;
+    const selector = {
+      css: cssPath(element),
+      xpath: xpathPath(element),
+      sample_text:
+        selection && typeof selection.selected_text === 'string' && selection.selected_text !== ''
+          ? selection.selected_text
+          : sampleText(element),
+    };
+
+    if (selection && typeof selection.selected_text === 'string' && selection.selected_text !== '') {
+      selector.text_selection = selection;
+    }
+
+    return selector;
+  };
 
   const inferJoinWith = (parts) => {
     if (!Array.isArray(parts) || parts.length <= 1) {
@@ -720,32 +778,32 @@
     }
 
     if (state.mode === 'select-price-main') {
-      instructionEl.textContent = t('Click the main price value on the page.');
+      instructionEl.textContent = t('Click the main price value on the page, or highlight only the text you want.');
       return;
     }
 
     if (state.mode === 'select-price-extra') {
-      instructionEl.textContent = t('Click the extra price part (for example cents).');
+      instructionEl.textContent = t('Click the extra price part (for example cents), or highlight only the needed text.');
       return;
     }
 
     if (state.mode === 'select-shipping-main') {
-      instructionEl.textContent = t('Click the main shipping amount.');
+      instructionEl.textContent = t('Click the main shipping amount, or highlight only the text you want.');
       return;
     }
 
     if (state.mode === 'select-shipping-extra') {
-      instructionEl.textContent = t('Click the extra shipping part (optional).');
+      instructionEl.textContent = t('Click the extra shipping part (optional), or highlight only the needed text.');
       return;
     }
 
     if (state.mode === 'select-quantity-main') {
-      instructionEl.textContent = t('Click the can count (example: 12 pack).');
+      instructionEl.textContent = t('Click the can count (example: 12 pack), or highlight only the text you want.');
       return;
     }
 
     if (state.mode === 'select-quantity-extra') {
-      instructionEl.textContent = t('Click extra can-count part if the count is split.');
+      instructionEl.textContent = t('Click extra can-count part if the count is split, or highlight only the needed text.');
       return;
     }
 
@@ -1177,41 +1235,10 @@
     resumeSelectingBtn.addEventListener('click', resumeSelecting);
   }
 
-  const onMouseOver = (event) => {
-    if (!isSelecting()) {
+  const applySelectedSelector = (selector) => {
+    if (!selector || typeof selector !== 'object') {
       return;
     }
-
-    const el = event.target;
-    if (!(el instanceof Element)) {
-      return;
-    }
-
-    if (el.closest('[data-monsterindex-ignore="true"]')) {
-      return;
-    }
-
-    setHighlight(el);
-  };
-
-  const onClick = (event) => {
-    if (!isSelecting()) {
-      return;
-    }
-
-    const el = event.target;
-    if (!(el instanceof Element)) {
-      return;
-    }
-
-    if (el.closest('[data-monsterindex-ignore="true"]')) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const selector = toSelector(el);
 
     if (state.mode === 'select-price-main') {
       state.priceParts = [selector];
@@ -1281,6 +1308,86 @@
     }
   };
 
+  const onMouseOver = (event) => {
+    if (!isSelecting()) {
+      return;
+    }
+
+    const el = event.target;
+    if (!(el instanceof Element)) {
+      return;
+    }
+
+    if (el.closest('[data-monsterindex-ignore="true"]')) {
+      return;
+    }
+
+    setHighlight(el);
+  };
+
+  const onMouseUp = (event) => {
+    if (!isSelecting()) {
+      return;
+    }
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const targetElement = selectionTargetFromRange(range);
+
+    if (!(targetElement instanceof Element)) {
+      return;
+    }
+
+    if (targetElement.closest('[data-monsterindex-ignore="true"]')) {
+      return;
+    }
+
+    const textSelection = textSelectionFromRange(targetElement, range);
+    if (!textSelection) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    ignoreNextClick = true;
+    applySelectedSelector(
+      toSelector(targetElement, {
+        textSelection,
+      }),
+    );
+    selection.removeAllRanges();
+  };
+
+  const onClick = (event) => {
+    if (!isSelecting()) {
+      return;
+    }
+
+    if (ignoreNextClick) {
+      ignoreNextClick = false;
+      return;
+    }
+
+    const el = event.target;
+    if (!(el instanceof Element)) {
+      return;
+    }
+
+    if (el.closest('[data-monsterindex-ignore="true"]')) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    applySelectedSelector(toSelector(el));
+  };
+
   const onBeforeUnload = (event) => {
     if (!window.__monsterindex_selector_unsaved) {
       return;
@@ -1291,6 +1398,7 @@
   };
 
   document.addEventListener('mouseover', onMouseOver, true);
+  document.addEventListener('mouseup', onMouseUp, true);
   document.addEventListener('click', onClick, true);
   window.addEventListener('beforeunload', onBeforeUnload);
 
