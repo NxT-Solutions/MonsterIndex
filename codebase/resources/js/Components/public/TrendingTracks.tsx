@@ -96,18 +96,36 @@ export default function TrendingTracks({ tracks }: TrendingTracksProps) {
                                     )}
                                 </p>
 
-                                <Link
-                                    href={track.detail_url}
-                                    className={cn(
-                                        buttonVariants({
-                                            variant: 'outline',
-                                            size: 'sm',
-                                        }),
-                                        'mt-4 border-white/20 bg-transparent text-white hover:bg-white/10',
+                                <div className="mt-4 flex flex-wrap items-center gap-2">
+                                    {track.product_url && (
+                                        <a
+                                            href={track.product_url}
+                                            target="_blank"
+                                            rel="noreferrer noopener"
+                                            className={cn(
+                                                buttonVariants({
+                                                    variant: 'default',
+                                                    size: 'sm',
+                                                }),
+                                                'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                            )}
+                                        >
+                                            {t('Open Cheapest Deal')}
+                                        </a>
                                     )}
-                                >
-                                    {t('View Track')}
-                                </Link>
+                                    <Link
+                                        href={track.detail_url}
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'outline',
+                                                size: 'sm',
+                                            }),
+                                            'border-white/20 bg-transparent text-white hover:bg-white/10',
+                                        )}
+                                    >
+                                        {t('View Track')}
+                                    </Link>
+                                </div>
                             </article>
                         );
                     })}

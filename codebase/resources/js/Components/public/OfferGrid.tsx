@@ -140,6 +140,22 @@ export default function OfferGrid({ offers, query }: OfferGridProps) {
                                 {t('status')}: {offer.status ?? t('unknown')}
                             </p>
                             <div className="flex flex-wrap items-center gap-2">
+                                {offer.product_url && (
+                                    <a
+                                        href={offer.product_url}
+                                        target="_blank"
+                                        rel="noreferrer noopener"
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: 'default',
+                                                size: 'sm',
+                                            }),
+                                            'bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95',
+                                        )}
+                                    >
+                                        {t('Open Cheapest Deal')}
+                                    </a>
+                                )}
                                 {user && canFollow ? (
                                     <button
                                         type="button"
