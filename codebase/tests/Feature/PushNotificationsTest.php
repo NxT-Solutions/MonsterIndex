@@ -56,7 +56,55 @@ it('allows authenticated users to upsert and delete push subscriptions', functio
     ]);
 });
 
+it('lists the authenticated users push subscriptions for device management', function () {
+    $user = User::factory()->create(['role' => User::ROLE_USER]);
+    $otherUser = User::factory()->create(['role' => User::ROLE_USER]);
+    PermissionBootstrapper::syncUserRole($user, false);
+    PermissionBootstrapper::syncUserRole($otherUser, false);
+
+    PushSubscription::query()->create([
+        'user_id' => $user->id,
+        'endpoint' => 'https://push.example.test/phone',
+        'p256dh' => 'phone-key',
+        'auth' => 'phone-auth',
+        'user_agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Version/18.0 Mobile/15E148 Safari/604.1',
+    ]);
+    PushSubscription::query()->create([
+        'user_id' => $user->id,
+        'endpoint' => 'https://push.example.test/laptop',
+        'p256dh' => 'laptop-key',
+        'auth' => 'laptop-auth',
+        'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/136.0.0.0 Safari/537.36',
+    ]);
+    PushSubscription::query()->create([
+        'user_id' => $otherUser->id,
+        'endpoint' => 'https://push.example.test/other-user',
+        'p256dh' => 'other-key',
+        'auth' => 'other-auth',
+        'user_agent' => 'Mozilla/5.0',
+    ]);
+
+    $this->actingAs($user)
+        ->getJson(route('api.push.subscriptions.index'))
+        ->assertOk()
+        ->assertJsonCount(2, 'subscriptions')
+        ->assertJsonFragment([
+            'endpoint' => 'https://push.example.test/phone',
+            'user_agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Version/18.0 Mobile/15E148 Safari/604.1',
+        ])
+        ->assertJsonFragment([
+            'endpoint' => 'https://push.example.test/laptop',
+            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/136.0.0.0 Safari/537.36',
+        ])
+        ->assertJsonMissing([
+            'endpoint' => 'https://push.example.test/other-user',
+        ]);
+});
+
 it('rejects unauthenticated push subscription calls', function () {
+    $this->getJson(route('api.push.subscriptions.index'))
+        ->assertStatus(401);
+
     $this->postJson(route('api.push.subscriptions.store'), validSubscriptionPayload('https://push.example.test/public'))
         ->assertStatus(401);
 });

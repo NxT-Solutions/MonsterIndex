@@ -95,6 +95,26 @@ export default function MonsterShow({
             .at(0);
     }, [visibleSnapshots]);
 
+    const cheapestSnapshot = useMemo(() => {
+        return [...visibleSnapshots]
+            .filter((snapshot) => snapshot.effective_total_cents !== null)
+            .sort((left, right) => {
+                const totalDifference =
+                    (left.effective_total_cents ?? Number.MAX_SAFE_INTEGER) -
+                    (right.effective_total_cents ?? Number.MAX_SAFE_INTEGER);
+
+                if (totalDifference !== 0) {
+                    return totalDifference;
+                }
+
+                const leftCheckedAt = left.checked_at ? new Date(left.checked_at).getTime() : 0;
+                const rightCheckedAt = right.checked_at ? new Date(right.checked_at).getTime() : 0;
+
+                return rightCheckedAt - leftCheckedAt;
+            })
+            .at(0);
+    }, [visibleSnapshots]);
+
     const latestCheckedAt = useMemo(() => {
         return visibleSnapshots
             .map((snapshot) => snapshot.checked_at)
@@ -388,15 +408,30 @@ export default function MonsterShow({
                                 )}
                             </div>
 
-                            <Link
-                                href={route('home')}
-                                className={cn(
-                                    buttonVariants({ variant: 'outline' }),
-                                    'w-full border-white/20 bg-transparent text-white hover:bg-white/10 sm:w-auto',
+                            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+                                {cheapestSnapshot?.site.product_url && (
+                                    <a
+                                        href={cheapestSnapshot.site.product_url}
+                                        target="_blank"
+                                        rel="noreferrer noopener"
+                                        className={cn(
+                                            buttonVariants({ variant: 'default' }),
+                                            'w-full bg-[color:var(--landing-accent)] text-[#0b1201] hover:brightness-95 sm:w-auto',
+                                        )}
+                                    >
+                                        {t('Open Cheapest Deal')}
+                                    </a>
                                 )}
-                            >
-                                {t('Back to Board')}
-                            </Link>
+                                <Link
+                                    href={route('home')}
+                                    className={cn(
+                                        buttonVariants({ variant: 'outline' }),
+                                        'w-full border-white/20 bg-transparent text-white hover:bg-white/10 sm:w-auto',
+                                    )}
+                                >
+                                    {t('Back to Board')}
+                                </Link>
+                            </div>
                         </div>
 
                         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

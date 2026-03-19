@@ -18,6 +18,7 @@ it('returns public best prices feed', function () {
     $monitor = Monitor::factory()->create([
         'monster_id' => $monster->id,
         'site_id' => $site->id,
+        'product_url' => 'https://feed-store.example/product/monster-public-feed',
         'currency' => 'USD',
     ]);
 
@@ -44,7 +45,8 @@ it('returns public best prices feed', function () {
         ->assertJsonPath('data.0.monster.slug', 'monster-public-feed')
         ->assertJsonPath('data.0.effective_total_cents', 1899)
         ->assertJsonPath('data.0.can_count', 12)
-        ->assertJsonPath('data.0.price_per_can_cents', 158);
+        ->assertJsonPath('data.0.price_per_can_cents', 158)
+        ->assertJsonPath('data.0.product_url', 'https://feed-store.example/product/monster-public-feed');
 });
 
 it('uses manual quantity from selector config when snapshot quantity is missing', function () {

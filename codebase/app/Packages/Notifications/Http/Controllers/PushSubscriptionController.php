@@ -2,6 +2,7 @@
 
 namespace Packages\Notifications\Http\Controllers;
 
+use App\Models\PushSubscription;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,28 @@ class PushSubscriptionController extends Controller
         private readonly PushSubscriptionService $pushSubscriptionService,
         private readonly WebPushService $webPushService,
     ) {}
+
+    public function index(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null, 401);
+
+        $subscriptions = PushSubscription::query()
+            ->where('user_id', $user->id)
+            ->latest('updated_at')
+            ->get()
+            ->map(fn (PushSubscription $subscription): array => [
+                'id' => $subscription->id,
+                'endpoint' => $subscription->endpoint,
+                'user_agent' => $subscription->user_agent,
+                'created_at' => $subscription->created_at?->toIso8601String(),
+            ])
+            ->values();
+
+        return response()->json([
+            'subscriptions' => $subscriptions,
+        ]);
+    }
 
     public function vapidPublicKey(Request $request): JsonResponse
     {
@@ -78,4 +101,3 @@ class PushSubscriptionController extends Controller
         ]);
     }
 }
-

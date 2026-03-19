@@ -3,11 +3,21 @@ import axios from 'axios';
 const SERVICE_WORKER_PATH = '/sw.js';
 
 export type PushPermissionState = NotificationPermission | 'unsupported';
+export type PushDevice = {
+    id: number;
+    endpoint: string;
+    user_agent: string | null;
+    created_at: string | null;
+};
 
 type PushSubscribeResponse = {
     ok: boolean;
     id: number;
     endpoint: string;
+};
+
+type PushSubscriptionsResponse = {
+    subscriptions: PushDevice[];
 };
 
 type VapidResponse = {
@@ -54,6 +64,68 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     } catch {
         return null;
     }
+}
+
+export async function getCurrentPushSubscription(): Promise<PushSubscription | null> {
+    if (!isPushSupported()) {
+        return null;
+    }
+
+    try {
+        const registration = await getServiceWorkerRegistration();
+
+        return registration ? await registration.pushManager.getSubscription() : null;
+    } catch {
+        return null;
+    }
+}
+
+export async function getCurrentPushSubscriptionEndpoint(): Promise<string | null> {
+    const subscription = await getCurrentPushSubscription();
+
+    return subscription?.endpoint ?? null;
+}
+
+export async function listPushSubscriptions(): Promise<PushDevice[]> {
+    const response = await axios.get<PushSubscriptionsResponse>(
+        route('api.push.subscriptions.index'),
+    );
+
+    return response.data.subscriptions ?? [];
+}
+
+export async function deletePushSubscriptionByEndpoint(endpoint: string): Promise<{
+    ok: boolean;
+    deleted: number;
+}> {
+    const response = await axios.delete(route('api.push.subscriptions.destroy'), {
+        data: {
+            endpoint,
+        },
+    });
+
+    return {
+        ok: Boolean(response.data.ok),
+        deleted: Number(response.data.deleted ?? 0),
+    };
+}
+
+export async function fetchPushDeviceState(): Promise<{
+    subscriptions: PushDevice[];
+    currentEndpoint: string | null;
+    currentDeviceSubscribed: boolean;
+}> {
+    const [subscriptions, currentEndpoint] = await Promise.all([
+        listPushSubscriptions(),
+        getCurrentPushSubscriptionEndpoint(),
+    ]);
+
+    return {
+        subscriptions,
+        currentEndpoint,
+        currentDeviceSubscribed: currentEndpoint !== null
+            && subscriptions.some((subscription) => subscription.endpoint === currentEndpoint),
+    };
 }
 
 export async function enablePushNotifications(): Promise<{
@@ -121,16 +193,10 @@ export async function disablePushNotifications(): Promise<{
         };
     }
 
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    const registration = registrations[0] ?? null;
-    const subscription = registration ? await registration.pushManager.getSubscription() : null;
+    const subscription = await getCurrentPushSubscription();
 
     if (subscription) {
-        await axios.delete(route('api.push.subscriptions.destroy'), {
-            data: {
-                endpoint: subscription.endpoint,
-            },
-        });
+        await deletePushSubscriptionByEndpoint(subscription.endpoint);
         await subscription.unsubscribe();
     }
 
@@ -147,6 +213,26 @@ async function fetchVapidPublicKey(): Promise<string> {
     const response = await axios.get<VapidResponse>(route('api.push.vapid-public-key'));
 
     return response.data.public_key;
+}
+
+async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
+    if (!isPushSupported()) {
+        return null;
+    }
+
+    try {
+        const existing = await navigator.serviceWorker.getRegistration('/');
+
+        if (existing) {
+            return existing.active ? existing : await navigator.serviceWorker.ready;
+        }
+
+        const registrations = await navigator.serviceWorker.getRegistrations();
+
+        return registrations[0] ?? null;
+    } catch {
+        return null;
+    }
 }
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
