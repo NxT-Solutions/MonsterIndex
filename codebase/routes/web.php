@@ -48,6 +48,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/api/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey'])
         ->name('api.push.vapid-public-key');
+    Route::get('/api/push/subscriptions', [PushSubscriptionController::class, 'index'])
+        ->name('api.push.subscriptions.index');
     Route::post('/api/push/subscriptions', [PushSubscriptionController::class, 'store'])
         ->middleware('throttle:push-subscribe')
         ->name('api.push.subscriptions.store');
