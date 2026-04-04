@@ -132,7 +132,9 @@
             })(window, document, 'script', 'dataLayer', 'GTM-N9C77BDB');
         </script>
         <!-- End Google Tag Manager -->
-
+        <!-- Start cookieyes banner --> 
+        <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/b66398a294a355cda909b7dc9209769c/script.js"></script>
+        <!-- End cookieyes banner -->
         <script>
             // Define dataLayer and the gtag function.
 
