@@ -15,6 +15,8 @@ use Packages\Admin\Http\Controllers\MonsterController as AdminMonsterController;
 use Packages\Admin\Http\Controllers\MonsterSuggestionReviewController as AdminMonsterSuggestionReviewController;
 use Packages\Admin\Http\Controllers\PushTestController as AdminPushTestController;
 use Packages\Admin\Http\Controllers\SiteController as AdminSiteController;
+use Packages\Analytics\Http\Controllers\AnalyticsEventController;
+use Packages\Analytics\Http\Controllers\AnalyticsPageViewController;
 use Packages\Contributions\Http\Controllers\ContributorAlertController;
 use Packages\Contributions\Http\Controllers\FollowedMonsterController;
 use Packages\Contributions\Http\Controllers\MonitorContributionController;
@@ -28,6 +30,15 @@ use Packages\PublicBoard\Http\Controllers\SitemapController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/monsters/{monster:slug}', [PublicMonsterController::class, 'show'])->name('monsters.show');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
+Route::post('/analytics/page-views', [AnalyticsPageViewController::class, 'store'])
+    ->middleware('throttle:analytics-ingest')
+    ->name('analytics.page-views.store');
+Route::post('/analytics/page-views/{pageView}/close', [AnalyticsPageViewController::class, 'close'])
+    ->middleware('throttle:analytics-ingest')
+    ->name('analytics.page-views.close');
+Route::post('/analytics/events', [AnalyticsEventController::class, 'store'])
+    ->middleware('throttle:analytics-ingest')
+    ->name('analytics.events.store');
 Route::get('/robots.txt', function () {
     return response(
         implode("\n", [
