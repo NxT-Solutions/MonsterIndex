@@ -85,6 +85,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('push-test', function (Request $request): Limit {
             return Limit::perMinute(10)->by($this->throttleKey($request));
         });
+
+        RateLimiter::for('analytics-ingest', function (Request $request): Limit {
+            return Limit::perMinute(240)->by($this->throttleKey($request));
+        });
     }
 
     private function throttleKey(Request $request): string

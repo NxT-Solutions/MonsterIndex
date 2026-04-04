@@ -1,6 +1,7 @@
 import Hero from "@/Components/public/Hero";
 import LandingNav from "@/Components/public/LandingNav";
 import { Card, CardContent } from "@/Components/ui/card";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import { useLocale } from "@/lib/locale";
 import { PublicOfferRow, TrendingTrackRow } from "@/lib/publicPricing";
 import { PageProps } from "@/types";
@@ -70,6 +71,7 @@ export default function BestPricesIndex({
 }>) {
     const { locale, t } = useLocale();
     const [query, setQuery] = useState("");
+    const lastTrackedSearchRef = useRef<string | null>(null);
     const normalizedQuery = query.trim().toLowerCase();
     const copy = LANDING_COPY[locale as 'en' | 'nl'] ?? LANDING_COPY.en;
     const canonicalUrl = route("home");
@@ -112,6 +114,34 @@ export default function BestPricesIndex({
 
         return () => window.clearInterval(intervalId);
     }, []);
+
+    useEffect(() => {
+        if (normalizedQuery.length < 2) {
+            if (normalizedQuery === "") {
+                lastTrackedSearchRef.current = null;
+            }
+
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            if (lastTrackedSearchRef.current === normalizedQuery) {
+                return;
+            }
+
+            lastTrackedSearchRef.current = normalizedQuery;
+
+            void trackAnalyticsEvent({
+                eventName: "search",
+                label: normalizedQuery,
+                properties: {
+                    results_count: filteredOffers.length,
+                },
+            });
+        }, 500);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [filteredOffers.length, normalizedQuery]);
 
     return (
         <>

@@ -41,4 +41,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'google_analytics' => [
+        'measurement_id' => env('GOOGLE_ANALYTICS_ID', 'G-TP8SL7T968'),
+    ],
+
 ];

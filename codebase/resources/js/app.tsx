@@ -1,6 +1,7 @@
 import '../css/app.css';
 import './bootstrap';
 
+import AnalyticsTracker from '@/Components/AnalyticsTracker';
 import { AppDialogProvider } from '@/Components/providers/AppDialogProvider';
 import AppToaster from '@/Components/ui/toaster';
 import { LocaleProvider } from '@/lib/locale';
@@ -114,6 +115,7 @@ createInertiaApp({
                             {({ Component, props: pageProps, key }) => (
                                 <>
                                     <Component key={key} {...pageProps} />
+                                    <AnalyticsTracker />
                                     <DeferredPwaExperience />
                                     <AppToaster />
                                 </>
