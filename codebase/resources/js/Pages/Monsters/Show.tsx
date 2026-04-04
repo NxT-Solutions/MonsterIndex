@@ -1,6 +1,7 @@
 import LandingNav from '@/Components/public/LandingNav';
 import PriceHistoryChart from '@/Components/public/PriceHistoryChart';
 import { buttonVariants } from '@/Components/ui/button';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 import { useLocale } from '@/lib/locale';
 import { cn } from '@/lib/utils';
 import { PageProps } from '@/types';
@@ -350,6 +351,13 @@ export default function MonsterShow({
                                                                                 value !== currency,
                                                                         ),
                                                                 );
+                                                                void trackAnalyticsEvent({
+                                                                    eventName: 'follow_remove',
+                                                                    label: monster.slug,
+                                                                    properties: {
+                                                                        currency,
+                                                                    },
+                                                                });
                                                             } else {
                                                                 await axios.post(
                                                                     route(
@@ -374,6 +382,13 @@ export default function MonsterShow({
                                                                                   currency,
                                                                               ],
                                                                 );
+                                                                void trackAnalyticsEvent({
+                                                                    eventName: 'follow_create',
+                                                                    label: monster.slug,
+                                                                    properties: {
+                                                                        currency,
+                                                                    },
+                                                                });
                                                             }
                                                         } catch {
                                                             toast.error(
