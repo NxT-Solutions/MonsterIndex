@@ -9,6 +9,8 @@
             $canonical = request()->url();
             $ogImage = $baseUrl !== '' ? $baseUrl.'/brand/monsterindex-og.png' : '/brand/monsterindex-og.png';
             $vite = app(\Illuminate\Foundation\Vite::class);
+            $googleAnalyticsId = (string) config('services.google_analytics.measurement_id', '');
+            $shouldLoadGoogleAnalytics = app()->environment('production') && $googleAnalyticsId !== '';
             $shouldRenderViteAssets = ! app()->runningUnitTests()
                 || is_file($vite->hotFile())
                 || file_exists(public_path('build/manifest.json'));
@@ -35,6 +37,7 @@
 
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="description" content="{{ $seoDescription }}">
         <meta name="keywords" content="{{ __('Monster Energy, price tracker, energy drink deals, compare prices, per can price, Monster offers') }}">
         <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
@@ -95,6 +98,16 @@
         <script type="application/ld+json">
             {!! json_encode($websiteSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
         </script>
+
+        @if ($shouldLoadGoogleAnalytics)
+            <script async src="https://www.googletagmanager.com/gtag/js?id={{ urlencode($googleAnalyticsId) }}"></script>
+            <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag() { dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', @js($googleAnalyticsId));
+            </script>
+        @endif
 
         <!-- Scripts -->
         @routes
