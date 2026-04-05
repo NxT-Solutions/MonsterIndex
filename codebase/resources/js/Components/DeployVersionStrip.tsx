@@ -15,10 +15,7 @@ export default function DeployVersionStrip({ className }: DeployVersionStripProp
     }
 
     return (
-        <p
-            className={cn('font-body text-xs', className)}
-            aria-label={t('Deploy version')}
-        >
+        <p className={cn('font-body text-xs', className)}>
             <span className="opacity-70">{t('Version')}</span>{' '}
             <span className="tabular-nums opacity-100">{deployVersion}</span>
         </p>

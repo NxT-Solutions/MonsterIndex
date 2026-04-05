@@ -97,7 +97,9 @@ test('admin dashboard loads through smoke auth', async ({ page }) => {
     await loginAs(page, 'admin', '/admin');
 
     await expect(
-        page.getByRole('heading', { name: 'Control Center' }),
+        page.getByRole('heading', {
+            name: 'Traffic, Users, and Operations',
+        }),
     ).toBeVisible();
 
     await expectNoAccessibilityViolations(page);

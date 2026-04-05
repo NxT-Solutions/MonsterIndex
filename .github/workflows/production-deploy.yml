@@ -61,6 +61,24 @@ jobs:
             fi
           }
 
+          # Double-quote value for strict dotenv / Docker Compose parsers (spaces, #, +, etc.).
+          upsert_env_quoted() {
+            local key="$1"
+            local value="$2"
+            local file="$3"
+            local inner
+            local sed_repl
+
+            inner="$(printf '%s' "$value" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
+            sed_repl="$(printf '%s' "$inner" | sed -e 's/[\/&]/\\&/g')"
+
+            if grep -q "^${key}=" "$file"; then
+              sed -i "s|^${key}=.*|${key}=\"${sed_repl}\"|" "$file"
+            else
+              printf '%s="%s"\n' "$key" "$inner" >> "$file"
+            fi
+          }
+
           app_key="${APP_KEY:-}"
 
           if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ] && [ -z "$app_key" ]; then
@@ -76,9 +94,9 @@ jobs:
           upsert_env "WEBPUSH_VAPID_PUBLIC_KEY" "${WEBPUSH_VAPID_PUBLIC_KEY:-}" "$runtime_env"
           upsert_env "WEBPUSH_VAPID_PRIVATE_KEY" "${WEBPUSH_VAPID_PRIVATE_KEY:-}" "$runtime_env"
 
-          # Dotenv disallows unquoted spaces and treats # as a comment — keep this ASCII-safe.
-          deploy_version="${GITHUB_SHA:0:7}+r${GITHUB_RUN_NUMBER}"
-          upsert_env "DEPLOY_VERSION" "$deploy_version" "$runtime_env"
+          # Short sha + run id (hyphen only; written quoted for dotenv / compose compatibility).
+          deploy_version="${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}"
+          upsert_env_quoted "DEPLOY_VERSION" "$deploy_version" "$runtime_env"
 
           chmod 0600 "$runtime_env"
 

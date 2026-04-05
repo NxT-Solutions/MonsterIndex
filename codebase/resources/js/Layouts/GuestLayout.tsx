@@ -13,7 +13,7 @@ export default function Guest({ children }: PropsWithChildren) {
                 <ThemeToggle compact />
             </header>
 
-            <main className="flex w-full flex-col items-center sm:max-w-md">
+            <main className="flex w-full flex-1 flex-col items-center sm:max-w-md">
                 <div className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--card)] p-3 shadow-[0_20px_60px_var(--auth-shadow)] backdrop-blur-xl">
                     <Link href="/">
                         <ApplicationLogo className="h-20 w-20 rounded-2xl object-cover" />
@@ -23,7 +23,9 @@ export default function Guest({ children }: PropsWithChildren) {
                 <div className="mt-6 w-full">{children}</div>
             </main>
 
-            <DeployVersionStrip className="mt-auto w-full max-w-md pb-6 text-center text-[color:var(--muted-foreground)]" />
+            <footer className="w-full max-w-md pb-6">
+                <DeployVersionStrip className="text-center text-[color:var(--muted-foreground)]" />
+            </footer>
         </div>
     );
 }
