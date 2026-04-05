@@ -14,8 +14,11 @@
         $vite = app(\Illuminate\Foundation\Vite::class);
         $googleAnalyticsId = (string) config('services.google_analytics.measurement_id', '');
         $googleTagManagerId = (string) config('services.google_tag_manager.container_id', '');
+        $microsoftClarityProjectId = (string) config('services.microsoft_clarity.project_id', '');
         $shouldLoadGoogleAnalytics = app()->environment('production') && $googleAnalyticsId !== '';
         $shouldLoadGoogleTagManager = app()->environment('production') && $googleTagManagerId !== '';
+        $shouldLoadMicrosoftClarity =
+            app()->environment('production') && $microsoftClarityProjectId !== '';
         $shouldRenderViteAssets =
             !app()->runningUnitTests() || is_file($vite->hotFile()) || file_exists(public_path('build/manifest.json'));
         $criticalFontPreloads = [
@@ -136,6 +139,21 @@
             })(window, document, 'script', 'dataLayer', @js($googleTagManagerId));
         </script>
         <!-- End Google Tag Manager -->
+    @endif
+
+    @if ($shouldLoadMicrosoftClarity)
+        <script>
+            (function(c, l, a, r, i, t, y) {
+                c[a] = c[a] || function() {
+                    (c[a].q = c[a].q || []).push(arguments)
+                };
+                t = l.createElement(r);
+                t.async = 1;
+                t.src = "https://www.clarity.ms/tag/" + i;
+                y = l.getElementsByTagName(r)[0];
+                y.parentNode.insertBefore(t, y);
+            })(window, document, "clarity", "script", @js($microsoftClarityProjectId));
+        </script>
     @endif
 
     <!-- Scripts -->

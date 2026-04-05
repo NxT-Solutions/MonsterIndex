@@ -49,4 +49,8 @@ return [
         'container_id' => env('GOOGLE_TAG_MANAGER_ID', ''),
     ],
 
+    'microsoft_clarity' => [
+        'project_id' => env('MICROSOFT_CLARITY_PROJECT_ID', ''),
+    ],
+
 ];
