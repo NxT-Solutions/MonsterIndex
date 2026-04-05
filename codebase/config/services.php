@@ -42,7 +42,11 @@ return [
     ],
 
     'google_analytics' => [
-        'measurement_id' => env('GOOGLE_ANALYTICS_ID', 'G-TP8SL7T968'),
+        'measurement_id' => env('GOOGLE_ANALYTICS_ID', ''),
+    ],
+
+    'google_tag_manager' => [
+        'container_id' => env('GOOGLE_TAG_MANAGER_ID', ''),
     ],
 
 ];

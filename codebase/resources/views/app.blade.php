@@ -13,7 +13,9 @@
         $ogImage = $baseUrl !== '' ? $baseUrl . '/brand/monsterindex-og.png' : '/brand/monsterindex-og.png';
         $vite = app(\Illuminate\Foundation\Vite::class);
         $googleAnalyticsId = (string) config('services.google_analytics.measurement_id', '');
+        $googleTagManagerId = (string) config('services.google_tag_manager.container_id', '');
         $shouldLoadGoogleAnalytics = app()->environment('production') && $googleAnalyticsId !== '';
+        $shouldLoadGoogleTagManager = app()->environment('production') && $googleTagManagerId !== '';
         $shouldRenderViteAssets =
             !app()->runningUnitTests() || is_file($vite->hotFile()) || file_exists(public_path('build/manifest.json'));
         $criticalFontPreloads = [
@@ -113,8 +115,10 @@
             gtag('js', new Date());
             gtag('config', @js($googleAnalyticsId));
         </script>
+    @endif
 
-        <!-- Google Tag Manager -->
+    @if ($shouldLoadGoogleTagManager)
+        <!-- Google Tag Manager (CookieYes CMP + tags; not tied to GOOGLE_ANALYTICS_ID) -->
         <script>
             (function(w, d, s, l, i) {
                 w[l] = w[l] || [];
@@ -129,10 +133,9 @@
                 j.src =
                     'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
                 f.parentNode.insertBefore(j, f);
-            })(window, document, 'script', 'dataLayer', 'GTM-N9C77BDB');
+            })(window, document, 'script', 'dataLayer', @js($googleTagManagerId));
         </script>
         <!-- End Google Tag Manager -->
-        {{-- CookieYes: use GTM CMP tag only; manual script conflicts with GTM consent flow. --}}
     @endif
 
     <!-- Scripts -->
@@ -145,10 +148,12 @@
 </head>
 
 <body class="font-sans antialiased">
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N9C77BDB" height="0" width="0"
-            style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
+    @if ($shouldLoadGoogleTagManager)
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ urlencode($googleTagManagerId) }}"
+                height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+    @endif
     @inertia
 </body>
 
