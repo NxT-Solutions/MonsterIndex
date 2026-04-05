@@ -132,51 +132,7 @@
             })(window, document, 'script', 'dataLayer', 'GTM-N9C77BDB');
         </script>
         <!-- End Google Tag Manager -->
-        <!-- Start cookieyes banner --> 
-        <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/b66398a294a355cda909b7dc9209769c/script.js"></script>
-        <!-- End cookieyes banner -->
-        <script>
-            // Define dataLayer and the gtag function.
-
-            window.dataLayer = window.dataLayer || [];
-
-            function gtag() {
-                dataLayer.push(arguments);
-            }
-
-
-            // IMPORTANT - DO NOT COPY/PASTE WITHOUT MODIFYING REGION LIST
-
-            // Set default consent for specific regions according to your requirements
-
-            gtag('consent', 'default', {
-
-                'ad_storage': 'denied',
-
-                'ad_user_data': 'denied',
-
-                'ad_personalization': 'denied',
-
-                'analytics_storage': 'denied',
-
-                'regions': [ < list of ISO 3166 - 2 region codes > ]
-
-            });
-
-            // Set default consent for all other regions according to your requirements
-
-            gtag('consent', 'default', {
-
-                'ad_storage': 'denied',
-
-                'ad_user_data': 'denied',
-
-                'ad_personalization': 'denied',
-
-                'analytics_storage': 'denied'
-
-            });
-        </script>
+        {{-- CookieYes: use GTM CMP tag only; manual script conflicts with GTM consent flow. --}}
     @endif
 
     <!-- Scripts -->
