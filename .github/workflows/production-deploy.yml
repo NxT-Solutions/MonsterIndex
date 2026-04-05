@@ -12,6 +12,9 @@ permissions:
   contents: read
   packages: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 concurrency:
   group: production-deploy-${{ github.ref }}
   cancel-in-progress: true
@@ -25,7 +28,7 @@ jobs:
 
     steps:
       - name: Check Out Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Derive Image Name
         id: image
