@@ -53,4 +53,5 @@ export type PageProps<
         subscriptions_count: number;
         has_active_subscription: boolean;
     } | null;
+    deployVersion?: string | null;
 };

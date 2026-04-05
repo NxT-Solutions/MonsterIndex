@@ -1,3 +1,4 @@
+import DeployVersionStrip from "@/Components/DeployVersionStrip";
 import Hero from "@/Components/public/Hero";
 import LandingNav from "@/Components/public/LandingNav";
 import { Card, CardContent } from "@/Components/ui/card";
@@ -339,6 +340,7 @@ export default function BestPricesIndex({
                                 {t("View Open Source Repo")}
                             </a>
                         </div>
+                        <DeployVersionStrip className="mt-4 border-t border-white/10 pt-4 text-center text-white/70 sm:text-left" />
                     </footer>
                 </main>
             </div>

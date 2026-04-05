@@ -1,3 +1,4 @@
+import DeployVersionStrip from '@/Components/DeployVersionStrip';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import ThemeToggle from '@/Components/ThemeToggle';
@@ -21,6 +22,8 @@ export default function Guest({ children }: PropsWithChildren) {
 
                 <div className="mt-6 w-full">{children}</div>
             </main>
+
+            <DeployVersionStrip className="mt-auto w-full max-w-md pb-6 text-center text-[color:var(--muted-foreground)]" />
         </div>
     );
 }

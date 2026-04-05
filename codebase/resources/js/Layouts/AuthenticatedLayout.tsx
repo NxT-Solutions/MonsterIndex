@@ -1,3 +1,4 @@
+import DeployVersionStrip from '@/Components/DeployVersionStrip';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import ThemeToggle from '@/Components/ThemeToggle';
@@ -447,6 +448,7 @@ export default function AuthenticatedLayout({
             )}
 
             <main>{children}</main>
+            <DeployVersionStrip className="border-t border-white/10 px-4 py-3 text-center text-white/45 sm:px-6 lg:px-8" />
         </div>
     );
 }

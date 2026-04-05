@@ -1,3 +1,4 @@
+import DeployVersionStrip from '@/Components/DeployVersionStrip';
 import LandingNav from '@/Components/public/LandingNav';
 import PriceHistoryChart from '@/Components/public/PriceHistoryChart';
 import { buttonVariants } from '@/Components/ui/button';
@@ -785,6 +786,8 @@ export default function MonsterShow({
                             </table>
                         </div>
                     </section>
+
+                    <DeployVersionStrip className="border-t border-white/10 pt-6 text-center text-white/45" />
                 </main>
             </div>
         </>

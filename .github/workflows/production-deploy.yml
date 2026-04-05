@@ -76,6 +76,9 @@ jobs:
           upsert_env "WEBPUSH_VAPID_PUBLIC_KEY" "${WEBPUSH_VAPID_PUBLIC_KEY:-}" "$runtime_env"
           upsert_env "WEBPUSH_VAPID_PRIVATE_KEY" "${WEBPUSH_VAPID_PRIVATE_KEY:-}" "$runtime_env"
 
+          deploy_version="${GITHUB_SHA:0:7} · #${GITHUB_RUN_NUMBER}"
+          upsert_env "DEPLOY_VERSION" "$deploy_version" "$runtime_env"
+
           chmod 0600 "$runtime_env"
 
       - name: Set Up Docker Buildx

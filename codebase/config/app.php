@@ -123,4 +123,36 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Deploy version
+    |--------------------------------------------------------------------------
+    |
+    | Set by CI (e.g. GitHub Actions) at image build time. Shown in the UI to
+    | identify the running release (commit + workflow run).
+    |
+    */
+
+    'deploy_version' => (static function () {
+        $fromEnv = env('DEPLOY_VERSION');
+
+        if (filled($fromEnv)) {
+            return $fromEnv;
+        }
+
+        $appEnv = env('APP_ENV');
+
+        if (in_array($appEnv, ['local', 'development', 'testing', 'dev'], true)) {
+            return 'local-version';
+        }
+
+        // Missing or empty APP_ENV in .env is common locally; Laravel still defaults the app
+        // to production elsewhere, so only pair this with debug on.
+        if (($appEnv === null || $appEnv === '') && filter_var(env('APP_DEBUG', false), FILTER_VALIDATE_BOOLEAN)) {
+            return 'local-version';
+        }
+
+        return null;
+    })(),
+
 ];

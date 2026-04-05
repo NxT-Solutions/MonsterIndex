@@ -141,6 +141,7 @@ class HandleInertiaRequests extends Middleware
             'adminReview' => $adminReview,
             'contributorAlerts' => $contributorAlerts,
             'push' => $pushSettings,
+            'deployVersion' => config('app.deploy_version'),
         ];
     }
 }
